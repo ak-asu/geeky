@@ -16,6 +16,9 @@ abstract final class NoteFeedStateDto {
       ),
       readNoteIds: (jsonDecode(row.readNoteIdsJson) as List<dynamic>)
           .cast<String>(),
+      bookmarkedNoteIds:
+          (jsonDecode(row.bookmarkedNoteIdsJson) as List<dynamic>)
+              .cast<String>(),
       recentTopics: (jsonDecode(row.recentTopicsJson) as List<dynamic>)
           .cast<String>(),
       avgReadLengthWords: row.avgReadLengthWords,
@@ -28,6 +31,7 @@ abstract final class NoteFeedStateDto {
       skipCountsJson: Value(jsonEncode(state.skipCounts)),
       lastSeenJson: Value(jsonEncode(state.lastSeen)),
       readNoteIdsJson: Value(jsonEncode(state.readNoteIds)),
+      bookmarkedNoteIdsJson: Value(jsonEncode(state.bookmarkedNoteIds)),
       recentTopicsJson: Value(jsonEncode(state.recentTopics)),
       avgReadLengthWords: Value(state.avgReadLengthWords),
     );

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../constants/app_constants.dart';
@@ -153,7 +154,10 @@ class _RailButton extends StatelessWidget {
         children: [
           IconButton(
             icon: Icon(icon, color: color, size: 24),
-            onPressed: onTap,
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              onTap();
+            },
             style: IconButton.styleFrom(
               backgroundColor: colorScheme.surfaceContainerHighest.withValues(
                 alpha: 0.6,
@@ -201,7 +205,10 @@ class _ChevronButton extends StatelessWidget {
             size: 20,
           ),
         ),
-        onPressed: onTap,
+        onPressed: () {
+          HapticFeedback.lightImpact();
+          onTap();
+        },
         style: IconButton.styleFrom(
           padding: const EdgeInsets.all(AppSpacing.s8),
         ),

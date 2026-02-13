@@ -11,6 +11,8 @@ abstract class UserEntity with _$UserEntity {
     required String email,
     String? avatarUrl,
     @Default([]) List<String> interests,
+    @Default([]) List<String> goals,
+    @Default({}) Map<String, double> topicFamiliarity,
     @Default('beginner') String expertiseLevel,
     required DateTime joinedAt,
   }) = _UserEntity;

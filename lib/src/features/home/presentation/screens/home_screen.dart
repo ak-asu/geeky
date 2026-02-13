@@ -7,8 +7,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/geeky_drawer.dart';
 import '../../../../core/widgets/geeky_scaffold.dart';
+import '../../../../core/widgets/paywall_sheet.dart';
 import '../../../../routing/route_names.dart';
-import '../../../settings/providers.dart';
 import '../../../subscription/providers.dart';
 import '../widgets/adaptive_feed.dart';
 
@@ -37,13 +37,6 @@ class HomeScreen extends ConsumerWidget {
           ),
           onPressed: () =>
               ref.read(subscriptionProvider.notifier).togglePremium(),
-        ),
-        // Theme toggle
-        IconButton(
-          icon: Icon(
-            context.isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-          ),
-          onPressed: () => ref.read(themeModeProvider.notifier).toggle(),
         ),
       ],
       body: const AdaptiveFeed(),
@@ -96,13 +89,17 @@ class HomeScreen extends ConsumerWidget {
               icon: Icons.hub_rounded,
               label: 'Knowledge Graph',
               isPremium: !isPremium,
-              onTap: () => context.pushNamed(RouteNames.knowledgeGraph),
+              onTap: () => isPremium
+                  ? context.pushNamed(RouteNames.knowledgeGraph)
+                  : PaywallSheet.show(context, featureName: 'Knowledge Graph'),
             ),
             DrawerItem(
               icon: Icons.quiz_rounded,
               label: 'Quiz & Review',
               isPremium: !isPremium,
-              onTap: () => context.pushNamed(RouteNames.quiz),
+              onTap: () => isPremium
+                  ? context.pushNamed(RouteNames.quiz)
+                  : PaywallSheet.show(context, featureName: 'Quiz & Review'),
             ),
           ],
         ),
@@ -133,7 +130,9 @@ class HomeScreen extends ConsumerWidget {
               icon: Icons.analytics_rounded,
               label: 'Analytics',
               isPremium: !isPremium,
-              onTap: () => context.pushNamed(RouteNames.analytics),
+              onTap: () => isPremium
+                  ? context.pushNamed(RouteNames.analytics)
+                  : PaywallSheet.show(context, featureName: 'Analytics'),
             ),
             DrawerItem(
               icon: Icons.settings_rounded,

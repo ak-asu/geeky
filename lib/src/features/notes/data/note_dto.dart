@@ -7,6 +7,9 @@ import '../domain/note_entity.dart';
 
 abstract final class NoteDto {
   static NoteEntity fromRow(CachedNote row) {
+    final metadata = jsonDecode(row.metadataJson) as Map<String, dynamic>;
+    final topic = metadata['topic'] as String?;
+
     return NoteEntity(
       id: row.id,
       userId: row.userId,
@@ -15,10 +18,12 @@ abstract final class NoteDto {
       content: row.content,
       extractedText: row.extractedText,
       sourceUrl: row.sourceUrl,
+      primaryTopic: topic,
+      topics: topic != null ? [topic] : const [],
       mediaAssets: (jsonDecode(row.mediaAssetsJson) as List<dynamic>)
           .cast<String>(),
       processed: row.processed,
-      metadata: jsonDecode(row.metadataJson) as Map<String, dynamic>,
+      metadata: metadata,
       wordCount: row.wordCount,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

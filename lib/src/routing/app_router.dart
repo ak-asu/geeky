@@ -15,6 +15,7 @@ import '../features/notes/presentation/screens/notes_list_screen.dart';
 import '../features/notes/presentation/screens/upload_media_screen.dart';
 import '../features/onboarding/presentation/screens/feature_showcase_screen.dart';
 import '../features/onboarding/presentation/screens/interest_selection_screen.dart';
+import '../features/settings/presentation/screens/settings_screen.dart';
 import 'premium_guard.dart';
 import 'route_names.dart';
 
@@ -194,7 +195,7 @@ GoRouter appRouter(Ref ref) {
       GoRoute(
         path: '/${RouteNames.settings}',
         name: RouteNames.settings,
-        builder: (context, state) => const _PlaceholderScreen('Settings'),
+        builder: (context, state) => const SettingsScreen(),
       ),
 
       // --- Sources ---

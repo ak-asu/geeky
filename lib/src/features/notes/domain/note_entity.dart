@@ -13,6 +13,8 @@ abstract class NoteEntity with _$NoteEntity {
     String? content,
     String? extractedText,
     String? sourceUrl,
+    String? primaryTopic,
+    @Default([]) List<String> topics,
     @Default([]) List<String> mediaAssets,
     @Default(false) bool processed,
     @Default({}) Map<String, dynamic> metadata,

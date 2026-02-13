@@ -9,6 +9,7 @@ abstract class NoteFeedState with _$NoteFeedState {
     @Default({}) Map<String, int> skipCounts,
     @Default({}) Map<String, String> lastSeen,
     @Default([]) List<String> readNoteIds,
+    @Default([]) List<String> bookmarkedNoteIds,
     @Default([]) List<String> recentTopics,
     @Default(0) double avgReadLengthWords,
   }) = _NoteFeedState;

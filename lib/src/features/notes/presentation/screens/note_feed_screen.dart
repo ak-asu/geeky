@@ -6,7 +6,9 @@ import '../../../../core/widgets/geeky_empty_state.dart';
 import '../../../../core/widgets/geeky_shimmer.dart';
 import '../../../../core/widgets/horizontal_card_feed.dart';
 import '../../../../routing/route_names.dart';
+import '../../data/interaction_notifier.dart';
 import '../../domain/note_entity.dart';
+import '../../domain/note_feed_state.dart';
 import '../../providers.dart';
 import '../widgets/note_card.dart';
 
@@ -45,6 +47,9 @@ class NoteFeedScreen extends ConsumerWidget {
       );
     }
 
+    final feedState =
+        ref.watch(noteFeedProvider).value ?? const NoteFeedState();
+
     return HorizontalCardFeed<NoteEntity>(
       items: notes,
       onPageChanged: (index) {
@@ -54,13 +59,24 @@ class NoteFeedScreen extends ConsumerWidget {
         }
       },
       cardBuilder: (context, note, index) {
+        final isDone = feedState.readNoteIds.contains(note.id);
+        final isBookmarked = feedState.bookmarkedNoteIds.contains(note.id);
+
         return NoteCard(
           note: note,
+          isDone: isDone,
+          isBookmarked: isBookmarked,
           onDone: () {
             ref.read(noteFeedProvider.notifier).markRead(note.id);
+            ref
+                .read(interactionProvider.notifier)
+                .recordDone(articleId: note.id);
           },
           onBookmark: () {
-            // Bookmark toggling wired in Phase 3
+            ref.read(noteFeedProvider.notifier).toggleBookmark(note.id);
+            ref
+                .read(interactionProvider.notifier)
+                .recordBookmark(articleId: note.id);
           },
           onExpand: () {
             context.pushNamed(RouteNames.noteDetail, extra: note);

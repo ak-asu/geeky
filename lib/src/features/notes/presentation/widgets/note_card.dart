@@ -13,6 +13,7 @@ class NoteCard extends StatelessWidget {
     required this.note,
     required this.onDone,
     required this.onBookmark,
+    this.isDone = false,
     this.isBookmarked = false,
     this.onShare,
     this.onExpand,
@@ -21,6 +22,7 @@ class NoteCard extends StatelessWidget {
   final NoteEntity note;
   final VoidCallback onDone;
   final VoidCallback onBookmark;
+  final bool isDone;
   final bool isBookmarked;
   final VoidCallback? onShare;
   final VoidCallback? onExpand;
@@ -29,15 +31,14 @@ class NoteCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Content area — scrollable vertically
+        // Content area — scrollable, full width (rail overlays on top)
         _buildContent(context),
 
-        // Side action rail — right edge, vertically centered
+        // Side action rail — overlay at bottom-right
         Positioned(
           right: AppSpacing.s8,
-          bottom: 0,
-          top: 0,
-          child: Align(alignment: Alignment.centerRight, child: _buildRail()),
+          bottom: AppSpacing.s16,
+          child: _buildRail(),
         ),
       ],
     );
@@ -49,12 +50,9 @@ class NoteCard extends StatelessWidget {
     final noteType = _formatType(note.type);
 
     return Padding(
-      // Leave space on right for the rail
-      padding: const EdgeInsets.only(
-        left: AppSpacing.s16,
-        right: 64,
-        top: AppSpacing.s16,
-        bottom: AppSpacing.s16,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.s16,
+        vertical: AppSpacing.s16,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,7 +163,13 @@ class NoteCard extends StatelessWidget {
   Widget _buildRail() {
     return SideActionRail(
       primaryActions: [
-        RailAction(icon: Icons.check_rounded, label: 'Done', onTap: onDone),
+        RailAction(
+          icon: isDone ? Icons.check_circle_rounded : Icons.check_rounded,
+          activeIcon: Icons.check_circle_rounded,
+          isActive: isDone,
+          label: 'Done',
+          onTap: onDone,
+        ),
         RailAction(
           icon: isBookmarked
               ? Icons.bookmark_rounded

@@ -48,6 +48,21 @@ class NoteFeed extends _$NoteFeed {
     state = AsyncData(updated);
   }
 
+  Future<void> toggleBookmark(String noteId) async {
+    final current = state.value ?? const NoteFeedState();
+    final bookmarked = List<String>.from(current.bookmarkedNoteIds);
+
+    if (bookmarked.contains(noteId)) {
+      bookmarked.remove(noteId);
+    } else {
+      bookmarked.add(noteId);
+    }
+
+    final updated = current.copyWith(bookmarkedNoteIds: bookmarked);
+    await _repo.saveFeedState(updated);
+    state = AsyncData(updated);
+  }
+
   Future<void> addRecentTopic(String topic) async {
     final current = state.value ?? const NoteFeedState();
     final topics = [topic, ...current.recentTopics].take(10).toList();
