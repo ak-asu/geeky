@@ -22,6 +22,4 @@ extension ContextExtensions on BuildContext {
         ),
       );
   }
-
-  void pop<T>([T? result]) => Navigator.of(this).pop(result);
 }

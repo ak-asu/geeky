@@ -5,7 +5,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/constants/storage_keys.dart';
 import '../core/providers/shared_preferences_provider.dart';
+import '../features/auth/presentation/screens/login_screen.dart';
+import '../features/auth/presentation/screens/signup_screen.dart';
 import '../features/home/presentation/screens/home_screen.dart';
+import '../features/notes/domain/note_entity.dart';
+import '../features/notes/presentation/screens/create_note_screen.dart';
+import '../features/notes/presentation/screens/note_detail_screen.dart';
+import '../features/notes/presentation/screens/notes_list_screen.dart';
+import '../features/notes/presentation/screens/upload_media_screen.dart';
+import '../features/onboarding/presentation/screens/feature_showcase_screen.dart';
+import '../features/onboarding/presentation/screens/interest_selection_screen.dart';
 import 'premium_guard.dart';
 import 'route_names.dart';
 
@@ -63,47 +72,52 @@ GoRouter appRouter(Ref ref) {
       GoRoute(
         path: '/${RouteNames.login}',
         name: RouteNames.login,
-        builder: (context, state) => const _PlaceholderScreen('Login'),
+        builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
         path: '/${RouteNames.signup}',
         name: RouteNames.signup,
-        builder: (context, state) => const _PlaceholderScreen('Sign Up'),
+        builder: (context, state) => const SignupScreen(),
       ),
 
       // --- Onboarding ---
       GoRoute(
         path: '/${RouteNames.onboarding}',
         name: RouteNames.onboarding,
-        builder: (context, state) => const _PlaceholderScreen('Onboarding'),
+        builder: (context, state) => const FeatureShowcaseScreen(),
       ),
       GoRoute(
         path: '/${RouteNames.interestSelection}',
         name: RouteNames.interestSelection,
-        builder: (context, state) =>
-            const _PlaceholderScreen('Interest Selection'),
+        builder: (context, state) => const InterestSelectionScreen(),
       ),
 
       // --- Notes ---
       GoRoute(
         path: '/${RouteNames.notesList}',
         name: RouteNames.notesList,
-        builder: (context, state) => const _PlaceholderScreen('Notes'),
+        builder: (context, state) => const NotesListScreen(),
       ),
       GoRoute(
         path: '/${RouteNames.noteDetail}',
         name: RouteNames.noteDetail,
-        builder: (context, state) => const _PlaceholderScreen('Note Detail'),
+        builder: (context, state) {
+          final note = state.extra as NoteEntity?;
+          if (note == null) {
+            return const _PlaceholderScreen('Note not found');
+          }
+          return NoteDetailScreen(note: note);
+        },
       ),
       GoRoute(
         path: '/${RouteNames.createNote}',
         name: RouteNames.createNote,
-        builder: (context, state) => const _PlaceholderScreen('Create Note'),
+        builder: (context, state) => const CreateNoteScreen(),
       ),
       GoRoute(
         path: '/${RouteNames.uploadMedia}',
         name: RouteNames.uploadMedia,
-        builder: (context, state) => const _PlaceholderScreen('Upload Media'),
+        builder: (context, state) => const UploadMediaScreen(),
       ),
 
       // --- Shorts (premium) ---
