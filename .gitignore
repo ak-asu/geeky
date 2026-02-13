@@ -43,3 +43,15 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Build artifacts that shouldn't be committed
+*.lock
+conflicting_outputs
+*.g.dart
+*.freezed.dart
+*.gr.dart
+
+# Firebase related
+google-services.json
+GoogleService-Info.plist
+firebase_options.dart

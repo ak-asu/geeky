@@ -1,0 +1,159 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/geeky_drawer.dart';
+import '../../../../core/widgets/geeky_scaffold.dart';
+import '../../../../routing/route_names.dart';
+import '../../../settings/providers.dart';
+import '../../../subscription/providers.dart';
+import '../widgets/adaptive_feed.dart';
+
+class HomeScreen extends ConsumerWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isPremium = ref.watch(isPremiumProvider);
+
+    return GeekyScaffold(
+      drawer: _buildDrawer(context, ref, isPremium),
+      actions: [
+        // Search
+        IconButton(
+          icon: const Icon(Icons.search_rounded),
+          onPressed: () => context.pushNamed(RouteNames.search),
+        ),
+        // Dev: toggle premium
+        IconButton(
+          icon: Icon(
+            isPremium
+                ? Icons.workspace_premium_rounded
+                : Icons.workspace_premium_outlined,
+            color: isPremium ? AppColors.primary : null,
+          ),
+          onPressed: () =>
+              ref.read(subscriptionProvider.notifier).togglePremium(),
+        ),
+        // Theme toggle
+        IconButton(
+          icon: Icon(
+            context.isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+          ),
+          onPressed: () => ref.read(themeModeProvider.notifier).toggle(),
+        ),
+      ],
+      body: const AdaptiveFeed(),
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context, WidgetRef ref, bool isPremium) {
+    return GeekyDrawer(
+      header: Row(
+        children: [
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+            child: const Icon(Icons.person_rounded, color: AppColors.primary),
+          ),
+          AppSpacing.gapH12,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Geeky',
+                  style: context.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  isPremium ? 'Premium' : 'Free',
+                  style: context.textTheme.bodySmall?.copyWith(
+                    color: isPremium
+                        ? AppColors.primary
+                        : context.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      sections: [
+        DrawerSection(
+          label: 'Learn',
+          items: [
+            DrawerItem(
+              icon: Icons.view_module_rounded,
+              label: 'Modules',
+              onTap: () => context.pushNamed(RouteNames.modulesList),
+            ),
+            DrawerItem(
+              icon: Icons.hub_rounded,
+              label: 'Knowledge Graph',
+              isPremium: !isPremium,
+              onTap: () => context.pushNamed(RouteNames.knowledgeGraph),
+            ),
+            DrawerItem(
+              icon: Icons.quiz_rounded,
+              label: 'Quiz & Review',
+              isPremium: !isPremium,
+              onTap: () => context.pushNamed(RouteNames.quiz),
+            ),
+          ],
+        ),
+        DrawerSection(
+          label: 'Manage',
+          items: [
+            DrawerItem(
+              icon: Icons.note_rounded,
+              label: 'Notes',
+              onTap: () => context.pushNamed(RouteNames.notesList),
+            ),
+            DrawerItem(
+              icon: Icons.source_rounded,
+              label: 'Sources',
+              onTap: () => context.pushNamed(RouteNames.sourcesList),
+            ),
+            DrawerItem(
+              icon: Icons.bookmark_rounded,
+              label: 'Bookmarks',
+              onTap: () => context.pushNamed(RouteNames.bookmarks),
+            ),
+          ],
+        ),
+        DrawerSection(
+          label: 'You',
+          items: [
+            DrawerItem(
+              icon: Icons.analytics_rounded,
+              label: 'Analytics',
+              isPremium: !isPremium,
+              onTap: () => context.pushNamed(RouteNames.analytics),
+            ),
+            DrawerItem(
+              icon: Icons.settings_rounded,
+              label: 'Settings',
+              onTap: () => context.pushNamed(RouteNames.settings),
+            ),
+          ],
+        ),
+      ],
+      footer: ListTile(
+        leading: const Icon(Icons.store_rounded, size: 22),
+        title: Text('Module Store', style: context.textTheme.bodyMedium),
+        dense: true,
+        visualDensity: VisualDensity.compact,
+        contentPadding: EdgeInsets.zero,
+        onTap: () {
+          Navigator.of(context).pop();
+          context.pushNamed(RouteNames.store);
+        },
+      ),
+    );
+  }
+}

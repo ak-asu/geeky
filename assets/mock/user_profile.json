@@ -1,0 +1,13 @@
+{
+  "id": "user-001",
+  "name": "Alex Learner",
+  "email": "alex@geeky.app",
+  "avatar_url": null,
+  "interests": ["AI", "Web Dev", "Data Science", "Mathematics", "Cognitive Psychology"],
+  "goals": ["Master ML fundamentals", "Build web apps", "Improve study habits"],
+  "learning_mode": "balanced",
+  "streak_days": 7,
+  "total_articles_read": 23,
+  "total_time_minutes": 145,
+  "joined_at": "2025-11-15T09:00:00Z"
+}

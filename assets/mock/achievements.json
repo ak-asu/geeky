@@ -1,0 +1,92 @@
+[
+  {
+    "id": "achievement-001",
+    "title": "First Steps",
+    "description": "Read your very first article.",
+    "icon": "auto_stories",
+    "unlocked": true,
+    "unlocked_at": "2025-11-15T09:30:00Z",
+    "category": "reading"
+  },
+  {
+    "id": "achievement-002",
+    "title": "Bookworm",
+    "description": "Read 10 articles across any topics.",
+    "icon": "menu_book",
+    "unlocked": true,
+    "unlocked_at": "2025-12-03T14:20:00Z",
+    "category": "reading"
+  },
+  {
+    "id": "achievement-003",
+    "title": "Week Warrior",
+    "description": "Maintain a 7-day learning streak.",
+    "icon": "local_fire_department",
+    "unlocked": true,
+    "unlocked_at": "2026-02-11T21:00:00Z",
+    "category": "streak"
+  },
+  {
+    "id": "achievement-004",
+    "title": "Quiz Master",
+    "description": "Pass 5 spaced repetition quizzes with a rating of Good or Easy.",
+    "icon": "quiz",
+    "unlocked": true,
+    "unlocked_at": "2026-01-20T10:45:00Z",
+    "category": "quiz"
+  },
+  {
+    "id": "achievement-005",
+    "title": "Knowledge Explorer",
+    "description": "Visit the knowledge graph and explore concept connections.",
+    "icon": "hub",
+    "unlocked": true,
+    "unlocked_at": "2025-12-08T16:30:00Z",
+    "category": "social"
+  },
+  {
+    "id": "achievement-006",
+    "title": "Recall Rookie",
+    "description": "Complete your first spaced repetition review session.",
+    "icon": "psychology",
+    "unlocked": true,
+    "unlocked_at": "2025-11-18T11:00:00Z",
+    "category": "quiz"
+  },
+  {
+    "id": "achievement-007",
+    "title": "Marathon Learner",
+    "description": "Maintain a 30-day learning streak.",
+    "icon": "emoji_events",
+    "unlocked": false,
+    "unlocked_at": null,
+    "category": "streak"
+  },
+  {
+    "id": "achievement-008",
+    "title": "Deep Diver",
+    "description": "Read 50 articles to prove your dedication to learning.",
+    "icon": "scuba_diving",
+    "unlocked": false,
+    "unlocked_at": null,
+    "category": "reading"
+  },
+  {
+    "id": "achievement-009",
+    "title": "Perfect Recall",
+    "description": "Achieve a 100% success rate across 20 consecutive quiz reviews.",
+    "icon": "star",
+    "unlocked": false,
+    "unlocked_at": null,
+    "category": "quiz"
+  },
+  {
+    "id": "achievement-010",
+    "title": "Community Contributor",
+    "description": "Share a learning module to the store for others to download.",
+    "icon": "share",
+    "unlocked": false,
+    "unlocked_at": null,
+    "category": "social"
+  }
+]
