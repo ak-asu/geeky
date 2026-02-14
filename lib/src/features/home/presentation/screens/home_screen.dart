@@ -94,6 +94,14 @@ class HomeScreen extends ConsumerWidget {
                   : PaywallSheet.show(context, featureName: 'Knowledge Graph'),
             ),
             DrawerItem(
+              icon: Icons.auto_awesome_rounded,
+              label: 'Ask Geeky',
+              isPremium: !isPremium,
+              onTap: () => isPremium
+                  ? context.pushNamed(RouteNames.ragQuery)
+                  : PaywallSheet.show(context, featureName: 'Ask Geeky'),
+            ),
+            DrawerItem(
               icon: Icons.quiz_rounded,
               label: 'Quiz & Review',
               isPremium: !isPremium,
@@ -126,6 +134,11 @@ class HomeScreen extends ConsumerWidget {
         DrawerSection(
           label: 'You',
           items: [
+            DrawerItem(
+              icon: Icons.person_rounded,
+              label: 'Profile',
+              onTap: () => context.pushNamed(RouteNames.profile),
+            ),
             DrawerItem(
               icon: Icons.analytics_rounded,
               label: 'Analytics',

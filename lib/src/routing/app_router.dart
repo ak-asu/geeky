@@ -14,6 +14,11 @@ import '../features/notes/presentation/screens/note_detail_screen.dart';
 import '../features/notes/presentation/screens/notes_list_screen.dart';
 import '../features/notes/presentation/screens/upload_media_screen.dart';
 import '../features/onboarding/presentation/screens/feature_showcase_screen.dart';
+import '../features/search/presentation/screens/search_screen.dart';
+import '../features/rag_query/presentation/screens/rag_query_screen.dart';
+import '../features/analytics/presentation/screens/analytics_dashboard_screen.dart';
+import '../features/profile/presentation/screens/profile_screen.dart';
+import '../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../features/onboarding/presentation/screens/interest_selection_screen.dart';
 import '../features/knowledge_graph/presentation/screens/knowledge_graph_screen.dart';
 import '../features/modules/domain/module_entity.dart';
@@ -70,7 +75,7 @@ GoRouter appRouter(Ref ref) {
             name: RouteNames.search,
             pageBuilder: (context, state) => CustomTransitionPage(
               key: state.pageKey,
-              child: const _PlaceholderScreen('Search'),
+              child: const SearchScreen(),
               transitionsBuilder: _fadeTransition,
             ),
           ),
@@ -201,26 +206,26 @@ GoRouter appRouter(Ref ref) {
       GoRoute(
         path: '/${RouteNames.ragQuery}',
         name: RouteNames.ragQuery,
-        builder: (context, state) => const _PlaceholderScreen('Ask a Question'),
+        builder: (context, state) => const RagQueryScreen(),
       ),
 
       // --- Analytics (premium) ---
       GoRoute(
         path: '/${RouteNames.analytics}',
         name: RouteNames.analytics,
-        builder: (context, state) => const _PlaceholderScreen('Analytics'),
+        builder: (context, state) => const AnalyticsDashboardScreen(),
       ),
 
       // --- Profile ---
       GoRoute(
         path: '/${RouteNames.profile}',
         name: RouteNames.profile,
-        builder: (context, state) => const _PlaceholderScreen('Profile'),
+        builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
         path: '/${RouteNames.editProfile}',
         name: RouteNames.editProfile,
-        builder: (context, state) => const _PlaceholderScreen('Edit Profile'),
+        builder: (context, state) => const EditProfileScreen(),
       ),
 
       // --- Settings ---
