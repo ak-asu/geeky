@@ -15,7 +15,7 @@ Geeky is an AI-driven educational platform transforming multimedia notes into bi
 | Card density | Content-first reader mode (topic tag, title, Markdown body, side rail) |
 | Actions | Side action rail: 2 visible (Done + Bookmark), expand upward for more. Fades to 40% after 3s inactivity |
 | Drawer | Grouped: LEARN (Modules, Graph, Quiz/Review), MANAGE (Notes, Sources, Bookmarks), YOU (Analytics, Settings) |
-| Free/Paid | No login gate. Free = Note feed + client-side. Paid = Shorts + full features. PremiumGate widget + isPremium provider |
+| Free/Paid | No login gate. Feed is data-driven (shorts availability), NOT tier-based. Free users see shorts from free/store modules. Premium = AI pipeline + KG + RAG + Quiz + Analytics + TTS. Feature-triggered paywalls only |
 | Onboarding | Progressive: welcome + interests at start, rest contextually later |
 | Paywall | Bottom sheet with feature preview + pricing |
 | Loading | Shimmer skeletons |
@@ -197,7 +197,7 @@ Each feature folder follows: `data/` (repository + DTOs) → `domain/` (Freezed 
 
 **1.11 — Home Screen Shell**
 - `home_screen.dart`: GeekyScaffold + drawer + AdaptiveFeedScreen body
-- `adaptive_feed_screen.dart`: PremiumGate → ShortsFeedScreen (paid) or NoteFeedScreen (free)
+- `adaptive_feed_screen.dart`: Data-driven feed — watches `allShortsProvider`. If shorts exist → ShortsFeedScreen, else → NoteFeedScreen (fallback). No PremiumGate on the feed
 
 **1.12 — Mock Data Fixtures**
 - Create JSON fixtures in `assets/mock/`: shorts (25), modules (5), notes (15), concepts (30), relationships (50), quiz data, user profile, store modules (5), achievements (10)
@@ -256,21 +256,21 @@ Each feature folder follows: `data/` (repository + DTOs) → `domain/` (Freezed 
 
 ### Steps
 
-**3.1 — Shorts Feed** (premium)
+**3.1 — Shorts Feed** (accessible to all users with shorts)
 - `shorts_repository.dart`: Drift CRUD
-- `shorts_feed_screen.dart`: HorizontalCardFeed<ShortEntity>
+- `shorts_feed_screen.dart`: HorizontalCardFeed<ShortEntity>, supports filtered view via `ShortsFeedParams` (module-scoped or full feed)
 - `short_card.dart`: Content-first with Markdown rendering
-- `short_action_rail.dart`: Done, Bookmark + expand (Share, Dive Deeper, Go Up, Related, Feedback, TTS)
-- `navigation_options.dart`: KG navigation chips
-- `exploration_prompts_list.dart`: Expandable follow-up questions
+- `short_action_rail.dart`: Done, Bookmark + expand (Share, Dive Deeper, Explore Further, Related, Feedback, TTS, Source)
+- `short_source_sheet.dart`: Modal bottom sheet showing provenance — source notes (from `citations`) + module membership. Navigates to note detail or module detail on tap
 
-**3.2 — AdaptiveFeed update**: Wire PremiumGate to switch Note ↔ Shorts feed
+**3.2 — AdaptiveFeed update**: Data-driven — watch shorts availability, NOT tier. Free users with store module shorts see ShortsFeedScreen
 
 **3.3 — Modules**
 - `modules_list_screen.dart`: Grid of module cards with progress
-- `module_detail_screen.dart`: Module info + shorts list with checkmarks
-- `create_module_screen.dart`: Name, description, topic select
+- `module_detail_screen.dart`: Module info + shorts list with checkmarks, opens module-scoped ShortsFeed
+- `create_module_screen.dart`: Name, description, topic select. Auto-populates `shortIds` by topic matching (case-insensitive overlap). Shows "X shorts matched" preview
 - `module_card.dart`, `module_progress_bar.dart`
+- `ModuleEntity.isFree`: Boolean field for paid/free gating. Free modules accessible to all users
 
 **3.4 — Knowledge Graph** (premium)
 - `kg_repository.dart`: Reads concepts + relationships from Drift
@@ -348,10 +348,32 @@ Each feature folder follows: `data/` (repository + DTOs) → `domain/` (Freezed 
 
 ## Free/Paid Gating Architecture
 
-Three layers:
+**Core principle**: AI processing is the premium value, not content access. Shorts from free/store modules are visible to all users.
+
+**Feed behaviour**: Home feed is data-driven. `AdaptiveFeed` watches `allShortsProvider` — if shorts exist → ShortsFeedScreen, if zero shorts → NoteFeedScreen (fallback). Feed decision is based on data availability, never subscription tier.
+
+**Content model**: Notes (user-created, always free) → Chunks (AI) → Shorts (AI-generated). Shorts have `citations` (source note IDs). Modules have `shortIds` (collection of shorts). Many-to-many relationship. Modules shared in store contain shorts only (not source notes).
+
+**What is premium-gated** (feature-triggered paywall via route guard + PremiumGate widget):
+- Knowledge Graph visualization
+- RAG / Knowledge Query
+- Quiz & Spaced Review
+- TTS
+- Adaptive learning paths (backend recommendation)
+- Analytics (full charts — basic streak/counts stay free)
+- AI pipeline processing (notes → shorts generation)
+
+**What is NOT gated**:
+- Shorts feed (if user has shorts from any source — free modules, store downloads)
+- Module browsing (free modules accessible to all)
+- Notes (always free)
+- Bookmarks, basic search (keyword)
+- Module Store browsing (with free tier limits: 3 downloads)
+
+**Three gating layers**:
 1. **`PremiumGate` widget**: Wraps premium UI → shows child (premium) or fallback/locked card (free)
 2. **`isPremiumProvider`**: Single source of truth computed from SubscriptionNotifier
-3. **Route-level `premiumGuard`**: GoRouter redirect for entirely premium routes
+3. **Route-level `premiumGuard`**: GoRouter redirect for premium routes (knowledgeGraph, ragQuery, analytics, quiz, spacedReview)
 
 Free tier limits enforced via `FreeTierLimits` constants checked in repository methods.
 
@@ -362,7 +384,7 @@ Free tier limits enforced via `FreeTierLimits` constants checked in repository m
 After each phase:
 1. **Phase 1**: App launches → shows splash → navigates to login → home screen renders with drawer, theme toggle works in settings, shimmer shows during loading
 2. **Phase 2**: Login → onboarding (interests) → note feed with swipeable cards → done/skip/bookmark work → notes list shows all notes → create text note works
-3. **Phase 3**: Toggle premium → shorts feed appears → modules list with progress → KG tree visualization renders → flashcard quiz works with self-grading
+3. **Phase 3**: Shorts feed appears if shorts exist (data-driven, not tier-based) → free user with store shorts sees shorts feed → modules list with progress → module detail opens scoped shorts feed → create module auto-matches shorts by topic → Source button shows citations + module membership → KG tree visualization renders (premium-gated) → flashcard quiz works with self-grading (premium-gated)
 4. **Phase 4**: Search overlay finds shorts by keyword → RAG query shows mock answer with citations → analytics dashboard shows streak + charts → profile shows radar chart
 5. **Phase 5**: All drawer links work → bookmarks/sources/settings/store/notifications all render → transitions are smooth → offline banner appears when disconnected
 

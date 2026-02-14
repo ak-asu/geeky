@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/extensions/datetime_extensions.dart';
+import '../../../../core/extensions/string_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/markdown_renderer.dart';
@@ -52,8 +54,8 @@ class NoteCard extends StatelessWidget {
   Widget _buildContent(BuildContext context) {
     final body = note.content ?? note.extractedText ?? '';
     final hasTitle = note.title != null && note.title!.isNotEmpty;
-    final noteType = _formatType(note.type);
-    final dateLabel = _formatDate(note.createdAt);
+    final noteType = formatNoteType(note.type);
+    final dateLabel = note.createdAt.formatDate;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(
@@ -158,35 +160,5 @@ class NoteCard extends StatelessWidget {
           ),
       ],
     );
-  }
-
-  String _formatType(String type) {
-    return switch (type) {
-      'text' => 'Text Note',
-      'url' => 'Web Link',
-      'pdf' => 'PDF',
-      'image' => 'Image',
-      'audio' => 'Audio',
-      'video' => 'Video',
-      _ => type[0].toUpperCase() + type.substring(1),
-    };
-  }
-
-  String _formatDate(DateTime dateTime) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${months[dateTime.month - 1]} ${dateTime.day}, ${dateTime.year}';
   }
 }

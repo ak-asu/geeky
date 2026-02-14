@@ -129,7 +129,7 @@ GoRouter appRouter(Ref ref) {
         builder: (context, state) => const UploadMediaScreen(),
       ),
 
-      // --- Shorts (premium) ---
+      // --- Shorts (module-scoped or filtered view) ---
       GoRoute(
         path: '/${RouteNames.shortsFeed}',
         name: RouteNames.shortsFeed,

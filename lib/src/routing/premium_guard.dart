@@ -15,9 +15,14 @@ String? checkPremiumAccess(Ref ref, String matchedLocation) {
 }
 
 /// Set of route paths that require premium access.
+///
+/// Note: shortsFeed is NOT gated — free users can view shorts from
+/// free store modules. Premium gates features (KG, RAG, analytics),
+/// not content access.
 const premiumRoutes = {
-  '/${RouteNames.shortsFeed}',
   '/${RouteNames.knowledgeGraph}',
   '/${RouteNames.ragQuery}',
   '/${RouteNames.analytics}',
+  '/${RouteNames.quiz}',
+  '/${RouteNames.spacedReview}',
 };

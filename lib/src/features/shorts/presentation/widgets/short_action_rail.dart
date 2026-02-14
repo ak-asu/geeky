@@ -16,6 +16,7 @@ class ShortActionRail extends StatelessWidget {
     this.onFeedback,
     this.onTts,
     this.onExploreFurther,
+    this.onSource,
   });
 
   final GlobalKey<SideActionRailState>? sideRailKey;
@@ -29,6 +30,7 @@ class ShortActionRail extends StatelessWidget {
   final VoidCallback? onFeedback;
   final VoidCallback? onTts;
   final VoidCallback? onExploreFurther;
+  final VoidCallback? onSource;
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +90,12 @@ class ShortActionRail extends StatelessWidget {
             icon: Icons.volume_up_rounded,
             label: 'Listen',
             onTap: onTts!,
+          ),
+        if (onSource != null)
+          RailAction(
+            icon: Icons.info_outline_rounded,
+            label: 'Source',
+            onTap: onSource!,
           ),
       ],
     );

@@ -8,6 +8,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/module_entity.dart';
 import '../../providers.dart';
+import '../../../shorts/domain/short_entity.dart';
+import '../../../shorts/providers.dart';
 
 class CreateModuleScreen extends ConsumerStatefulWidget {
   const CreateModuleScreen({super.key});
@@ -44,12 +46,28 @@ class _CreateModuleScreenState extends ConsumerState<CreateModuleScreen> {
     super.dispose();
   }
 
+  /// Finds shorts whose topics overlap with the selected module topics.
+  List<String> _matchShortsByTopics(List<ShortEntity> allShorts) {
+    if (_selectedTopics.isEmpty) return [];
+    final lowerTopics = _selectedTopics.map((t) => t.toLowerCase()).toSet();
+    return allShorts
+        .where(
+          (s) => s.topics.any((t) => lowerTopics.contains(t.toLowerCase())),
+        )
+        .map((s) => s.id)
+        .toList();
+  }
+
   Future<void> _save() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
       context.showSnackBar('Please enter a module name');
       return;
     }
+
+    // Auto-populate shortIds from topic-matched shorts
+    final allShorts = ref.read(allShortsProvider).value ?? <ShortEntity>[];
+    final matchedIds = _matchShortsByTopics(allShorts);
 
     final now = DateTime.now();
     final module = ModuleEntity(
@@ -60,6 +78,8 @@ class _CreateModuleScreenState extends ConsumerState<CreateModuleScreen> {
           ? _descriptionController.text.trim()
           : null,
       topics: _selectedTopics.toList(),
+      shortIds: matchedIds,
+      totalShorts: matchedIds.length,
       createdAt: now,
       updatedAt: now,
     );
@@ -146,6 +166,49 @@ class _CreateModuleScreenState extends ConsumerState<CreateModuleScreen> {
                 checkmarkColor: AppColors.primary,
               );
             }).toList(),
+          ),
+
+          // Matched shorts preview
+          if (_selectedTopics.isNotEmpty) ...[
+            AppSpacing.gapV16,
+            _buildMatchPreview(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMatchPreview() {
+    final allShorts = ref.watch(allShortsProvider).value ?? <ShortEntity>[];
+    final matchedIds = _matchShortsByTopics(allShorts);
+    final count = matchedIds.length;
+
+    return Container(
+      padding: AppSpacing.paddingV8H16,
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.auto_stories_rounded,
+            size: 16,
+            color: count > 0
+                ? AppColors.primary
+                : context.colorScheme.onSurfaceVariant,
+          ),
+          AppSpacing.gapH8,
+          Text(
+            count > 0
+                ? '$count short${count == 1 ? '' : 's'} matched'
+                : 'No shorts match selected topics',
+            style: context.textTheme.bodySmall?.copyWith(
+              color: count > 0
+                  ? AppColors.primary
+                  : context.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),

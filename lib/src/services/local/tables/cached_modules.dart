@@ -13,6 +13,7 @@ class CachedModules extends Table {
   IntColumn get currentPosition => integer().withDefault(const Constant(0))();
   RealColumn get estimatedMinutesRemaining =>
       real().withDefault(const Constant(0))();
+  BoolColumn get isFree => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get cachedAt => dateTime()();

@@ -11,6 +11,7 @@ import '../../../notes/data/interaction_notifier.dart';
 import '../../domain/short_entity.dart';
 import '../../providers.dart';
 import '../widgets/short_card.dart';
+import '../widgets/short_source_sheet.dart';
 
 /// Parameters passed via route extra for filtered shorts feed.
 class ShortsFeedParams {
@@ -140,6 +141,7 @@ class _ShortsFeedBody extends ConsumerWidget {
           onExploreFurther: short.prompts.isNotEmpty
               ? () => _showExploreSheet(context, short)
               : null,
+          onSource: () => ShortSourceSheet.show(context, short),
         );
       },
     );

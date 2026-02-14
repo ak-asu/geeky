@@ -17,6 +17,7 @@ abstract class ModuleEntity with _$ModuleEntity {
     @Default(0) int totalShorts,
     @Default(0) int currentPosition,
     @Default(0) double estimatedMinutesRemaining,
+    @Default(false) bool isFree,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _ModuleEntity;

@@ -125,6 +125,7 @@ class MockDataService {
             estimatedMinutesRemaining: Value(
               (map['estimated_minutes_remaining'] as num?)?.toDouble() ?? 0,
             ),
+            isFree: Value(map['is_free'] as bool? ?? false),
             createdAt:
                 DateTime.tryParse(map['created_at'] as String? ?? '') ?? now,
             updatedAt:

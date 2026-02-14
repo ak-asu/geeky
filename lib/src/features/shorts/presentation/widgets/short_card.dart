@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/extensions/datetime_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/markdown_renderer.dart';
@@ -23,6 +24,7 @@ class ShortCard extends StatelessWidget {
     this.onFeedback,
     this.onTts,
     this.onExploreFurther,
+    this.onSource,
     this.onConceptTap,
   });
 
@@ -37,6 +39,7 @@ class ShortCard extends StatelessWidget {
   final VoidCallback? onFeedback;
   final VoidCallback? onTts;
   final VoidCallback? onExploreFurther;
+  final VoidCallback? onSource;
   final ValueChanged<String>? onConceptTap;
 
   @override
@@ -67,6 +70,7 @@ class ShortCard extends StatelessWidget {
             onFeedback: onFeedback,
             onTts: onTts,
             onExploreFurther: onExploreFurther,
+            onSource: onSource,
           ),
         ),
       ],
@@ -75,7 +79,7 @@ class ShortCard extends StatelessWidget {
 
   Widget _buildContent(BuildContext context) {
     final primaryTopic = short.topics.isNotEmpty ? short.topics.first : null;
-    final dateLabel = _formatDate(short.createdAt);
+    final dateLabel = short.createdAt.formatDate;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(
@@ -138,23 +142,5 @@ class ShortCard extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _formatDate(DateTime dateTime) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${months[dateTime.month - 1]} ${dateTime.day}, ${dateTime.year}';
   }
 }

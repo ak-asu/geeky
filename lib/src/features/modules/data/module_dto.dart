@@ -19,6 +19,7 @@ abstract final class ModuleDto {
       totalShorts: row.totalShorts,
       currentPosition: row.currentPosition,
       estimatedMinutesRemaining: row.estimatedMinutesRemaining,
+      isFree: row.isFree,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     );
@@ -38,6 +39,7 @@ abstract final class ModuleDto {
       totalShorts: Value(entity.totalShorts),
       currentPosition: Value(entity.currentPosition),
       estimatedMinutesRemaining: Value(entity.estimatedMinutesRemaining),
+      isFree: Value(entity.isFree),
       createdAt: Value(entity.createdAt),
       updatedAt: Value(entity.updatedAt),
       cachedAt: Value(now),

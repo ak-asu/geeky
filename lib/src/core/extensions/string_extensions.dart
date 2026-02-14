@@ -1,3 +1,16 @@
+/// Formats note type codes into display labels.
+String formatNoteType(String type) {
+  return switch (type) {
+    'text' => 'Text Note',
+    'url' => 'Web Link',
+    'pdf' => 'PDF',
+    'image' => 'Image',
+    'audio' => 'Audio',
+    'video' => 'Video',
+    _ => type.capitalized,
+  };
+}
+
 extension StringExtensions on String {
   String get capitalized {
     if (isEmpty) return this;
