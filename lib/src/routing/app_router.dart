@@ -15,6 +15,13 @@ import '../features/notes/presentation/screens/notes_list_screen.dart';
 import '../features/notes/presentation/screens/upload_media_screen.dart';
 import '../features/onboarding/presentation/screens/feature_showcase_screen.dart';
 import '../features/onboarding/presentation/screens/interest_selection_screen.dart';
+import '../features/knowledge_graph/presentation/screens/knowledge_graph_screen.dart';
+import '../features/modules/domain/module_entity.dart';
+import '../features/modules/presentation/screens/create_module_screen.dart';
+import '../features/modules/presentation/screens/module_detail_screen.dart';
+import '../features/modules/presentation/screens/modules_list_screen.dart';
+import '../features/quiz/presentation/screens/quiz_screen.dart';
+import '../features/quiz/presentation/screens/spaced_review_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import 'premium_guard.dart';
 import 'route_names.dart';
@@ -132,37 +139,42 @@ GoRouter appRouter(Ref ref) {
       GoRoute(
         path: '/${RouteNames.modulesList}',
         name: RouteNames.modulesList,
-        builder: (context, state) => const _PlaceholderScreen('Modules'),
+        builder: (context, state) => const ModulesListScreen(),
       ),
       GoRoute(
         path: '/${RouteNames.moduleDetail}',
         name: RouteNames.moduleDetail,
-        builder: (context, state) => const _PlaceholderScreen('Module Detail'),
+        builder: (context, state) {
+          final module = state.extra as ModuleEntity?;
+          if (module == null) {
+            return const _PlaceholderScreen('Module not found');
+          }
+          return ModuleDetailScreen(module: module);
+        },
       ),
       GoRoute(
         path: '/${RouteNames.createModule}',
         name: RouteNames.createModule,
-        builder: (context, state) => const _PlaceholderScreen('Create Module'),
+        builder: (context, state) => const CreateModuleScreen(),
       ),
 
       // --- Knowledge Graph (premium) ---
       GoRoute(
         path: '/${RouteNames.knowledgeGraph}',
         name: RouteNames.knowledgeGraph,
-        builder: (context, state) =>
-            const _PlaceholderScreen('Knowledge Graph'),
+        builder: (context, state) => const KnowledgeGraphScreen(),
       ),
 
       // --- Quiz ---
       GoRoute(
         path: '/${RouteNames.quiz}',
         name: RouteNames.quiz,
-        builder: (context, state) => const _PlaceholderScreen('Quiz'),
+        builder: (context, state) => const QuizScreen(),
       ),
       GoRoute(
         path: '/${RouteNames.spacedReview}',
         name: RouteNames.spacedReview,
-        builder: (context, state) => const _PlaceholderScreen('Spaced Review'),
+        builder: (context, state) => const SpacedReviewScreen(),
       ),
 
       // --- RAG (premium) ---

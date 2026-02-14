@@ -22,6 +22,7 @@ import 'daos/sync_dao.dart';
 import 'daos/note_feed_dao.dart';
 import 'daos/bookmarks_dao.dart';
 import 'daos/quiz_dao.dart';
+import 'daos/kg_dao.dart';
 
 part 'database.g.dart';
 
@@ -46,6 +47,7 @@ part 'database.g.dart';
     NoteFeedDao,
     BookmarksDao,
     QuizDao,
+    KgDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {

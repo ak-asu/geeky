@@ -57,6 +57,7 @@ dev_dependencies:
   # Code generation
   build_runner: ^2.11.1
   riverpod_generator: ^4.0.0+1
+  flutter_launcher_icons:
   freezed: ^3.2.3
   json_serializable: ^6.11.2
   drift_dev: ^2.31.0
