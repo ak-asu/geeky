@@ -67,7 +67,7 @@ class NoteFeedScreen extends ConsumerWidget {
           isDone: isDone,
           isBookmarked: isBookmarked,
           onDone: () {
-            ref.read(noteFeedProvider.notifier).markRead(note.id);
+            ref.read(noteFeedProvider.notifier).toggleRead(note.id);
             ref
                 .read(interactionProvider.notifier)
                 .recordDone(articleId: note.id);

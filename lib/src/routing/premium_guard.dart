@@ -16,6 +16,7 @@ String? checkPremiumAccess(Ref ref, String matchedLocation) {
 
 /// Set of route paths that require premium access.
 const premiumRoutes = {
+  '/${RouteNames.shortsFeed}',
   '/${RouteNames.knowledgeGraph}',
   '/${RouteNames.ragQuery}',
   '/${RouteNames.analytics}',

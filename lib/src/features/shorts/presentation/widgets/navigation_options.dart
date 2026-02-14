@@ -37,9 +37,7 @@ class NavigationOptions extends StatelessWidget {
               ),
             ),
             backgroundColor: AppColors.primary.withValues(alpha: 0.08),
-            side: BorderSide(
-              color: AppColors.primary.withValues(alpha: 0.2),
-            ),
+            side: BorderSide(color: AppColors.primary.withValues(alpha: 0.2)),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
             ),

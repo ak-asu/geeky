@@ -18,8 +18,7 @@ class KgDao extends DatabaseAccessor<AppDatabase> with _$KgDaoMixin {
       select(cachedConcepts).watch();
 
   Future<CachedConcept?> getConceptById(String id) =>
-      (select(cachedConcepts)..where((t) => t.id.equals(id)))
-          .getSingleOrNull();
+      (select(cachedConcepts)..where((t) => t.id.equals(id))).getSingleOrNull();
 
   Future<void> insertConcept(CachedConceptsCompanion entry) =>
       into(cachedConcepts).insertOnConflictUpdate(entry);

@@ -71,8 +71,9 @@ class _KnowledgeGraphScreenState extends ConsumerState<KnowledgeGraphScreen> {
                 filterStatus: _filterStatus,
                 onNodeTap: (node) {
                   setState(() {
-                    _selectedNodeId =
-                        _selectedNodeId == node.id ? null : node.id;
+                    _selectedNodeId = _selectedNodeId == node.id
+                        ? null
+                        : node.id;
                   });
                 },
               ),
@@ -124,8 +125,9 @@ class _KnowledgeGraphScreenState extends ConsumerState<KnowledgeGraphScreen> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.s8),
       decoration: BoxDecoration(
-        color:
-            context.colorScheme.surfaceContainerHighest.withValues(alpha: 0.9),
+        color: context.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.9,
+        ),
         borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
       ),
       child: Column(
@@ -153,7 +155,7 @@ class _KnowledgeGraphScreenState extends ConsumerState<KnowledgeGraphScreen> {
           height: 8,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        const SizedBox(width: 6),
+        AppSpacing.gapH4,
         Text(
           label,
           style: context.textTheme.labelSmall?.copyWith(fontSize: 10),

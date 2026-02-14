@@ -18,7 +18,7 @@ abstract final class RouteNames {
   static const String uploadMedia = 'upload-media';
 
   // Shorts (premium)
-  static const String shortDetail = 'short-detail';
+  static const String shortsFeed = 'shorts-feed';
 
   // Modules
   static const String modulesList = 'modules-list';

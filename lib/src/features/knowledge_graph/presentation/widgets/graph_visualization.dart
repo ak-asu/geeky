@@ -62,27 +62,74 @@ class GraphVisualizationState extends State<GraphVisualization> {
         ? widget.nodes.where((n) => n.status == widget.filterStatus).toList()
         : widget.nodes;
 
+    if (filteredNodes.isEmpty) {
+      setState(() => _graph = graph);
+      return;
+    }
+
     // Create graph nodes
     final nodeMap = <String, Node>{};
+    final nodeIds = <String>{};
     for (final graphNode in filteredNodes) {
       final node = Node.Id(graphNode.id);
       nodeMap[graphNode.id] = node;
+      nodeIds.add(graphNode.id);
       graph.addNode(node);
     }
 
-    // Create edges from relationships
+    // Build adjacency list from relationships (only for filtered node IDs)
+    final adjacency = <String, List<String>>{};
     for (final rel in widget.relationships) {
-      final source = nodeMap[rel.sourceId];
-      final target = nodeMap[rel.targetId];
-      if (source != null && target != null) {
-        graph.addEdge(source, target);
+      if (!nodeIds.contains(rel.sourceId) || !nodeIds.contains(rel.targetId)) {
+        continue;
+      }
+      adjacency.putIfAbsent(rel.sourceId, () => []).add(rel.targetId);
+    }
+
+    // BFS spanning tree to eliminate cycles
+    // BuchheimWalkerAlgorithm requires a strict tree structure
+    final visited = <String>{};
+    final queue = <String>[];
+
+    // Start from nodes that have no incoming edges (roots), or first node
+    final hasIncoming = <String>{};
+    for (final rel in widget.relationships) {
+      if (nodeIds.contains(rel.targetId) && nodeIds.contains(rel.sourceId)) {
+        hasIncoming.add(rel.targetId);
+      }
+    }
+    final roots = nodeIds.where((id) => !hasIncoming.contains(id)).toList();
+    if (roots.isEmpty && nodeIds.isNotEmpty) {
+      roots.add(nodeIds.first);
+    }
+
+    // BFS from each root to build spanning tree edges
+    for (final root in roots) {
+      if (visited.contains(root)) continue;
+      visited.add(root);
+      queue.add(root);
+
+      while (queue.isNotEmpty) {
+        final current = queue.removeAt(0);
+        final children = adjacency[current] ?? [];
+        for (final child in children) {
+          if (visited.contains(child)) continue;
+          visited.add(child);
+          queue.add(child);
+          // Add only tree edge (no cycles)
+          graph.addEdge(nodeMap[current]!, nodeMap[child]!);
+        }
       }
     }
 
-    // Ensure nodes without edges are still in the graph
-    for (final graphNode in filteredNodes) {
-      if (!nodeMap.containsKey(graphNode.id)) continue;
-      // Node is already added above
+    // Connect any remaining disconnected nodes to the first root
+    // so the tree algorithm has a single connected component
+    final firstRoot = roots.first;
+    for (final id in nodeIds) {
+      if (!visited.contains(id)) {
+        visited.add(id);
+        graph.addEdge(nodeMap[firstRoot]!, nodeMap[id]!);
+      }
     }
 
     _builder = BuchheimWalkerConfiguration()
@@ -115,9 +162,7 @@ class GraphVisualizationState extends State<GraphVisualization> {
   @override
   Widget build(BuildContext context) {
     if (_graph.nodeCount() == 0) {
-      return const Center(
-        child: Text('No concepts to display'),
-      );
+      return const Center(child: Text('No concepts to display'));
     }
 
     return InteractiveViewer(

@@ -90,9 +90,7 @@ class _GradeButton extends StatelessWidget {
                 Text(
                   label,
                   style: context.textTheme.labelMedium?.copyWith(
-                    color: onTap != null
-                        ? color
-                        : color.withValues(alpha: 0.4),
+                    color: onTap != null ? color : color.withValues(alpha: 0.4),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -100,8 +98,9 @@ class _GradeButton extends StatelessWidget {
                 Text(
                   subtitle,
                   style: context.textTheme.labelSmall?.copyWith(
-                    color: context.colorScheme.onSurfaceVariant
-                        .withValues(alpha: onTap != null ? 0.7 : 0.3),
+                    color: context.colorScheme.onSurfaceVariant.withValues(
+                      alpha: onTap != null ? 0.7 : 0.3,
+                    ),
                     fontSize: 10,
                   ),
                 ),

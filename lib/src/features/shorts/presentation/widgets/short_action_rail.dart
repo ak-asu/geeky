@@ -5,32 +5,35 @@ import '../../../../core/widgets/side_action_rail.dart';
 class ShortActionRail extends StatelessWidget {
   const ShortActionRail({
     super.key,
+    this.sideRailKey,
     required this.isDone,
     required this.isBookmarked,
     required this.onDone,
     required this.onBookmark,
     this.onShare,
     this.onDiveDeeper,
-    this.onGoUp,
     this.onRelated,
     this.onFeedback,
     this.onTts,
+    this.onExploreFurther,
   });
 
+  final GlobalKey<SideActionRailState>? sideRailKey;
   final bool isDone;
   final bool isBookmarked;
   final VoidCallback onDone;
   final VoidCallback onBookmark;
   final VoidCallback? onShare;
   final VoidCallback? onDiveDeeper;
-  final VoidCallback? onGoUp;
   final VoidCallback? onRelated;
   final VoidCallback? onFeedback;
   final VoidCallback? onTts;
+  final VoidCallback? onExploreFurther;
 
   @override
   Widget build(BuildContext context) {
     return SideActionRail(
+      key: sideRailKey,
       primaryActions: [
         RailAction(
           icon: isDone ? Icons.check_circle_rounded : Icons.check_rounded,
@@ -62,11 +65,11 @@ class ShortActionRail extends StatelessWidget {
             label: 'Deeper',
             onTap: onDiveDeeper!,
           ),
-        if (onGoUp != null)
+        if (onExploreFurther != null)
           RailAction(
-            icon: Icons.arrow_upward_rounded,
-            label: 'Go Up',
-            onTap: onGoUp!,
+            icon: Icons.explore_rounded,
+            label: 'Explore',
+            onTap: onExploreFurther!,
           ),
         if (onRelated != null)
           RailAction(

@@ -101,11 +101,12 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
           Expanded(
             child: FlashcardWidget(
               key: ValueKey(card.articleId),
-              question:
-                  'What do you remember about this topic?',
+              question: 'What do you remember about this topic?',
               answer:
                   'Article: ${card.articleId}\n\nStability: ${card.stability.toStringAsFixed(1)}\nDifficulty: ${card.difficulty.toStringAsFixed(2)}\nReps: ${card.reps}',
-              topic: card.articleId.replaceAll('-', ' ').replaceAll('short ', ''),
+              topic: card.articleId
+                  .replaceAll('-', ' ')
+                  .replaceAll('short ', ''),
               onFlipped: () {
                 setState(() => _revealed = true);
               },

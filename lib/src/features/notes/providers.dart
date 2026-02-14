@@ -27,13 +27,16 @@ class NoteFeed extends _$NoteFeed {
   @override
   Future<NoteFeedState> build() => _repo.getFeedState();
 
-  Future<void> markRead(String noteId) async {
+  Future<void> toggleRead(String noteId) async {
     final current = state.value ?? const NoteFeedState();
-    if (current.readNoteIds.contains(noteId)) return;
+    final List<String> updatedIds;
+    if (current.readNoteIds.contains(noteId)) {
+      updatedIds = current.readNoteIds.where((id) => id != noteId).toList();
+    } else {
+      updatedIds = [...current.readNoteIds, noteId];
+    }
 
-    final updated = current.copyWith(
-      readNoteIds: [...current.readNoteIds, noteId],
-    );
+    final updated = current.copyWith(readNoteIds: updatedIds);
     await _repo.saveFeedState(updated);
     state = AsyncData(updated);
   }

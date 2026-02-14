@@ -29,16 +29,21 @@ class NoteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sideRailKey = GlobalKey<SideActionRailState>();
+
     return Stack(
       children: [
-        // Content area — scrollable, full width (rail overlays on top)
-        _buildContent(context),
+        // Content area — tapping collapses the side rail
+        GestureDetector(
+          onTap: () => sideRailKey.currentState?.collapse(),
+          child: _buildContent(context),
+        ),
 
         // Side action rail — overlay at bottom-right
         Positioned(
           right: AppSpacing.s8,
           bottom: AppSpacing.s16,
-          child: _buildRail(),
+          child: _buildRail(sideRailKey),
         ),
       ],
     );
@@ -48,8 +53,9 @@ class NoteCard extends StatelessWidget {
     final body = note.content ?? note.extractedText ?? '';
     final hasTitle = note.title != null && note.title!.isNotEmpty;
     final noteType = _formatType(note.type);
+    final dateLabel = _formatDate(note.createdAt);
 
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.s16,
         vertical: AppSpacing.s16,
@@ -75,7 +81,7 @@ class NoteCard extends StatelessWidget {
               ),
             ),
           ),
-          AppSpacing.gapV12,
+          AppSpacing.gapV8,
 
           // Title
           if (hasTitle) ...[
@@ -84,84 +90,41 @@ class NoteCard extends StatelessWidget {
               style: context.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
-            AppSpacing.gapV12,
           ],
 
-          // Body — scrollable markdown
-          Expanded(
-            child: body.isNotEmpty
-                ? MarkdownRenderer(data: body)
-                : Center(
-                    child: Text(
-                      'No content yet',
-                      style: context.textTheme.bodyMedium?.copyWith(
-                        color: context.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
+          // Date
+          Text(
+            dateLabel,
+            style: context.textTheme.labelSmall?.copyWith(
+              color: context.colorScheme.onSurfaceVariant,
+            ),
           ),
-
-          // Footer metadata
           AppSpacing.gapV8,
-          _buildFooter(context),
+
+          // Body — markdown content (scrolls with header)
+          if (body.isNotEmpty)
+            MarkdownRenderer(data: body, shrinkWrap: true)
+          else
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.s32),
+                child: Text(
+                  'No content yet',
+                  style: context.textTheme.bodyMedium?.copyWith(
+                    color: context.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildFooter(BuildContext context) {
-    final wordLabel = note.wordCount > 0 ? '${note.wordCount} words' : '';
-    final timeAgo = _formatTimeAgo(note.createdAt);
-
-    return Row(
-      children: [
-        if (wordLabel.isNotEmpty) ...[
-          Text(
-            wordLabel,
-            style: context.textTheme.labelSmall?.copyWith(
-              color: context.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
-            child: Text(
-              '\u00B7',
-              style: context.textTheme.labelSmall?.copyWith(
-                color: context.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-        ],
-        Text(
-          timeAgo,
-          style: context.textTheme.labelSmall?.copyWith(
-            color: context.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        if (note.processed) ...[
-          const Spacer(),
-          Icon(
-            Icons.check_circle_rounded,
-            size: 14,
-            color: AppColors.success.withValues(alpha: 0.7),
-          ),
-          AppSpacing.gapH4,
-          Text(
-            'Processed',
-            style: context.textTheme.labelSmall?.copyWith(
-              color: AppColors.success.withValues(alpha: 0.7),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildRail() {
+  Widget _buildRail(GlobalKey<SideActionRailState> railKey) {
     return SideActionRail(
+      key: railKey,
       primaryActions: [
         RailAction(
           icon: isDone ? Icons.check_circle_rounded : Icons.check_rounded,
@@ -209,12 +172,21 @@ class NoteCard extends StatelessWidget {
     };
   }
 
-  String _formatTimeAgo(DateTime dateTime) {
-    final diff = DateTime.now().difference(dateTime);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
-    return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+  String _formatDate(DateTime dateTime) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${months[dateTime.month - 1]} ${dateTime.day}, ${dateTime.year}';
   }
 }

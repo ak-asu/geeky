@@ -39,10 +39,10 @@ class SideActionRail extends StatefulWidget {
   final List<RailAction> expandedActions;
 
   @override
-  State<SideActionRail> createState() => _SideActionRailState();
+  SideActionRailState createState() => SideActionRailState();
 }
 
-class _SideActionRailState extends State<SideActionRail> {
+class SideActionRailState extends State<SideActionRail> {
   bool _expanded = false;
   double _opacity = 1.0;
   Timer? _fadeTimer;
@@ -74,6 +74,13 @@ class _SideActionRailState extends State<SideActionRail> {
   void _toggleExpand() {
     _onInteraction();
     setState(() => _expanded = !_expanded);
+  }
+
+  /// Collapse the expanded actions from outside (e.g. tapping on content area).
+  void collapse() {
+    if (_expanded) {
+      setState(() => _expanded = false);
+    }
   }
 
   @override

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../extensions/context_extensions.dart';
 import '../theme/app_spacing.dart';
 
 class GeekyScaffold extends StatelessWidget {
@@ -32,8 +31,10 @@ class GeekyScaffold extends StatelessWidget {
                 SliverAppBar(
                   floating: true,
                   snap: true,
-                  backgroundColor: context.colorScheme.surface,
+                  backgroundColor: Colors.transparent,
                   surfaceTintColor: Colors.transparent,
+                  elevation: 0,
+                  scrolledUnderElevation: 0,
                   leading: Builder(
                     builder: (ctx) => IconButton(
                       icon: const Icon(Icons.menu_rounded),
@@ -43,9 +44,8 @@ class GeekyScaffold extends StatelessWidget {
                   title: title != null
                       ? Text(
                           title!,
-                          style: context.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
                         )
                       : null,
                   centerTitle: true,

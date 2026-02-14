@@ -23,6 +23,7 @@ import '../features/modules/presentation/screens/modules_list_screen.dart';
 import '../features/quiz/presentation/screens/quiz_screen.dart';
 import '../features/quiz/presentation/screens/spaced_review_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
+import '../features/shorts/presentation/screens/shorts_feed_screen.dart';
 import 'premium_guard.dart';
 import 'route_names.dart';
 
@@ -130,11 +131,30 @@ GoRouter appRouter(Ref ref) {
 
       // --- Shorts (premium) ---
       GoRoute(
-        path: '/${RouteNames.shortDetail}',
-        name: RouteNames.shortDetail,
-        builder: (context, state) => const _PlaceholderScreen('Short Detail'),
+        path: '/${RouteNames.shortsFeed}',
+        name: RouteNames.shortsFeed,
+        builder: (context, state) {
+          final params = state.extra as ShortsFeedParams?;
+          return Scaffold(
+            appBar: AppBar(
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              title: params?.title != null
+                  ? Text(
+                      params!.title!,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    )
+                  : null,
+            ),
+            body: ShortsFeedScreen(
+              filterShortIds: params?.filterShortIds,
+              initialIndex: params?.initialIndex ?? 0,
+            ),
+          );
+        },
       ),
-
       // --- Modules ---
       GoRoute(
         path: '/${RouteNames.modulesList}',

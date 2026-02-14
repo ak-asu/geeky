@@ -81,12 +81,7 @@ class _CreateModuleScreenState extends ConsumerState<CreateModuleScreen> {
         centerTitle: true,
         backgroundColor: context.colorScheme.surface,
         surfaceTintColor: Colors.transparent,
-        actions: [
-          TextButton(
-            onPressed: _save,
-            child: const Text('Save'),
-          ),
-        ],
+        actions: [TextButton(onPressed: _save, child: const Text('Save'))],
       ),
       body: ListView(
         padding: AppSpacing.paddingAll16,

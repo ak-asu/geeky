@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../routing/route_names.dart';
 import '../../domain/module_entity.dart';
 import '../../../shorts/providers.dart';
 import '../../../shorts/domain/short_entity.dart';
+import '../../../shorts/presentation/screens/shorts_feed_screen.dart';
 import '../widgets/module_progress_bar.dart';
 
 class ModuleDetailScreen extends ConsumerWidget {
@@ -30,6 +33,19 @@ class ModuleDetailScreen extends ConsumerWidget {
         backgroundColor: context.colorScheme.surface,
         surfaceTintColor: Colors.transparent,
       ),
+      floatingActionButton: module.shortIds.isNotEmpty
+          ? FloatingActionButton.small(
+              onPressed: () => context.pushNamed(
+                RouteNames.shortsFeed,
+                extra: ShortsFeedParams(
+                  filterShortIds: module.shortIds,
+                  title: module.name,
+                ),
+              ),
+              child: const Icon(Icons.play_arrow_rounded),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       body: ListView(
         padding: AppSpacing.paddingAll16,
         children: [
@@ -148,7 +164,7 @@ class ModuleDetailScreen extends ConsumerWidget {
       );
     }
 
-    // Use shorts from the allShorts provider if available, otherwise show IDs
+    // Use shorts from the allShorts provider if available
     final shortsAsync = ref.watch(allShortsProvider);
     final allShorts = shortsAsync.value ?? <ShortEntity>[];
 
@@ -159,9 +175,7 @@ class ModuleDetailScreen extends ConsumerWidget {
         final isDone = doneSet.contains(shortId);
 
         // Find the short entity for this ID
-        final shortEntity = allShorts
-            .where((s) => s.id == shortId)
-            .firstOrNull;
+        final shortEntity = allShorts.where((s) => s.id == shortId).firstOrNull;
         final title = shortEntity?.title ?? 'Short ${index + 1}';
         final summary = shortEntity?.summary ?? '';
 
@@ -177,6 +191,14 @@ class ModuleDetailScreen extends ConsumerWidget {
             ),
           ),
           child: ListTile(
+            onTap: () => context.pushNamed(
+              RouteNames.shortsFeed,
+              extra: ShortsFeedParams(
+                filterShortIds: module.shortIds,
+                initialIndex: index,
+                title: module.name,
+              ),
+            ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.s16,
               vertical: AppSpacing.s4,
@@ -211,9 +233,7 @@ class ModuleDetailScreen extends ConsumerWidget {
               style: context.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w500,
                 decoration: isDone ? TextDecoration.lineThrough : null,
-                color: isDone
-                    ? context.colorScheme.onSurfaceVariant
-                    : null,
+                color: isDone ? context.colorScheme.onSurfaceVariant : null,
               ),
             ),
             subtitle: summary.isNotEmpty
@@ -226,14 +246,13 @@ class ModuleDetailScreen extends ConsumerWidget {
                     ),
                   )
                 : null,
-            trailing: isDone
-                ? null
-                : Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 14,
-                    color: context.colorScheme.onSurfaceVariant
-                        .withValues(alpha: 0.5),
-                  ),
+            trailing: Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: context.colorScheme.onSurfaceVariant.withValues(
+                alpha: 0.5,
+              ),
+            ),
           ),
         );
       }).toList(),

@@ -31,11 +31,7 @@ class QuizSession extends _$QuizSession {
   QuizSessionState build() => const QuizSessionState();
 
   void startSession(List<QuizCardEntity> cards) {
-    state = QuizSessionState(
-      cards: cards,
-      currentIndex: 0,
-      results: [],
-    );
+    state = QuizSessionState(cards: cards, currentIndex: 0, results: []);
   }
 
   void recordGrade(FSRSGrade grade) {
@@ -44,18 +40,12 @@ class QuizSession extends _$QuizSession {
     final currentCard = state.currentCard;
     if (currentCard == null) return;
 
-    final result = QuizResult(
-      card: currentCard,
-      grade: grade,
-    );
+    final result = QuizResult(card: currentCard, grade: grade);
 
     final newResults = [...state.results, result];
     final nextIndex = state.currentIndex + 1;
 
-    state = state.copyWith(
-      currentIndex: nextIndex,
-      results: newResults,
-    );
+    state = state.copyWith(currentIndex: nextIndex, results: newResults);
 
     // Apply the grade via repository
     ref.read(quizRepositoryProvider).gradeCard(currentCard, grade);

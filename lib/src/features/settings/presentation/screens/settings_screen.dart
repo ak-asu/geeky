@@ -36,30 +36,34 @@ class SettingsScreen extends ConsumerWidget {
           _SettingsTile(
             icon: Icons.palette_rounded,
             title: 'Theme',
-            trailing: SegmentedButton<ThemeMode>(
-              segments: const [
-                ButtonSegment(
-                  value: ThemeMode.light,
-                  icon: Icon(Icons.light_mode_rounded, size: 18),
+            trailing: SizedBox(
+              width: 160,
+              child: SegmentedButton<ThemeMode>(
+                showSelectedIcon: false,
+                segments: const [
+                  ButtonSegment(
+                    value: ThemeMode.light,
+                    icon: Icon(Icons.light_mode_rounded, size: 18),
+                  ),
+                  ButtonSegment(
+                    value: ThemeMode.system,
+                    icon: Icon(Icons.contrast_rounded, size: 18),
+                  ),
+                  ButtonSegment(
+                    value: ThemeMode.dark,
+                    icon: Icon(Icons.dark_mode_rounded, size: 18),
+                  ),
+                ],
+                selected: {themeMode},
+                onSelectionChanged: (selected) {
+                  ref
+                      .read(themeModeProvider.notifier)
+                      .setThemeMode(selected.first);
+                },
+                style: const ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                ButtonSegment(
-                  value: ThemeMode.system,
-                  icon: Icon(Icons.contrast_rounded, size: 18),
-                ),
-                ButtonSegment(
-                  value: ThemeMode.dark,
-                  icon: Icon(Icons.dark_mode_rounded, size: 18),
-                ),
-              ],
-              selected: {themeMode},
-              onSelectionChanged: (selected) {
-                ref
-                    .read(themeModeProvider.notifier)
-                    .setThemeMode(selected.first);
-              },
-              style: const ButtonStyle(
-                visualDensity: VisualDensity.compact,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ),
           ),
@@ -68,19 +72,25 @@ class SettingsScreen extends ConsumerWidget {
           _SettingsTile(
             icon: Icons.text_fields_rounded,
             title: 'Font Size',
-            trailing: SegmentedButton<FontSizeOption>(
-              segments: const [
-                ButtonSegment(value: FontSizeOption.small, label: Text('S')),
-                ButtonSegment(value: FontSizeOption.medium, label: Text('M')),
-                ButtonSegment(value: FontSizeOption.large, label: Text('L')),
-              ],
-              selected: {fontSize},
-              onSelectionChanged: (selected) {
-                ref.read(fontSizeProvider.notifier).setFontSize(selected.first);
-              },
-              style: const ButtonStyle(
-                visualDensity: VisualDensity.compact,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            trailing: SizedBox(
+              width: 160,
+              child: SegmentedButton<FontSizeOption>(
+                showSelectedIcon: false,
+                segments: const [
+                  ButtonSegment(value: FontSizeOption.small, label: Text('S')),
+                  ButtonSegment(value: FontSizeOption.medium, label: Text('M')),
+                  ButtonSegment(value: FontSizeOption.large, label: Text('L')),
+                ],
+                selected: {fontSize},
+                onSelectionChanged: (selected) {
+                  ref
+                      .read(fontSizeProvider.notifier)
+                      .setFontSize(selected.first);
+                },
+                style: const ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
               ),
             ),
           ),

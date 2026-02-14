@@ -12,7 +12,14 @@ class GeekyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
+    final fontSize = ref.watch(fontSizeProvider);
     final router = ref.watch(appRouterProvider);
+
+    final scaleFactor = switch (fontSize) {
+      FontSizeOption.small => 0.9,
+      FontSizeOption.medium => 1.0,
+      FontSizeOption.large => 1.15,
+    };
 
     return MaterialApp.router(
       title: 'Geeky',
@@ -22,7 +29,13 @@ class GeekyApp extends ConsumerWidget {
       themeMode: themeMode,
       routerConfig: router,
       builder: (context, child) {
-        return ConnectivityBanner(child: child ?? const SizedBox.shrink());
+        final scaled = MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(scaleFactor)),
+          child: child ?? const SizedBox.shrink(),
+        );
+        return ConnectivityBanner(child: scaled);
       },
     );
   }

@@ -25,6 +25,9 @@ class MarkdownRenderer extends StatelessWidget {
       data: data,
       shrinkWrap: shrinkWrap,
       physics: physics,
+      markdownGenerator: MarkdownGenerator(
+        linesMargin: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
+      ),
       config: MarkdownConfig(
         configs: [
           PConfig(

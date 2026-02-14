@@ -29,8 +29,9 @@ class GraphControls extends StatelessWidget {
         // Zoom controls
         Container(
           decoration: BoxDecoration(
-            color: context.colorScheme.surfaceContainerHighest
-                .withValues(alpha: 0.9),
+            color: context.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.9,
+            ),
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           ),
           child: Column(
@@ -45,15 +46,16 @@ class GraphControls extends StatelessWidget {
               ),
               Divider(
                 height: 1,
-                color: context.colorScheme.outlineVariant.withValues(alpha: 0.3),
+                color: context.colorScheme.outlineVariant.withValues(
+                  alpha: 0.3,
+                ),
               ),
-              _ControlButton(
-                icon: Icons.remove_rounded,
-                onTap: onZoomOut,
-              ),
+              _ControlButton(icon: Icons.remove_rounded, onTap: onZoomOut),
               Divider(
                 height: 1,
-                color: context.colorScheme.outlineVariant.withValues(alpha: 0.3),
+                color: context.colorScheme.outlineVariant.withValues(
+                  alpha: 0.3,
+                ),
               ),
               _ControlButton(
                 icon: Icons.fit_screen_rounded,
@@ -70,17 +72,15 @@ class GraphControls extends StatelessWidget {
         // Filter dropdown
         Container(
           decoration: BoxDecoration(
-            color: context.colorScheme.surfaceContainerHighest
-                .withValues(alpha: 0.9),
+            color: context.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.9,
+            ),
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           ),
           child: PopupMenuButton<NodeStatus?>(
             onSelected: onFilterChanged,
             itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: null,
-                child: Text('All nodes'),
-              ),
+              const PopupMenuItem(value: null, child: Text('All nodes')),
               PopupMenuItem(
                 value: NodeStatus.mastered,
                 child: Row(

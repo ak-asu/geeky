@@ -165,9 +165,7 @@ class _FlashcardWidgetState extends State<FlashcardWidget>
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -181,13 +179,10 @@ class _FlashcardWidgetState extends State<FlashcardWidget>
           Text(
             widget.answer,
             textAlign: TextAlign.center,
-            style: context.textTheme.bodyLarge?.copyWith(
-              height: 1.5,
-            ),
+            style: context.textTheme.bodyLarge?.copyWith(height: 1.5),
           ),
         ],
       ),
     );
   }
 }
-

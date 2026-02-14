@@ -48,7 +48,8 @@ class SpacedReviewScreen extends ConsumerWidget {
             return const GeekyEmptyState(
               icon: Icons.school_rounded,
               title: 'No Review Cards',
-              subtitle: 'Read some shorts first — quiz cards will be generated automatically.',
+              subtitle:
+                  'Read some shorts first — quiz cards will be generated automatically.',
             );
           }
 
@@ -57,8 +58,12 @@ class SpacedReviewScreen extends ConsumerWidget {
             ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
 
           final now = DateTime.now();
-          final dueCards = sorted.where((c) => c.dueDate.isBefore(now)).toList();
-          final upcomingCards = sorted.where((c) => !c.dueDate.isBefore(now)).toList();
+          final dueCards = sorted
+              .where((c) => c.dueDate.isBefore(now))
+              .toList();
+          final upcomingCards = sorted
+              .where((c) => !c.dueDate.isBefore(now))
+              .toList();
 
           return ListView(
             padding: AppSpacing.paddingAll16,
@@ -72,9 +77,7 @@ class SpacedReviewScreen extends ConsumerWidget {
                   AppColors.primary,
                 ),
                 AppSpacing.gapV8,
-                ...dueCards.map(
-                  (card) => _CardTile(card: card, isDue: true),
-                ),
+                ...dueCards.map((card) => _CardTile(card: card, isDue: true)),
                 AppSpacing.gapV16,
                 SizedBox(
                   width: double.infinity,
@@ -223,7 +226,9 @@ class _CardTile extends StatelessWidget {
           Text(
             dueLabel,
             style: context.textTheme.labelSmall?.copyWith(
-              color: isDue ? AppColors.primary : context.colorScheme.onSurfaceVariant,
+              color: isDue
+                  ? AppColors.primary
+                  : context.colorScheme.onSurfaceVariant,
               fontWeight: isDue ? FontWeight.w600 : FontWeight.w400,
             ),
           ),

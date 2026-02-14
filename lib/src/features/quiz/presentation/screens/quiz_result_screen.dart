@@ -8,10 +8,7 @@ import '../../data/fsrs_scheduler.dart';
 import '../../providers.dart';
 
 class QuizResultScreen extends StatelessWidget {
-  const QuizResultScreen({
-    super.key,
-    required this.results,
-  });
+  const QuizResultScreen({super.key, required this.results});
 
   final List<QuizResult> results;
 
@@ -48,10 +45,7 @@ class QuizResultScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: _scoreColor(score).withValues(alpha: 0.1),
-                border: Border.all(
-                  color: _scoreColor(score),
-                  width: 3,
-                ),
+                border: Border.all(color: _scoreColor(score), width: 3),
               ),
               child: Center(
                 child: Column(

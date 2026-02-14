@@ -38,10 +38,7 @@ class QuizRepository {
   }
 
   /// Apply a grade to a card using simplified FSRS scheduling.
-  Future<QuizCardEntity> gradeCard(
-    QuizCardEntity card,
-    FSRSGrade grade,
-  ) async {
+  Future<QuizCardEntity> gradeCard(QuizCardEntity card, FSRSGrade grade) async {
     final updated = FSRSScheduler.schedule(card, grade);
     await saveCard(updated);
     return updated;
@@ -50,9 +47,7 @@ class QuizRepository {
   // --- Generate questions from shorts ---
 
   /// Generates mock questions from a short for the quiz.
-  Future<List<QuestionEntity>> generateQuestionsForShort(
-    String shortId,
-  ) async {
+  Future<List<QuestionEntity>> generateQuestionsForShort(String shortId) async {
     final row = await _shortsDao.getShortById(shortId);
     if (row == null) return [];
 

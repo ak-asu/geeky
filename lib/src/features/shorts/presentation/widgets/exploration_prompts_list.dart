@@ -72,15 +72,18 @@ class _ExplorationPromptsListState extends State<ExplorationPromptsList> {
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16),
             child: Column(
               children: widget.prompts
-                  .map((prompt) => _PromptTile(
-                        prompt: prompt,
-                        onTap: () => widget.onPromptTap?.call(prompt),
-                      ))
+                  .map(
+                    (prompt) => _PromptTile(
+                      prompt: prompt,
+                      onTap: () => widget.onPromptTap?.call(prompt),
+                    ),
+                  )
                   .toList(),
             ),
           ),
-          crossFadeState:
-              _expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+          crossFadeState: _expanded
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
           duration: const Duration(milliseconds: 200),
         ),
       ],

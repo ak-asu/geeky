@@ -32,8 +32,14 @@ class ShortsFeed extends _$ShortsFeed {
   @override
   Set<String> build() => {};
 
-  void markDone(String shortId) {
-    state = {...state, shortId};
+  void toggleDone(String shortId) {
+    final updated = {...state};
+    if (updated.contains(shortId)) {
+      updated.remove(shortId);
+    } else {
+      updated.add(shortId);
+    }
+    state = updated;
   }
 
   bool isDone(String shortId) => state.contains(shortId);

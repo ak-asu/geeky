@@ -7,11 +7,7 @@ import '../../domain/module_entity.dart';
 import 'module_progress_bar.dart';
 
 class ModuleCard extends StatelessWidget {
-  const ModuleCard({
-    super.key,
-    required this.module,
-    required this.onTap,
-  });
+  const ModuleCard({super.key, required this.module, required this.onTap});
 
   final ModuleEntity module;
   final VoidCallback onTap;
@@ -22,8 +18,9 @@ class ModuleCard extends StatelessWidget {
         ? module.completedShorts / module.totalShorts
         : 0.0;
     final isComplete = progress >= 1.0;
-    final topicLabel =
-        module.topics.isNotEmpty ? module.topics.first : module.type;
+    final topicLabel = module.topics.isNotEmpty
+        ? module.topics.first
+        : module.type;
 
     return GestureDetector(
       onTap: onTap,
@@ -48,8 +45,7 @@ class ModuleCard extends StatelessWidget {
                   padding: const EdgeInsets.all(AppSpacing.s8),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusSm),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                   ),
                   child: Icon(
                     isComplete
@@ -60,22 +56,27 @@ class ModuleCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.s8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.5),
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusFull),
-                  ),
-                  child: Text(
-                    topicLabel,
-                    style: context.textTheme.labelSmall?.copyWith(
-                      color: context.colorScheme.onSurfaceVariant,
-                      fontSize: 10,
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.s8,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: context.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(
+                        AppSpacing.radiusFull,
+                      ),
+                    ),
+                    child: Text(
+                      topicLabel,
+                      style: context.textTheme.labelSmall?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant,
+                        fontSize: 10,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
