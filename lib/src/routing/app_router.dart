@@ -7,19 +7,21 @@ import '../core/constants/storage_keys.dart';
 import '../core/providers/shared_preferences_provider.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/signup_screen.dart';
+import '../features/bookmarks/presentation/screens/bookmarks_list_screen.dart';
 import '../features/home/presentation/screens/home_screen.dart';
 import '../features/notes/domain/note_entity.dart';
 import '../features/notes/presentation/screens/create_note_screen.dart';
 import '../features/notes/presentation/screens/note_detail_screen.dart';
 import '../features/notes/presentation/screens/notes_list_screen.dart';
 import '../features/notes/presentation/screens/upload_media_screen.dart';
+import '../features/notifications/presentation/screens/notifications_list_screen.dart';
 import '../features/onboarding/presentation/screens/feature_showcase_screen.dart';
+import '../features/onboarding/presentation/screens/interest_selection_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
 import '../features/rag_query/presentation/screens/rag_query_screen.dart';
 import '../features/analytics/presentation/screens/analytics_dashboard_screen.dart';
 import '../features/profile/presentation/screens/profile_screen.dart';
 import '../features/profile/presentation/screens/edit_profile_screen.dart';
-import '../features/onboarding/presentation/screens/interest_selection_screen.dart';
 import '../features/knowledge_graph/presentation/screens/knowledge_graph_screen.dart';
 import '../features/modules/domain/module_entity.dart';
 import '../features/modules/presentation/screens/create_module_screen.dart';
@@ -29,14 +31,22 @@ import '../features/quiz/presentation/screens/quiz_screen.dart';
 import '../features/quiz/presentation/screens/spaced_review_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/shorts/presentation/screens/shorts_feed_screen.dart';
+import '../features/sources/domain/content_source_entity.dart';
+import '../features/sources/presentation/screens/add_source_screen.dart';
+import '../features/sources/presentation/screens/source_detail_screen.dart';
+import '../features/sources/presentation/screens/sources_list_screen.dart';
+import '../features/store/domain/store_module_entity.dart';
+import '../features/store/presentation/screens/module_store_screen.dart';
+import '../features/store/presentation/screens/store_module_detail_screen.dart';
+import '../features/subscription/presentation/screens/subscription_screen.dart';
 import 'premium_guard.dart';
 import 'route_names.dart';
 
 part 'app_router.g.dart';
 
-// Placeholder screens — replaced by real screens as features are built
-class _PlaceholderScreen extends StatelessWidget {
-  const _PlaceholderScreen(this.title);
+// Fallback screen for missing entities
+class _NotFoundScreen extends StatelessWidget {
+  const _NotFoundScreen(this.title);
   final String title;
   @override
   Widget build(BuildContext context) {
@@ -118,7 +128,7 @@ GoRouter appRouter(Ref ref) {
         builder: (context, state) {
           final note = state.extra as NoteEntity?;
           if (note == null) {
-            return const _PlaceholderScreen('Note not found');
+            return const _NotFoundScreen('Note not found');
           }
           return NoteDetailScreen(note: note);
         },
@@ -160,6 +170,7 @@ GoRouter appRouter(Ref ref) {
           );
         },
       ),
+
       // --- Modules ---
       GoRoute(
         path: '/${RouteNames.modulesList}',
@@ -172,7 +183,7 @@ GoRouter appRouter(Ref ref) {
         builder: (context, state) {
           final module = state.extra as ModuleEntity?;
           if (module == null) {
-            return const _PlaceholderScreen('Module not found');
+            return const _NotFoundScreen('Module not found');
           }
           return ModuleDetailScreen(module: module);
         },
@@ -225,49 +236,83 @@ GoRouter appRouter(Ref ref) {
       GoRoute(
         path: '/${RouteNames.editProfile}',
         name: RouteNames.editProfile,
-        builder: (context, state) => const EditProfileScreen(),
+        pageBuilder: (context, state) =>
+            _slidePage(state, const EditProfileScreen()),
       ),
 
       // --- Settings ---
       GoRoute(
         path: '/${RouteNames.settings}',
         name: RouteNames.settings,
-        builder: (context, state) => const SettingsScreen(),
+        pageBuilder: (context, state) =>
+            _slidePage(state, const SettingsScreen()),
       ),
 
       // --- Sources ---
       GoRoute(
         path: '/${RouteNames.sourcesList}',
         name: RouteNames.sourcesList,
-        builder: (context, state) => const _PlaceholderScreen('Sources'),
+        builder: (context, state) => const SourcesListScreen(),
+      ),
+      GoRoute(
+        path: '/${RouteNames.addSource}',
+        name: RouteNames.addSource,
+        pageBuilder: (context, state) =>
+            _slidePage(state, const AddSourceScreen()),
+      ),
+      GoRoute(
+        path: '/${RouteNames.sourceDetail}',
+        name: RouteNames.sourceDetail,
+        pageBuilder: (context, state) {
+          final source = state.extra as ContentSourceEntity?;
+          if (source == null) {
+            return _slidePage(state, const _NotFoundScreen('Source not found'));
+          }
+          return _slidePage(state, SourceDetailScreen(source: source));
+        },
       ),
 
       // --- Bookmarks ---
       GoRoute(
         path: '/${RouteNames.bookmarks}',
         name: RouteNames.bookmarks,
-        builder: (context, state) => const _PlaceholderScreen('Bookmarks'),
+        builder: (context, state) => const BookmarksListScreen(),
       ),
 
       // --- Notifications ---
       GoRoute(
         path: '/${RouteNames.notifications}',
         name: RouteNames.notifications,
-        builder: (context, state) => const _PlaceholderScreen('Notifications'),
+        builder: (context, state) => const NotificationsListScreen(),
       ),
 
       // --- Subscription ---
       GoRoute(
         path: '/${RouteNames.subscription}',
         name: RouteNames.subscription,
-        builder: (context, state) => const _PlaceholderScreen('Subscription'),
+        pageBuilder: (context, state) =>
+            _slidePage(state, const SubscriptionScreen()),
       ),
 
       // --- Store ---
       GoRoute(
         path: '/${RouteNames.store}',
         name: RouteNames.store,
-        builder: (context, state) => const _PlaceholderScreen('Module Store'),
+        builder: (context, state) => const ModuleStoreScreen(),
+      ),
+      GoRoute(
+        path: '/${RouteNames.storeModuleDetail}',
+        name: RouteNames.storeModuleDetail,
+        pageBuilder: (context, state) {
+          final module = state.extra as StoreModuleEntity?;
+          if (module == null) {
+            return _slidePage(
+              state,
+              const _NotFoundScreen('Store module not found'),
+            );
+          }
+          return _slidePage(state, StoreModuleDetailScreen(module: module));
+        },
       ),
     ],
   );
@@ -305,4 +350,33 @@ Widget _fadeTransition(
   Widget child,
 ) {
   return FadeTransition(opacity: animation, child: child);
+}
+
+Widget _slideTransition(
+  BuildContext context,
+  Animation<double> animation,
+  Animation<double> secondaryAnimation,
+  Widget child,
+) {
+  final slideIn = Tween<Offset>(
+    begin: const Offset(1, 0),
+    end: Offset.zero,
+  ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
+  final fadeIn = CurvedAnimation(parent: animation, curve: Curves.easeOut);
+
+  return SlideTransition(
+    position: slideIn,
+    child: FadeTransition(opacity: fadeIn, child: child),
+  );
+}
+
+/// Creates a [CustomTransitionPage] with a slide-from-right transition.
+CustomTransitionPage<void> _slidePage(GoRouterState state, Widget child) {
+  return CustomTransitionPage(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 250),
+    reverseTransitionDuration: const Duration(milliseconds: 200),
+    transitionsBuilder: _slideTransition,
+  );
 }

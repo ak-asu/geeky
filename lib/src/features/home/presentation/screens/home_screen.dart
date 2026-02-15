@@ -27,6 +27,11 @@ class HomeScreen extends ConsumerWidget {
           icon: const Icon(Icons.search_rounded),
           onPressed: () => context.pushNamed(RouteNames.search),
         ),
+        // Notifications
+        IconButton(
+          icon: const Icon(Icons.notifications_outlined),
+          onPressed: () => context.pushNamed(RouteNames.notifications),
+        ),
         // Dev: toggle premium
         IconButton(
           icon: Icon(
