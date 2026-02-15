@@ -79,6 +79,17 @@ abstract final class AppTheme {
         surfaceTintColor: Colors.transparent,
       ),
       dividerTheme: base.dividerTheme.copyWith(color: AppColors.lightDivider),
+      appBarTheme: base.appBarTheme.copyWith(
+        centerTitle: true,
+        backgroundColor: base.colorScheme.surface,
+        surfaceTintColor: Colors.transparent,
+        titleTextStyle: GoogleFonts.plusJakartaSans(
+          textStyle: base.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+          color: base.colorScheme.onSurface,
+        ),
+      ),
     );
   }
 
@@ -103,6 +114,17 @@ abstract final class AppTheme {
         surfaceTintColor: Colors.transparent,
       ),
       dividerTheme: base.dividerTheme.copyWith(color: AppColors.darkDivider),
+      appBarTheme: base.appBarTheme.copyWith(
+        centerTitle: true,
+        backgroundColor: base.colorScheme.surface,
+        surfaceTintColor: Colors.transparent,
+        titleTextStyle: GoogleFonts.plusJakartaSans(
+          textStyle: base.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+          color: base.colorScheme.onSurface,
+        ),
+      ),
     );
   }
 }

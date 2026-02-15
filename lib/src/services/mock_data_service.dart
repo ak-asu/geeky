@@ -25,6 +25,10 @@ class MockDataService {
     await _seedModules();
     await _seedConcepts();
     await _seedRelationships();
+    await _seedSources();
+    await _seedStoreModules();
+    await _seedNotifications();
+    await _seedQuizCards();
 
     await _prefs.setBool(StorageKeys.mockDataSeeded, true);
   }
@@ -187,6 +191,123 @@ class MockDataService {
             type: map['type'] as String,
             strength: Value((map['strength'] as num?)?.toDouble() ?? 1.0),
             isDynamic: Value(map['is_dynamic'] as bool? ?? false),
+          ),
+        );
+      }
+    });
+  }
+
+  Future<void> _seedSources() async {
+    final items = await _loadJson('assets/mock/sources.json');
+    final now = DateTime.now();
+    await _db.batch((batch) {
+      for (final item in items) {
+        final map = item as Map<String, dynamic>;
+        batch.insert(
+          _db.cachedSources,
+          CachedSourcesCompanion.insert(
+            id: map['id'] as String,
+            userId: map['user_id'] as String,
+            type: map['type'] as String,
+            name: map['name'] as String,
+            url: Value(map['url'] as String?),
+            status: Value(map['status'] as String? ?? 'active'),
+            healthScore: Value((map['health_score'] as num?)?.toDouble()),
+            lastChecked: Value(
+              DateTime.tryParse(map['last_checked'] as String? ?? ''),
+            ),
+            createdAt:
+                DateTime.tryParse(map['created_at'] as String? ?? '') ?? now,
+            cachedAt: now,
+          ),
+        );
+      }
+    });
+  }
+
+  Future<void> _seedStoreModules() async {
+    final items = await _loadJson('assets/mock/store_modules.json');
+    final now = DateTime.now();
+    await _db.batch((batch) {
+      for (final item in items) {
+        final map = item as Map<String, dynamic>;
+        batch.insert(
+          _db.cachedStoreModules,
+          CachedStoreModulesCompanion.insert(
+            id: map['id'] as String,
+            name: map['name'] as String,
+            description: Value(map['description'] as String? ?? ''),
+            topicsJson: Value(map['topics_json'] as String? ?? '[]'),
+            author: Value(map['author'] as String? ?? ''),
+            shortCount: Value(map['short_count'] as int? ?? 0),
+            difficulty: Value((map['difficulty'] as num?)?.toDouble() ?? 0.5),
+            rating: Value((map['rating'] as num?)?.toDouble() ?? 0),
+            downloads: Value(map['download_count'] as int? ?? 0),
+            createdAt:
+                DateTime.tryParse(map['created_at'] as String? ?? '') ?? now,
+            cachedAt: now,
+          ),
+        );
+      }
+    });
+  }
+
+  Future<void> _seedQuizCards() async {
+    final items = await _loadJson('assets/mock/quiz_cards.json');
+    final now = DateTime.now();
+    await _db.batch((batch) {
+      for (final item in items) {
+        final map = item as Map<String, dynamic>;
+        batch.insert(
+          _db.cachedQuizCards,
+          CachedQuizCardsCompanion.insert(
+            articleId: map['articleId'] as String,
+            stability: Value((map['stability'] as num?)?.toDouble() ?? 1.0),
+            difficulty: Value((map['difficulty'] as num?)?.toDouble() ?? 0.5),
+            dueDate: DateTime.tryParse(map['dueDate'] as String? ?? '') ?? now,
+            reps: Value(map['reps'] as int? ?? 0),
+            lapses: Value(map['lapses'] as int? ?? 0),
+            state: Value(_parseCardState(map['state'])),
+            lastReviewDate: Value(
+              DateTime.tryParse(map['lastReviewDate'] as String? ?? ''),
+            ),
+          ),
+        );
+      }
+    });
+  }
+
+  static String _parseCardState(dynamic value) {
+    if (value is int) {
+      return switch (value) {
+        0 => 'new',
+        1 => 'learning',
+        2 => 'review',
+        3 => 'relearning',
+        _ => 'new',
+      };
+    }
+    if (value is String) return value;
+    return 'new';
+  }
+
+  Future<void> _seedNotifications() async {
+    final items = await _loadJson('assets/mock/notifications.json');
+    final now = DateTime.now();
+    await _db.batch((batch) {
+      for (final item in items) {
+        final map = item as Map<String, dynamic>;
+        batch.insert(
+          _db.cachedNotifications,
+          CachedNotificationsCompanion.insert(
+            id: map['id'] as String,
+            title: map['title'] as String,
+            body: map['body'] as String,
+            type: map['type'] as String,
+            isRead: Value(map['is_read'] as bool? ?? false),
+            createdAt:
+                DateTime.tryParse(map['created_at'] as String? ?? '') ?? now,
+            dataJson: Value(map['data_json'] as String? ?? '{}'),
           ),
         );
       }

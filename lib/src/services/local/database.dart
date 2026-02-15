@@ -14,6 +14,9 @@ import 'tables/cached_quiz_cards.dart';
 import 'tables/pending_interactions.dart';
 import 'tables/note_feed_state_table.dart';
 import 'tables/user_preferences_table.dart';
+import 'tables/cached_sources.dart';
+import 'tables/cached_store_modules.dart';
+import 'tables/cached_notifications.dart';
 
 import 'daos/shorts_dao.dart';
 import 'daos/notes_dao.dart';
@@ -23,6 +26,9 @@ import 'daos/note_feed_dao.dart';
 import 'daos/bookmarks_dao.dart';
 import 'daos/quiz_dao.dart';
 import 'daos/kg_dao.dart';
+import 'daos/sources_dao.dart';
+import 'daos/store_dao.dart';
+import 'daos/notifications_dao.dart';
 
 part 'database.g.dart';
 
@@ -38,6 +44,9 @@ part 'database.g.dart';
     PendingInteractions,
     NoteFeedStateEntries,
     UserPreferencesEntries,
+    CachedSources,
+    CachedStoreModules,
+    CachedNotifications,
   ],
   daos: [
     ShortsDao,
@@ -48,6 +57,9 @@ part 'database.g.dart';
     BookmarksDao,
     QuizDao,
     KgDao,
+    SourcesDao,
+    StoreDao,
+    NotificationsDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -56,7 +68,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -70,6 +82,11 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 3) {
         await m.addColumn(cachedModules, cachedModules.isFree);
+      }
+      if (from < 4) {
+        await m.createTable(cachedSources);
+        await m.createTable(cachedStoreModules);
+        await m.createTable(cachedNotifications);
       }
     },
   );

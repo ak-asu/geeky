@@ -10,7 +10,6 @@ import '../../../../core/widgets/geeky_error_widget.dart';
 import '../../../../core/widgets/geeky_shimmer.dart';
 import '../../../../routing/route_names.dart';
 import '../../../shorts/domain/short_entity.dart';
-import '../../../shorts/providers.dart';
 import '../../../shorts/presentation/screens/shorts_feed_screen.dart';
 import '../../providers.dart';
 import '../widgets/bookmark_card.dart';
@@ -23,17 +22,7 @@ class BookmarksListScreen extends ConsumerWidget {
     final bookmarkedShortsAsync = ref.watch(bookmarkedShortsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Bookmarks',
-          style: context.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: context.colorScheme.surface,
-        surfaceTintColor: Colors.transparent,
-      ),
+      appBar: AppBar(title: const Text('Bookmarks')),
       body: bookmarkedShortsAsync.when(
         loading: () => ListView.builder(
           padding: const EdgeInsets.only(top: AppSpacing.s8),
@@ -89,7 +78,7 @@ class _BookmarksList extends ConsumerWidget {
               ),
               onRemove: () async {
                 await ref
-                    .read(shortsBookmarksProvider.notifier)
+                    .read(bookmarkToggleProvider.notifier)
                     .toggle(short.id);
                 ref.invalidate(bookmarkedShortsProvider);
                 if (context.mounted) {

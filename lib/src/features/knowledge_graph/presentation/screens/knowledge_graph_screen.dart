@@ -30,17 +30,7 @@ class _KnowledgeGraphScreenState extends ConsumerState<KnowledgeGraphScreen> {
     final relationshipsAsync = ref.watch(allRelationshipsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Knowledge Graph',
-          style: context.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: context.colorScheme.surface,
-        surfaceTintColor: Colors.transparent,
-      ),
+      appBar: AppBar(title: const Text('Knowledge Graph')),
       body: nodesAsync.when(
         loading: () => GeekyShimmer.feedCard(context),
         error: (error, _) => GeekyEmptyState(

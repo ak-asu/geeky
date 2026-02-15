@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'src/core/theme/app_theme.dart';
 import 'src/core/widgets/connectivity_banner.dart';
+import 'src/features/offline/providers.dart';
 import 'src/features/settings/providers.dart';
 import 'src/routing/app_router.dart';
 
@@ -11,6 +12,9 @@ class GeekyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Activate auto-sync when connectivity is restored
+    ref.watch(syncOnReconnectProvider);
+
     final themeMode = ref.watch(themeModeProvider);
     final fontSize = ref.watch(fontSizeProvider);
     final router = ref.watch(appRouterProvider);

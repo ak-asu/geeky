@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../auth/providers.dart';
 import '../../domain/content_source_entity.dart';
 import '../../providers.dart';
 
@@ -28,7 +29,7 @@ class _AddSourceScreenState extends ConsumerState<AddSourceScreen> {
     super.dispose();
   }
 
-  void _save() {
+  Future<void> _save() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
       context.showSnackBar('Please enter a source name');
@@ -37,7 +38,7 @@ class _AddSourceScreenState extends ConsumerState<AddSourceScreen> {
 
     final source = ContentSourceEntity(
       id: const Uuid().v4(),
-      userId: 'user-001',
+      userId: ref.read(currentUserProvider)?.id ?? 'anonymous',
       type: _selectedType,
       name: name,
       url: _urlController.text.trim().isNotEmpty
@@ -49,26 +50,18 @@ class _AddSourceScreenState extends ConsumerState<AddSourceScreen> {
       createdAt: DateTime.now(),
     );
 
-    ref.read(sourcesRepositoryProvider).addSource(source);
+    await ref.read(sourcesRepositoryProvider).addSource(source);
     ref.invalidate(allSourcesProvider);
-    context.pop();
-    context.showSnackBar('Source added');
+    if (mounted) {
+      context.pop();
+      context.showSnackBar('Source added');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Add Source',
-          style: context.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: context.colorScheme.surface,
-        surfaceTintColor: Colors.transparent,
-      ),
+      appBar: AppBar(title: const Text('Add Source')),
       body: ListView(
         padding: AppSpacing.paddingAll16,
         children: [

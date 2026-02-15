@@ -30,15 +30,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Quiz',
-          style: context.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: context.colorScheme.surface,
-        surfaceTintColor: Colors.transparent,
+        title: const Text('Quiz'),
         actions: [
           TextButton(
             onPressed: () => context.pushNamed(RouteNames.spacedReview),

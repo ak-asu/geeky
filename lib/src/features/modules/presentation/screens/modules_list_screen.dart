@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/geeky_empty_state.dart';
 import '../../../../core/widgets/geeky_shimmer.dart';
@@ -19,17 +18,7 @@ class ModulesListScreen extends ConsumerWidget {
     final modulesAsync = ref.watch(allModulesProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Modules',
-          style: context.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: context.colorScheme.surface,
-        surfaceTintColor: Colors.transparent,
-      ),
+      appBar: AppBar(title: const Text('Modules')),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.pushNamed(RouteNames.createModule),
         child: const Icon(Icons.add_rounded),

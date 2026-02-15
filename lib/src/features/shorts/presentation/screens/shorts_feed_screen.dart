@@ -7,7 +7,10 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/geeky_empty_state.dart';
 import '../../../../core/widgets/geeky_shimmer.dart';
 import '../../../../core/widgets/horizontal_card_feed.dart';
+import '../../../bookmarks/providers.dart';
 import '../../../notes/data/interaction_notifier.dart';
+import '../../../quiz/domain/quiz_card_entity.dart';
+import '../../../quiz/providers.dart';
 import '../../domain/short_entity.dart';
 import '../../providers.dart';
 import '../widgets/short_card.dart';
@@ -96,7 +99,7 @@ class _ShortsFeedBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final doneSet = ref.watch(shortsFeedProvider);
-    final bookmarkSet = ref.watch(shortsBookmarksProvider);
+    final bookmarkSet = ref.watch(bookmarkToggleProvider);
 
     return HorizontalCardFeed<ShortEntity>(
       items: shorts,
@@ -110,13 +113,30 @@ class _ShortsFeedBody extends ConsumerWidget {
           isDone: isDone,
           isBookmarked: isBookmarked,
           onDone: () {
+            final wasDone = doneSet.contains(short.id);
             ref.read(shortsFeedProvider.notifier).toggleDone(short.id);
             ref
                 .read(interactionProvider.notifier)
                 .recordDone(articleId: short.id);
+
+            // Create a quiz card for newly completed shorts (local bridge
+            // until the backend pipeline generates cards server-side).
+            if (!wasDone) {
+              final quizRepo = ref.read(quizRepositoryProvider);
+              quizRepo.getCardForArticle(short.id).then((existing) {
+                if (existing == null) {
+                  quizRepo.saveCard(
+                    QuizCardEntity(
+                      articleId: short.id,
+                      dueDate: DateTime.now(),
+                    ),
+                  );
+                }
+              });
+            }
           },
           onBookmark: () {
-            ref.read(shortsBookmarksProvider.notifier).toggle(short.id);
+            ref.read(bookmarkToggleProvider.notifier).toggle(short.id);
             ref
                 .read(interactionProvider.notifier)
                 .recordBookmark(articleId: short.id);

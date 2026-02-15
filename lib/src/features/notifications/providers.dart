@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/providers/database_provider.dart';
 import 'data/notifications_repository.dart';
 import 'domain/notification_entity.dart';
 
@@ -7,9 +8,7 @@ part 'providers.g.dart';
 
 @Riverpod(keepAlive: true)
 NotificationsRepository notificationsRepository(Ref ref) {
-  final repo = NotificationsRepository();
-  ref.onDispose(repo.dispose);
-  return repo;
+  return NotificationsRepository(ref.read(appDatabaseProvider));
 }
 
 @riverpod

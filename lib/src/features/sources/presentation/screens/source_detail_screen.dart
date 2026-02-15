@@ -17,24 +17,18 @@ class SourceDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Source Details',
-          style: context.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: context.colorScheme.surface,
-        surfaceTintColor: Colors.transparent,
+        title: const Text('Source Details'),
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_outline_rounded),
             tooltip: 'Remove source',
-            onPressed: () {
-              ref.read(sourcesRepositoryProvider).removeSource(source.id);
+            onPressed: () async {
+              await ref.read(sourcesRepositoryProvider).removeSource(source.id);
               ref.invalidate(allSourcesProvider);
-              context.pop();
-              context.showSnackBar('Source removed');
+              if (context.mounted) {
+                context.pop();
+                context.showSnackBar('Source removed');
+              }
             },
           ),
         ],

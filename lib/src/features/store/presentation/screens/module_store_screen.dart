@@ -24,17 +24,7 @@ class ModuleStoreScreen extends ConsumerWidget {
     final isPremium = ref.watch(isPremiumProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Module Store',
-          style: context.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: context.colorScheme.surface,
-        surfaceTintColor: Colors.transparent,
-      ),
+      appBar: AppBar(title: const Text('Module Store')),
       body: modulesAsync.when(
         loading: () => GridView.builder(
           padding: AppSpacing.paddingAll16,

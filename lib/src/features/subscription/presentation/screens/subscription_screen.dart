@@ -16,17 +16,7 @@ class SubscriptionScreen extends ConsumerWidget {
     final isPremium = tier == SubscriptionTier.premium;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Subscription',
-          style: context.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: context.colorScheme.surface,
-        surfaceTintColor: Colors.transparent,
-      ),
+      appBar: AppBar(title: const Text('Subscription')),
       body: ListView(
         padding: AppSpacing.paddingAll16,
         children: [

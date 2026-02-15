@@ -20,19 +20,11 @@ class NotificationsListScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Notifications',
-          style: context.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: context.colorScheme.surface,
-        surfaceTintColor: Colors.transparent,
+        title: const Text('Notifications'),
         actions: [
           TextButton(
-            onPressed: () {
-              ref.read(notificationsRepositoryProvider).markAllAsRead();
+            onPressed: () async {
+              await ref.read(notificationsRepositoryProvider).markAllAsRead();
               ref.invalidate(allNotificationsProvider);
             },
             child: Text(
@@ -75,9 +67,9 @@ class NotificationsListScreen extends ConsumerWidget {
               final notification = notifications[index];
               return _NotificationTile(
                     notification: notification,
-                    onTap: () {
+                    onTap: () async {
                       if (!notification.isRead) {
-                        ref
+                        await ref
                             .read(notificationsRepositoryProvider)
                             .markAsRead(notification.id);
                         ref.invalidate(allNotificationsProvider);

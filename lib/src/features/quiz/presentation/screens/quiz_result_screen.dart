@@ -23,17 +23,7 @@ class QuizResultScreen extends StatelessWidget {
     final score = total > 0 ? (correct / total * 100).round() : 0;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Results',
-          style: context.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: context.colorScheme.surface,
-        surfaceTintColor: Colors.transparent,
-      ),
+      appBar: AppBar(title: const Text('Results')),
       body: ListView(
         padding: AppSpacing.paddingAll24,
         children: [

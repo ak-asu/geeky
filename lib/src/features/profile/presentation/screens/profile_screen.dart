@@ -26,12 +26,7 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Profile',
-          style: context.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        title: const Text('Profile'),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_rounded, size: 22),

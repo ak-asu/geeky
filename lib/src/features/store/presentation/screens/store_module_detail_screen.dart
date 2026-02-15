@@ -25,10 +25,7 @@ class StoreModuleDetailScreen extends ConsumerWidget {
     final isPremium = ref.watch(isPremiumProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: context.colorScheme.surface,
-        surfaceTintColor: Colors.transparent,
-      ),
+      appBar: AppBar(),
       body: ListView(
         padding: AppSpacing.paddingAll16,
         children: [
@@ -142,31 +139,34 @@ class StoreModuleDetailScreen extends ConsumerWidget {
     );
   }
 
-  void _handleDownload(
+  Future<void> _handleDownload(
     BuildContext context,
     WidgetRef ref,
     StoreModuleEntity current,
     bool isPremium,
-  ) {
+  ) async {
     final repo = ref.read(storeRepositoryProvider);
 
     // If already downloaded, allow un-download
     if (current.isDownloaded) {
-      repo.toggleDownload(current.id);
-      context.showSnackBar('Module removed');
+      await repo.toggleDownload(current.id);
+      if (context.mounted) context.showSnackBar('Module removed');
       return;
     }
 
     // Check free tier limit
-    if (!isPremium && repo.downloadedCount >= FreeTierLimits.maxStoreModules) {
-      context.showSnackBar(
-        'Free tier limited to ${FreeTierLimits.maxStoreModules} downloads. Upgrade for unlimited.',
-      );
+    final count = await repo.downloadedCount;
+    if (!isPremium && count >= FreeTierLimits.maxStoreModules) {
+      if (context.mounted) {
+        context.showSnackBar(
+          'Free tier limited to ${FreeTierLimits.maxStoreModules} downloads. Upgrade for unlimited.',
+        );
+      }
       return;
     }
 
-    repo.toggleDownload(current.id);
-    context.showSnackBar('Module downloaded');
+    await repo.toggleDownload(current.id);
+    if (context.mounted) context.showSnackBar('Module downloaded');
   }
 
   String _formatDownloads(int count) {

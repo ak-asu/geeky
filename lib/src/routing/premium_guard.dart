@@ -9,7 +9,7 @@ String? checkPremiumAccess(Ref ref, String matchedLocation) {
   if (!premiumRoutes.contains(matchedLocation)) return null;
 
   final isPremium = ref.read(isPremiumProvider);
-  if (!isPremium) return '/';
+  if (!isPremium) return '/${RouteNames.subscription}';
 
   return null;
 }

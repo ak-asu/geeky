@@ -22,17 +22,7 @@ class ModuleDetailScreen extends ConsumerWidget {
     final doneSet = ref.watch(shortsFeedProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          module.name,
-          style: context.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: context.colorScheme.surface,
-        surfaceTintColor: Colors.transparent,
-      ),
+      appBar: AppBar(title: Text(module.name)),
       floatingActionButton: module.shortIds.isNotEmpty
           ? FloatingActionButton.small(
               onPressed: () => context.pushNamed(

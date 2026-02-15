@@ -19,17 +19,7 @@ class SpacedReviewScreen extends ConsumerWidget {
     final allCardsAsync = ref.watch(allQuizCardsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Spaced Review',
-          style: context.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: context.colorScheme.surface,
-        surfaceTintColor: Colors.transparent,
-      ),
+      appBar: AppBar(title: const Text('Spaced Review')),
       body: allCardsAsync.when(
         loading: () => ListView.builder(
           itemCount: 5,

@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../auth/providers.dart';
 import '../../domain/module_entity.dart';
 import '../../providers.dart';
 import '../../../shorts/domain/short_entity.dart';
@@ -72,7 +73,7 @@ class _CreateModuleScreenState extends ConsumerState<CreateModuleScreen> {
     final now = DateTime.now();
     final module = ModuleEntity(
       id: const Uuid().v4(),
-      userId: 'user-001',
+      userId: ref.read(currentUserProvider)?.id ?? 'anonymous',
       name: name,
       description: _descriptionController.text.trim().isNotEmpty
           ? _descriptionController.text.trim()
@@ -92,15 +93,7 @@ class _CreateModuleScreenState extends ConsumerState<CreateModuleScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Create Module',
-          style: context.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: context.colorScheme.surface,
-        surfaceTintColor: Colors.transparent,
+        title: const Text('Create Module'),
         actions: [TextButton(onPressed: _save, child: const Text('Save'))],
       ),
       body: ListView(

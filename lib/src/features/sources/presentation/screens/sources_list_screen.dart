@@ -24,17 +24,7 @@ class SourcesListScreen extends ConsumerWidget {
     final isPremium = ref.watch(isPremiumProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Sources',
-          style: context.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: context.colorScheme.surface,
-        surfaceTintColor: Colors.transparent,
-      ),
+      appBar: AppBar(title: const Text('Sources')),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           final sources = sourcesAsync.value ?? [];

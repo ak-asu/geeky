@@ -4,7 +4,9 @@ import 'package:uuid/uuid.dart';
 import '../../core/providers/database_provider.dart';
 import 'data/rag_repository.dart';
 import 'domain/chat_message.dart';
-import 'domain/rag_response.dart';
+import 'domain/rag_chat_state.dart';
+
+export 'domain/rag_chat_state.dart' show RagChatState;
 
 part 'providers.g.dart';
 
@@ -67,33 +69,4 @@ class RagChat extends _$RagChat {
   void clearSession() {
     state = const RagChatState();
   }
-}
-
-/// Holds the full chat state: messages + loading + last response.
-class RagChatState {
-  const RagChatState({
-    this.messages = const [],
-    this.isLoading = false,
-    this.lastResponse,
-  });
-
-  final List<ChatMessage> messages;
-  final bool isLoading;
-  final RagResponse? lastResponse;
-
-  RagChatState copyWith({
-    List<ChatMessage>? messages,
-    bool? isLoading,
-    Object? lastResponse = _sentinel,
-  }) {
-    return RagChatState(
-      messages: messages ?? this.messages,
-      isLoading: isLoading ?? this.isLoading,
-      lastResponse: lastResponse == _sentinel
-          ? this.lastResponse
-          : lastResponse as RagResponse?,
-    );
-  }
-
-  static const _sentinel = Object();
 }
