@@ -20,7 +20,10 @@ class SearchQuery extends _$SearchQuery {
   Timer? _debounce;
 
   @override
-  String build() => '';
+  String build() {
+    ref.onDispose(() => _debounce?.cancel());
+    return '';
+  }
 
   void update(String query) {
     _debounce?.cancel();
@@ -53,12 +56,22 @@ class SearchDifficultyFilter extends _$SearchDifficultyFilter {
   void set(String? difficulty) => state = difficulty;
 }
 
+/// Active read/unread filter for search results. null = all, true = read, false = unread.
+@riverpod
+class SearchReadFilter extends _$SearchReadFilter {
+  @override
+  bool? build() => null;
+
+  void set(bool? value) => state = value;
+}
+
 /// Search results based on current query and filters.
 @riverpod
 Future<List<ShortEntity>> searchResults(Ref ref) async {
   final query = ref.watch(searchQueryProvider);
   final topicFilter = ref.watch(searchTopicFilterProvider);
   final difficultyFilter = ref.watch(searchDifficultyFilterProvider);
+  final readFilter = ref.watch(searchReadFilterProvider);
   final doneIds = ref.watch(shortsFeedProvider);
 
   if (query.isEmpty) return [];
@@ -69,6 +82,7 @@ Future<List<ShortEntity>> searchResults(Ref ref) async {
         query: query,
         topicFilter: topicFilter,
         difficultyFilter: difficultyFilter,
+        readFilter: readFilter,
         doneIds: doneIds,
       );
 }

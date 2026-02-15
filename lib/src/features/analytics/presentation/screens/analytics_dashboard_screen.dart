@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/geeky_error_widget.dart';
 import '../../../../core/widgets/geeky_shimmer.dart';
 import '../../providers.dart';
 import '../widgets/streak_card.dart';
@@ -81,7 +82,7 @@ class _StreakSection extends ConsumerWidget {
           ),
         ),
       ),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (e, _) => GeekyErrorWidget(message: e.toString(), compact: true),
       data: (streak) => StreakCard(streak: streak),
     );
   }
@@ -104,7 +105,7 @@ class _StatsSection extends ConsumerWidget {
           ),
         ),
       ),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (e, _) => GeekyErrorWidget(message: e.toString(), compact: true),
       data: (stats) => StatsRow(stats: stats),
     );
   }
@@ -127,7 +128,7 @@ class _EngagementSection extends ConsumerWidget {
           ),
         ),
       ),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (e, _) => GeekyErrorWidget(message: e.toString(), compact: true),
       data: (data) => EngagementChart(data: data),
     );
   }
@@ -143,7 +144,7 @@ class _TopicProgressSection extends ConsumerWidget {
     return progressAsync.when(
       loading: () =>
           Column(children: List.generate(3, (_) => GeekyShimmer.listItem())),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (e, _) => GeekyErrorWidget(message: e.toString(), compact: true),
       data: (topics) => TopicProgressList(topics: topics),
     );
   }
@@ -166,7 +167,7 @@ class _AchievementsSection extends ConsumerWidget {
           ),
         ),
       ),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (e, _) => GeekyErrorWidget(message: e.toString(), compact: true),
       data: (achievements) => AchievementGrid(achievements: achievements),
     );
   }

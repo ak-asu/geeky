@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/geeky_empty_state.dart';
+import '../../../../core/widgets/geeky_error_widget.dart';
 import '../../../../core/widgets/geeky_shimmer.dart';
 import '../../../../routing/route_names.dart';
 import '../../../shorts/domain/short_entity.dart';
@@ -221,11 +222,7 @@ class _SearchResultsBody extends ConsumerWidget {
         itemCount: 6,
         itemBuilder: (_, _) => GeekyShimmer.listItem(),
       ),
-      error: (error, _) => GeekyEmptyState(
-        icon: Icons.error_outline_rounded,
-        title: 'Search failed',
-        subtitle: error.toString(),
-      ),
+      error: (error, _) => GeekyErrorWidget(message: error.toString()),
       data: (results) {
         if (results.isEmpty) {
           return const GeekyEmptyState(

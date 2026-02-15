@@ -13,7 +13,11 @@ class SearchFilterBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final topicFilter = ref.watch(searchTopicFilterProvider);
     final difficultyFilter = ref.watch(searchDifficultyFilterProvider);
+    final readFilter = ref.watch(searchReadFilterProvider);
     final topicsAsync = ref.watch(availableTopicsProvider);
+
+    final hasAnyFilter =
+        topicFilter != null || difficultyFilter != null || readFilter != null;
 
     return SizedBox(
       height: 48,
@@ -39,9 +43,21 @@ class SearchFilterBar extends ConsumerWidget {
             loading: () => const SizedBox.shrink(),
             error: (_, _) => const SizedBox.shrink(),
           ),
+          AppSpacing.gapH8,
+
+          // Read/unread filter
+          _FilterChip(
+            label: readFilter == null
+                ? 'Status'
+                : readFilter
+                ? 'Read'
+                : 'Unread',
+            isActive: readFilter != null,
+            onTap: () => _showReadPicker(context, ref, readFilter),
+          ),
 
           // Clear filters
-          if (topicFilter != null || difficultyFilter != null) ...[
+          if (hasAnyFilter) ...[
             AppSpacing.gapH8,
             ActionChip(
               label: Text(
@@ -54,6 +70,7 @@ class SearchFilterBar extends ConsumerWidget {
               onPressed: () {
                 ref.read(searchTopicFilterProvider.notifier).set(null);
                 ref.read(searchDifficultyFilterProvider.notifier).set(null);
+                ref.read(searchReadFilterProvider.notifier).set(null);
               },
             ),
           ],
@@ -104,6 +121,55 @@ class SearchFilterBar extends ConsumerWidget {
                   ref
                       .read(searchDifficultyFilterProvider.notifier)
                       .set(current == d ? null : d);
+                  Navigator.pop(ctx);
+                },
+              ),
+            ),
+            AppSpacing.gapV16,
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showReadPicker(BuildContext context, WidgetRef ref, bool? current) {
+    final options = [
+      (label: 'Read', value: true),
+      (label: 'Unread', value: false),
+    ];
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppSpacing.radiusXl),
+        ),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppSpacing.gapV8,
+            Container(
+              width: 32,
+              height: 4,
+              decoration: BoxDecoration(
+                color: context.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.3,
+                ),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+              ),
+            ),
+            AppSpacing.gapV16,
+            ...options.map(
+              (o) => ListTile(
+                title: Text(o.label, style: context.textTheme.bodyMedium),
+                trailing: current == o.value
+                    ? const Icon(Icons.check_rounded, color: AppColors.primary)
+                    : null,
+                onTap: () {
+                  ref
+                      .read(searchReadFilterProvider.notifier)
+                      .set(current == o.value ? null : o.value);
                   Navigator.pop(ctx);
                 },
               ),

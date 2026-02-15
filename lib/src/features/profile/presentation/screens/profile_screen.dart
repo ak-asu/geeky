@@ -6,6 +6,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/extensions/string_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/widgets/geeky_error_widget.dart';
 import '../../../../core/widgets/geeky_shimmer.dart';
 import '../../../../routing/route_names.dart';
 import '../../../analytics/data/analytics_repository.dart';
@@ -97,7 +98,8 @@ class ProfileScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            error: (_, _) => const SizedBox.shrink(),
+            error: (e, _) =>
+                GeekyErrorWidget(message: e.toString(), compact: true),
           ),
 
           AppSpacing.gapV24,
@@ -175,7 +177,8 @@ class ProfileScreen extends ConsumerWidget {
                 ),
               ),
             ),
-            error: (_, _) => const SizedBox.shrink(),
+            error: (e, _) =>
+                GeekyErrorWidget(message: e.toString(), compact: true),
           ),
 
           AppSpacing.gapV32,
