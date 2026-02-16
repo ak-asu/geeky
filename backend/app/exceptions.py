@@ -179,3 +179,33 @@ class PremiumRequiredError(GeekyError):
             detail=f"Upgrade to premium to access {feature}.",
         )
         self.feature = feature
+
+
+# --- Search / RAG ---
+
+
+class SearchError(GeekyError):
+    """Search operation error."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message=message, code="SEARCH_ERROR")
+
+
+class RAGError(GeekyError):
+    """RAG pipeline error."""
+
+    def __init__(self, message: str, stage: str | None = None) -> None:
+        super().__init__(
+            message=message,
+            code="RAG_ERROR",
+            detail=f"RAG pipeline failed at stage: {stage}" if stage else None,
+        )
+        self.stage = stage
+
+
+# --- User ---
+
+
+class UserNotFoundError(NotFoundError):
+    def __init__(self, user_id: str) -> None:
+        super().__init__("User", user_id)

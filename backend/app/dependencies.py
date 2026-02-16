@@ -360,3 +360,82 @@ def get_flashcard_generator():
         llm=get_llm_provider(),
         short_repo=get_short_repository(),
     )
+
+
+# ============================================================
+# Search Services
+# ============================================================
+
+
+def get_hybrid_search_service():
+    """Get the hybrid search service (sparse + dense)."""
+    from app.services.search.hybrid_search import HybridSearchService  # noqa: PLC0415
+
+    return HybridSearchService(
+        sparse_engine=get_sparse_search_engine(),
+        vector_store=get_vector_store(),
+        embedding_provider=get_embedding_provider(),
+        short_repo=get_short_repository(),
+        settings=get_settings(),
+    )
+
+
+# ============================================================
+# RAG Services
+# ============================================================
+
+
+def get_rag_orchestrator():
+    """Get the RAG orchestrator."""
+    from app.services.rag.rag_orchestrator import RAGOrchestrator  # noqa: PLC0415
+
+    return RAGOrchestrator(
+        search_service=get_hybrid_search_service(),
+        reranker=get_reranker(),
+        llm=get_llm_provider(),
+        embedding_provider=get_embedding_provider(),
+        short_repo=get_short_repository(),
+        settings=get_settings(),
+    )
+
+
+# ============================================================
+# Analytics Services
+# ============================================================
+
+
+def get_analytics_aggregator():
+    """Get the analytics aggregator."""
+    from app.services.analytics.aggregator import AnalyticsAggregator  # noqa: PLC0415
+
+    return AnalyticsAggregator(
+        note_repo=get_note_repository(),
+        short_repo=get_short_repository(),
+        concept_repo=get_concept_repository(),
+        review_state_repo=get_review_state_repository(),
+        interaction_repo=get_interaction_repository(),
+        quiz_attempt_repo=get_quiz_attempt_repository(),
+        user_repo=get_user_repository(),
+    )
+
+
+# ============================================================
+# Profile Services
+# ============================================================
+
+
+def get_profile_service():
+    """Get the profile service."""
+    from app.services.profile.profile_service import ProfileService  # noqa: PLC0415
+
+    return ProfileService(
+        user_repo=get_user_repository(),
+        note_repo=get_note_repository(),
+        short_repo=get_short_repository(),
+        review_state_repo=get_review_state_repository(),
+        concept_repo=get_concept_repository(),
+        interaction_repo=get_interaction_repository(),
+        bookmark_repo=get_bookmark_repository(),
+        chunk_repo=get_chunk_repository(),
+        quiz_attempt_repo=get_quiz_attempt_repository(),
+    )

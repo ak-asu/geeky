@@ -95,6 +95,10 @@ class Settings(BaseSettings):
     review_default_batch: int = Field(default=20, description="Default review cards per session")
     review_max_batch: int = Field(default=50, description="Maximum review cards per session")
 
+    # --- Search ---
+    search_rrf_k: int = Field(default=60, description="RRF fusion constant (higher = more weight to lower ranks)")
+    search_default_limit: int = Field(default=20, description="Default search results limit")
+
     # --- Source Polling ---
     source_poll_interval_minutes: int = Field(default=60, description="Source polling interval (SYS-02)")
 

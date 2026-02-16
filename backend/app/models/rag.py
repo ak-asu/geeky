@@ -45,3 +45,18 @@ class SearchFilters(BaseModel):
     module_id: str | None = Field(default=None, alias="moduleId")
     sort_by: str | None = Field(default=None, alias="sortBy")
     model_config = {"populate_by_name": True}
+
+
+class SearchResultItem(BaseModel):
+    short_id: str = Field(alias="shortId")
+    title: str = ""
+    snippet: str = ""
+    score: float = 0.0
+    topics: list[str] = Field(default_factory=list)
+    model_config = {"populate_by_name": True}
+
+
+class SearchResponse(BaseModel):
+    results: list[SearchResultItem] = Field(default_factory=list)
+    total: int = 0
+    model_config = {"populate_by_name": True}
