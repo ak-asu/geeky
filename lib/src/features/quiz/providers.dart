@@ -15,13 +15,7 @@ QuizRepository quizRepository(Ref ref) {
   return QuizRepository(ref.read(appDatabaseProvider));
 }
 
-/// All quiz cards.
-@riverpod
-Future<List<QuizCardEntity>> allQuizCards(Ref ref) {
-  return ref.watch(quizRepositoryProvider).getAllCards();
-}
-
-/// Due cards for spaced review.
+/// Due cards for quiz review.
 @riverpod
 Future<List<QuizCardEntity>> dueQuizCards(Ref ref) {
   return ref.watch(quizRepositoryProvider).getDueCards();

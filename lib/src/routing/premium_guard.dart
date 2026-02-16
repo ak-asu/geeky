@@ -24,5 +24,4 @@ const premiumRoutes = {
   '/${RouteNames.ragQuery}',
   '/${RouteNames.analytics}',
   '/${RouteNames.quiz}',
-  '/${RouteNames.spacedReview}',
 };

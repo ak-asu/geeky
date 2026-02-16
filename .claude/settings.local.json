@@ -6,7 +6,9 @@
       "Bash(flutter analyze:*)",
       "Bash(findstr:*)",
       "Bash(dart analyze:*)",
-      "Bash(dart format:*)"
+      "Bash(dart format:*)",
+      "Bash(wc:*)",
+      "Bash(ls:*)"
     ]
   }
 }

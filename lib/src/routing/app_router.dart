@@ -28,7 +28,6 @@ import '../features/modules/presentation/screens/create_module_screen.dart';
 import '../features/modules/presentation/screens/module_detail_screen.dart';
 import '../features/modules/presentation/screens/modules_list_screen.dart';
 import '../features/quiz/presentation/screens/quiz_screen.dart';
-import '../features/quiz/presentation/screens/spaced_review_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/shorts/presentation/screens/shorts_feed_screen.dart';
 import '../features/sources/domain/content_source_entity.dart';
@@ -207,12 +206,6 @@ GoRouter appRouter(Ref ref) {
         name: RouteNames.quiz,
         builder: (context, state) => const QuizScreen(),
       ),
-      GoRoute(
-        path: '/${RouteNames.spacedReview}',
-        name: RouteNames.spacedReview,
-        builder: (context, state) => const SpacedReviewScreen(),
-      ),
-
       // --- RAG (premium) ---
       GoRoute(
         path: '/${RouteNames.ragQuery}',

@@ -1,0 +1,40 @@
+# Core
+fastapi>=0.129.0
+uvicorn[standard]>=0.40.0
+pydantic>=2.12.5
+pydantic-settings>=2.13.0
+
+# Firebase
+firebase-admin>=7.1.0
+
+# AI / ML
+google-genai>=1.63.0
+llama-index-core>=0.14.14
+sentence-transformers>=5.2.2
+spacy>=3.8.11
+
+# Vector DB & Search
+chromadb-client>=1.5.0
+bm25s>=0.2.14
+
+# Knowledge Graph
+networkx>=3.6.1
+cdlib>=0.4.0
+
+# Task Queue
+celery[redis]>=5.6.2
+redis>=6.4.0
+
+# Document Parsing
+docling>=2.73.1
+
+# Spaced Repetition
+fsrs>=6.3.0
+
+# Deduplication
+datasketch>=1.9.0
+
+# Utilities
+httpx>=0.28.1
+bleach>=6.3.0
+python-multipart>=0.0.22

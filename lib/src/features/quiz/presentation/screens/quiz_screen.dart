@@ -7,7 +7,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/geeky_empty_state.dart';
 import '../../../../core/widgets/geeky_shimmer.dart';
-import '../../../../routing/route_names.dart';
 import '../../data/fsrs_scheduler.dart';
 import '../../domain/quiz_card_entity.dart';
 import '../../providers.dart';
@@ -29,15 +28,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
     final dueCardsAsync = ref.watch(dueQuizCardsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Quiz'),
-        actions: [
-          TextButton(
-            onPressed: () => context.pushNamed(RouteNames.spacedReview),
-            child: const Text('Review'),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Quiz')),
       body: dueCardsAsync.when(
         loading: () => GeekyShimmer.feedCard(context),
         error: (error, _) => GeekyEmptyState(

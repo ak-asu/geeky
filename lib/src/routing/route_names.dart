@@ -30,7 +30,6 @@ abstract final class RouteNames {
 
   // Quiz
   static const String quiz = 'quiz';
-  static const String spacedReview = 'spaced-review';
   static const String quizResult = 'quiz-result';
 
   // Search
