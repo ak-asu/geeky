@@ -76,7 +76,7 @@ class HierarchicalChunker:
             return []
 
         # Level 1: Try structural splitting (sections from parser)
-        if document.sections and len(document.sections) > 1:
+        if document.sections:
             chunks = self._split_by_sections(document.sections)
         else:
             # Level 2: Paragraph splitting

@@ -80,6 +80,21 @@ class Settings(BaseSettings):
     # --- Spaced Repetition ---
     fsrs_desired_retention: float = Field(default=0.9, description="FSRS target retention rate")
 
+    # --- Knowledge Graph ---
+    kg_ner_confidence_threshold: float = Field(default=0.5, description="Min NER entity confidence (KG-02)")
+    kg_edge_confidence_threshold: float = Field(default=0.4, description="Min edge classification confidence (KG-03)")
+    kg_max_entities_per_short: int = Field(default=20, description="Max entities extracted per short")
+    kg_community_resolution: float = Field(default=1.0, description="Louvain community detection resolution")
+    kg_pagerank_damping: float = Field(default=0.85, description="PageRank damping factor")
+
+    # --- Quiz ---
+    quiz_default_count: int = Field(default=5, description="Default number of quiz questions")
+    quiz_max_count: int = Field(default=20, description="Maximum quiz questions per request")
+
+    # --- Review ---
+    review_default_batch: int = Field(default=20, description="Default review cards per session")
+    review_max_batch: int = Field(default=50, description="Maximum review cards per session")
+
     # --- Source Polling ---
     source_poll_interval_minutes: int = Field(default=60, description="Source polling interval (SYS-02)")
 

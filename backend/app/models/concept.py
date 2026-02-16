@@ -25,9 +25,11 @@ class ConceptDocument(TimestampMixin):
     id: str = ""
     name: str = ""
     description: str = ""
+    entity_type: str = Field(default="concept", alias="entityType")
     level: int = 1
     aliases: list[str] = Field(default_factory=list)
     article_ids: list[str] = Field(default_factory=list, alias="articleIds")
+    short_ids: list[str] = Field(default_factory=list, alias="shortIds")
     importance_score: float = Field(default=0.0, alias="importanceScore")
     mastery_state: str = Field(default="unknown", alias="masteryState")
     bkt_params: BKTParams = Field(default_factory=BKTParams, alias="bktParams")

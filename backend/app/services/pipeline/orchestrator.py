@@ -15,7 +15,6 @@ from datetime import datetime, timezone
 from app.config import Settings
 from app.models.chunk import ChunkDocument
 from app.models.common import ProcessingStatus
-from app.models.processing_task import ProcessingTaskDocument, StageStatus
 from app.models.short import Citation, ConflictFlag, ShortDocument
 from app.services.pipeline.chunker import ChunkerConfig, HierarchicalChunker
 from app.services.pipeline.deduplicator import DedupConfig, Deduplicator
@@ -131,6 +130,10 @@ class PipelineOrchestrator:
             await self._complete_stage(task_id, "storage")
 
             await self._update_task_status(task_id, ProcessingStatus.COMPLETED)
+
+            # Dispatch KG update + review state creation for new shorts
+            if shorts_created > 0:
+                self._dispatch_post_pipeline_tasks(user_id, chunk_ids, shorts_created)
 
             summary = {"chunks_created": len(chunk_ids), "shorts_created": shorts_created}
             logger.info("Pipeline completed for note=%s: %s", note_id, summary)
@@ -253,9 +256,13 @@ class PipelineOrchestrator:
         """Stage 5: Generate Shorts from chunks."""
         await self._start_stage(task_id, "short_generation")
 
-        # CP-17: Anti-density control
-        existing_shorts = await self._short_repo.query(
-            user_id, filters=[("citations", "array_contains", {"noteId": note_id})]
+        # CP-17: Anti-density control — find shorts already linked to this note
+        existing_chunk_docs = await self._chunk_repo.get_by_note(user_id, note_id)
+        existing_chunk_ids = [c.id for c in existing_chunk_docs]
+        existing_shorts = (
+            await self._short_repo.get_by_chunk_ids(user_id, existing_chunk_ids)
+            if existing_chunk_ids
+            else []
         )
         if len(existing_shorts) >= self._settings.anti_density_max_per_source:
             logger.warning(
@@ -331,6 +338,29 @@ class PipelineOrchestrator:
             "error": error,
             "completedAt": datetime.now(timezone.utc).isoformat(),
         })
+
+    def _dispatch_post_pipeline_tasks(
+        self, user_id: str, short_ids: list[str], shorts_created: int
+    ) -> None:
+        """Dispatch KG update and review state creation after pipeline completes."""
+        try:
+            from app.workers.kg_tasks import (  # noqa: PLC0415
+                ensure_review_states,
+                update_kg_for_short,
+            )
+
+            for short_id in short_ids[:shorts_created]:
+                update_kg_for_short.delay(user_id, short_id)
+
+            ensure_review_states.delay(user_id, short_ids[:shorts_created])
+
+            logger.info(
+                "Dispatched KG update + review state tasks for %d shorts",
+                shorts_created,
+            )
+        except Exception as exc:
+            # Non-fatal: pipeline succeeded, post-tasks can be retried independently
+            logger.warning("Failed to dispatch post-pipeline tasks: %s", exc)
 
 
 def _note_type_to_content_type(note_type: str) -> str:

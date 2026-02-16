@@ -63,6 +63,21 @@ class QuizCardNotFoundError(NotFoundError):
         super().__init__("QuizCard", card_id)
 
 
+class ReviewStateNotFoundError(NotFoundError):
+    def __init__(self, review_state_id: str) -> None:
+        super().__init__("ReviewState", review_state_id)
+
+
+# --- Knowledge Graph ---
+
+
+class KnowledgeGraphError(GeekyError):
+    """Knowledge graph operation error."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message=message, code="KG_ERROR")
+
+
 # --- Auth ---
 
 

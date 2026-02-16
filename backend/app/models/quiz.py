@@ -32,11 +32,14 @@ class QuizGenerateRequest(BaseModel):
 class QuizAnswer(BaseModel):
     question_id: str = Field(alias="questionId")
     answer: str
+    correct_answer: str = Field(alias="correctAnswer")
     model_config = {"populate_by_name": True}
 
 
 class QuizGradeRequest(BaseModel):
+    short_ids: list[str] = Field(default_factory=list, alias="shortIds")
     answers: list[QuizAnswer]
+    model_config = {"populate_by_name": True}
 
 
 class QuizGradeResult(BaseModel):

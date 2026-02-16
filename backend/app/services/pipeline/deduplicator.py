@@ -5,9 +5,9 @@ Stage 2: SimHash near-duplicate (Jaccard >= 0.9, soft dedup)
 Stage 3: ChromaDB cosine similarity >= 0.85 (soft dedup)
 Stage 4: Cross-modal (same as stage 3, across media types)
 
-Uses datasketch for MinHash/LSH. Includes Bloom filter for streaming
-dedup (CP-19). Logs dedup decisions (CP-18). Supports soft dedup via
-canonical chunk linking (CP-21).
+Uses datasketch for MinHash/LSH. Uses hash-set for fast streaming
+screening (CP-19). Logs dedup decisions (CP-18). Supports soft dedup
+via canonical chunk linking (CP-21).
 """
 
 from __future__ import annotations
@@ -75,10 +75,8 @@ class Deduplicator:
         self._embedding_provider = embedding_provider
         self._config = config or DedupConfig()
         self._exact_seen: set[str] = set()
-        self._bloom = _create_bloom_filter(
-            self._config.bloom_capacity,
-            self._config.bloom_error_rate,
-        )
+        self._minhash_index: dict = {}
+        self._bloom: set[str] = set()
 
     async def deduplicate(
         self,
@@ -96,8 +94,8 @@ class Deduplicator:
             canonical_text = canonicalize(chunk.content)
             content_hash = hashlib.sha256(canonical_text.encode()).hexdigest()
 
-            # CP-19: Bloom filter fast screen
-            if self._bloom is not None and content_hash in self._bloom:
+            # CP-19: Fast screen via hash set
+            if content_hash in self._bloom:
                 logger.debug("Bloom filter hit for hash %s", content_hash[:12])
 
             # Stage 1: Exact hash dedup (CP-05a)
@@ -114,8 +112,7 @@ class Deduplicator:
                 continue
 
             self._exact_seen.add(content_hash)
-            if self._bloom is not None:
-                self._bloom.add(content_hash)
+            self._bloom.add(content_hash)
 
             # Stage 2: Near-duplicate via MinHash (CP-05b)
             near_decision = self._check_near_duplicate(canonical_text, content_hash)
@@ -154,9 +151,6 @@ class Deduplicator:
                 mh.update(s.encode("utf-8"))
 
             # Compare against existing MinHash signatures
-            if not hasattr(self, "_minhash_index"):
-                self._minhash_index: dict[str, MinHash] = {}
-
             for existing_hash, existing_mh in self._minhash_index.items():
                 jaccard = mh.jaccard(existing_mh)
                 if jaccard >= self._config.near_threshold:
@@ -239,18 +233,3 @@ def _text_to_shingles(text: str, k: int = 3) -> list[str]:
     return [" ".join(words[i : i + k]) for i in range(len(words) - k + 1)]
 
 
-def _create_bloom_filter(capacity: int, error_rate: float):
-    """Create a Bloom filter for streaming dedup (CP-19).
-
-    Returns None if datasketch is not available.
-    """
-    try:
-        from datasketch import HyperLogLog  # noqa: PLC0415
-
-        # Use a simple set-based approach as a fallback
-        # datasketch doesn't have a built-in Bloom filter,
-        # so we use a Python set for exact hash tracking
-        return set()
-    except ImportError:
-        logger.warning("datasketch not available, Bloom filter disabled")
-        return None

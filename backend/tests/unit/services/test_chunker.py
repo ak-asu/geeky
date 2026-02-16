@@ -52,10 +52,11 @@ class TestStructuralSplitting:
         assert any("Results" in c.content for c in chunks)
 
     def test_section_titles_preserved(self, chunker):
+        section_content = "This section explains an important concept. " * 20  # ~120 words, well above min_chunk_words
         doc = ParsedDocument(
             text="ignored",
             sections=[
-                ParsedSection(heading="My Section", content="Some content here with enough words to pass the minimum chunk size.", level=1),
+                ParsedSection(heading="My Section", content=section_content, level=1),
             ],
         )
         chunks = chunker.chunk(doc)

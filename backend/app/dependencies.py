@@ -116,10 +116,10 @@ def get_ner_extractor():
 
 @lru_cache
 def get_edge_classifier():
-    """Get the edge classifier. Currently: spaCy dependency parsing."""
-    from app.services.ner.spacy_extractor import SpacyEdgeClassifier  # noqa: PLC0415
+    """Get the edge classifier. Currently: LLM-based classification."""
+    from app.services.ner.spacy_extractor import LLMEdgeClassifier  # noqa: PLC0415
 
-    return SpacyEdgeClassifier()
+    return LLMEdgeClassifier(llm=get_llm_provider())
 
 
 # ============================================================
@@ -277,3 +277,86 @@ def get_analytics_repository():
     from app.repositories.analytics_repo import AnalyticsRepository  # noqa: PLC0415
 
     return AnalyticsRepository(db=get_firestore_db())
+
+
+def get_review_state_repository():
+    """Get the review state repository."""
+    from app.repositories.review_state_repo import ReviewStateRepository  # noqa: PLC0415
+
+    return ReviewStateRepository(db=get_firestore_db())
+
+
+def get_quiz_attempt_repository():
+    """Get the quiz attempt repository."""
+    from app.repositories.quiz_attempt_repo import QuizAttemptRepository  # noqa: PLC0415
+
+    return QuizAttemptRepository(db=get_firestore_db())
+
+
+# ============================================================
+# Knowledge Graph Services
+# ============================================================
+
+
+def get_graph_builder():
+    """Get the KG graph builder service."""
+    from app.services.knowledge_graph.graph_builder import GraphBuilder  # noqa: PLC0415
+
+    return GraphBuilder(
+        ner_extractor=get_ner_extractor(),
+        edge_classifier=get_edge_classifier(),
+        concept_repo=get_concept_repository(),
+        relationship_repo=get_relationship_repository(),
+        short_repo=get_short_repository(),
+        settings=get_settings(),
+    )
+
+
+def get_graph_query_service():
+    """Get the KG query service."""
+    from app.services.knowledge_graph.query_service import GraphQueryService  # noqa: PLC0415
+
+    return GraphQueryService(
+        concept_repo=get_concept_repository(),
+        relationship_repo=get_relationship_repository(),
+        settings=get_settings(),
+    )
+
+
+# ============================================================
+# Learning Services
+# ============================================================
+
+
+def get_review_manager():
+    """Get the review session manager."""
+    from app.services.learning.review_manager import ReviewManager  # noqa: PLC0415
+
+    return ReviewManager(
+        scheduler=get_spaced_repetition_scheduler(),
+        review_state_repo=get_review_state_repository(),
+        short_repo=get_short_repository(),
+        graph_query_service=get_graph_query_service(),
+        settings=get_settings(),
+    )
+
+
+def get_quiz_generator():
+    """Get the quiz generator."""
+    from app.services.learning.quiz_generator import QuizGenerator  # noqa: PLC0415
+
+    return QuizGenerator(
+        llm=get_llm_provider(),
+        short_repo=get_short_repository(),
+        graph_query_service=get_graph_query_service(),
+    )
+
+
+def get_flashcard_generator():
+    """Get the flashcard generator."""
+    from app.services.learning.flashcard_generator import FlashcardGenerator  # noqa: PLC0415
+
+    return FlashcardGenerator(
+        llm=get_llm_provider(),
+        short_repo=get_short_repository(),
+    )

@@ -39,13 +39,7 @@ def cascade_note_update(self, user_id: str, note_id: str, task_id: str) -> dict:
     logger.info("Cascading update for note %s user %s (task=%s)", note_id, user_id, task_id)
 
     try:
-        # First delete old derived content
-        asyncio.run(_run_cascade_delete(user_id, note_id))
-
-        # Then re-run the pipeline
-        from app.workers.pipeline_tasks import _run_pipeline  # noqa: PLC0415
-
-        result = asyncio.run(_run_pipeline(user_id, note_id, task_id))
+        result = asyncio.run(_run_cascade_update(user_id, note_id, task_id))
         logger.info("Cascade update completed for note %s: %s", note_id, result)
         return {"status": "completed", "note_id": note_id, **result}
 
@@ -107,3 +101,12 @@ async def _run_cascade_delete(user_id: str, note_id: str) -> dict:
         "shorts_deleted": shorts_deleted,
         "embeddings_deleted": len(chunk_ids),
     }
+
+
+async def _run_cascade_update(user_id: str, note_id: str, task_id: str) -> dict:
+    """Delete old derived content then re-run the pipeline in a single event loop."""
+    await _run_cascade_delete(user_id, note_id)
+
+    from app.workers.pipeline_tasks import _run_pipeline  # noqa: PLC0415
+
+    return await _run_pipeline(user_id, note_id, task_id)

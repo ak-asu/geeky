@@ -14,4 +14,7 @@ class RelationshipDocument(TimestampMixin):
     target_id: str = Field(default="", alias="targetId")
     type: str = "related"
     strength: float = 1.0
+    confidence: float = 1.0
+    evidence: str | None = None
+    short_ids: list[str] = Field(default_factory=list, alias="shortIds")
     is_dynamic: bool = Field(default=False, alias="isDynamic")
