@@ -167,12 +167,11 @@ def get_spaced_repetition_scheduler():
 # ============================================================
 
 
-@lru_cache
 def get_notification_sender():
     """Get the notification sender. Currently: Firebase Cloud Messaging."""
     from app.services.notification.fcm_sender import FCMNotificationSender  # noqa: PLC0415
 
-    return FCMNotificationSender()
+    return FCMNotificationSender(user_repo=get_user_repository())
 
 
 # ============================================================
@@ -439,3 +438,117 @@ def get_profile_service():
         chunk_repo=get_chunk_repository(),
         quiz_attempt_repo=get_quiz_attempt_repository(),
     )
+
+
+# ============================================================
+# Bookmark Services
+# ============================================================
+
+
+def get_bookmark_service():
+    """Get the bookmark service."""
+    from app.services.bookmark.bookmark_service import BookmarkService  # noqa: PLC0415
+
+    return BookmarkService(
+        bookmark_repo=get_bookmark_repository(),
+        short_repo=get_short_repository(),
+    )
+
+
+# ============================================================
+# Source Services
+# ============================================================
+
+
+def get_source_service():
+    """Get the source service."""
+    from app.services.source.source_service import SourceService  # noqa: PLC0415
+
+    return SourceService(source_repo=get_source_repository())
+
+
+# ============================================================
+# Module Services
+# ============================================================
+
+
+def get_module_service():
+    """Get the module service."""
+    from app.services.module.module_service import ModuleService  # noqa: PLC0415
+
+    return ModuleService(
+        module_repo=get_module_repository(),
+        short_repo=get_short_repository(),
+    )
+
+
+# ============================================================
+# Notification Services
+# ============================================================
+
+
+def get_notification_service():
+    """Get the notification service."""
+    from app.services.notification.notification_service import NotificationService  # noqa: PLC0415
+
+    return NotificationService(
+        notification_repo=get_notification_repository(),
+        notification_sender=get_notification_sender(),
+    )
+
+
+# ============================================================
+# Sync Services
+# ============================================================
+
+
+def get_sync_service():
+    """Get the sync service."""
+    from app.services.sync.sync_service import SyncService  # noqa: PLC0415
+
+    return SyncService(
+        interaction_repo=get_interaction_repository(),
+        user_repo=get_user_repository(),
+    )
+
+
+# ============================================================
+# Recommendation Services
+# ============================================================
+
+
+def get_recommendation_scorer():
+    """Get the multi-factor recommendation scorer."""
+    from app.services.recommendation.multi_factor_scorer import MultiFactorScorer  # noqa: PLC0415
+
+    return MultiFactorScorer(
+        user_repo=get_user_repository(),
+        interaction_repo=get_interaction_repository(),
+        review_state_repo=get_review_state_repository(),
+        short_repo=get_short_repository(),
+        settings=get_settings(),
+    )
+
+
+def get_feed_ranker():
+    """Get the feed ranker."""
+    from app.services.recommendation.feed_ranker import FeedRanker  # noqa: PLC0415
+
+    return FeedRanker(
+        scorer=get_recommendation_scorer(),
+        short_repo=get_short_repository(),
+        review_state_repo=get_review_state_repository(),
+        interaction_repo=get_interaction_repository(),
+    )
+
+
+# ============================================================
+# BKT Mastery Tracker
+# ============================================================
+
+
+def get_bkt_tracker():
+    """Get the BKT mastery tracker."""
+    from app.services.learning.bkt_tracker import BKTTracker  # noqa: PLC0415
+
+    return BKTTracker(concept_repo=get_concept_repository())
