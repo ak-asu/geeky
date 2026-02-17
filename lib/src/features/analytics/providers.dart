@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/network/api_service.dart';
 import '../../core/providers/database_provider.dart';
 import 'data/analytics_repository.dart';
 import 'domain/achievement.dart';
@@ -10,7 +11,10 @@ part 'providers.g.dart';
 
 @Riverpod(keepAlive: true)
 AnalyticsRepository analyticsRepository(Ref ref) {
-  return AnalyticsRepository(ref.read(appDatabaseProvider));
+  return AnalyticsRepository(
+    ref.read(appDatabaseProvider),
+    ref.read(apiServiceProvider),
+  );
 }
 
 @riverpod

@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/network/api_service.dart';
 import '../../core/providers/database_provider.dart';
 import 'data/rag_repository.dart';
 import 'domain/chat_message.dart';
@@ -12,7 +13,10 @@ part 'providers.g.dart';
 
 @Riverpod(keepAlive: true)
 RagRepository ragRepository(Ref ref) {
-  return RagRepository(ref.read(appDatabaseProvider));
+  return RagRepository(
+    ref.read(appDatabaseProvider),
+    ref.read(apiServiceProvider),
+  );
 }
 
 /// Manages the RAG chat session: message history and querying.

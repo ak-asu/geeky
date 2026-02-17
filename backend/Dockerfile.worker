@@ -1,21 +1,31 @@
-FROM python:3.12-slim
+FROM python:3.12-slim AS builder
 
-WORKDIR /app
+WORKDIR /build
 
-# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Download spaCy model
+# Download spaCy model (needed by worker for NER tasks)
 RUN python -m spacy download en_core_web_sm
 
-# Copy application code
-COPY . .
+# --- Runtime stage ---
+FROM python:3.12-slim
 
-# Run Celery worker
+WORKDIR /app
+
+# Copy installed Python packages from builder
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Create non-root user
+RUN groupadd -r geeky && useradd -r -g geeky -d /app geeky
+
+COPY . .
+RUN chown -R geeky:geeky /app
+USER geeky
+
 CMD ["celery", "-A", "app.workers.celery_app", "worker", "--loglevel=info", "--concurrency=2"]

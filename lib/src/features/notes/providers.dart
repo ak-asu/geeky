@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/network/api_service.dart';
 import '../../core/providers/database_provider.dart';
 import 'data/note_feed_scorer.dart';
 import 'data/notes_repository.dart';
@@ -10,7 +11,10 @@ part 'providers.g.dart';
 
 @Riverpod(keepAlive: true)
 NotesRepository notesRepository(Ref ref) {
-  return NotesRepository(ref.read(appDatabaseProvider));
+  return NotesRepository(
+    ref.read(appDatabaseProvider),
+    ref.read(apiServiceProvider),
+  );
 }
 
 /// Watches all notes from Drift as a stream.

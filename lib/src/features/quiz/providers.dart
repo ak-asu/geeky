@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/network/api_service.dart';
 import '../../core/providers/database_provider.dart';
 import 'data/fsrs_scheduler.dart';
 import 'data/quiz_repository.dart';
@@ -12,7 +13,10 @@ part 'providers.g.dart';
 
 @Riverpod(keepAlive: true)
 QuizRepository quizRepository(Ref ref) {
-  return QuizRepository(ref.read(appDatabaseProvider));
+  return QuizRepository(
+    ref.read(appDatabaseProvider),
+    ref.read(apiServiceProvider),
+  );
 }
 
 /// Due cards for quiz review.

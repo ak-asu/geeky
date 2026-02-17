@@ -1,23 +1,42 @@
+import '../../../core/constants/api_constants.dart';
+import '../../../core/network/api_service.dart';
 import '../../../services/local/database.dart';
 import '../../../services/local/daos/shorts_dao.dart';
 import '../../shorts/data/short_dto.dart';
 import '../domain/rag_response.dart';
 
-/// Mock RAG repository — simulates RAG answers by searching shorts locally
-/// and composing a mock answer with citations. Will be replaced by backend
-/// POST /rag/query calls when live.
+/// RAG repository — delegates to backend RAG orchestrator when online,
+/// falls back to local keyword matching when offline.
 class RagRepository {
-  RagRepository(this._db);
+  RagRepository(this._db, this._api);
 
   final AppDatabase _db;
+  final ApiService _api;
 
   ShortsDao get _shortsDao => _db.shortsDao;
 
   Future<RagResponse> query(String question) async {
+    // Try backend RAG first
+    try {
+      final response = await _api.post(
+        '${ApiConstants.rag}/query',
+        {'query': question},
+        (json) => RagResponse.fromJson(json as Map<String, dynamic>),
+      );
+      return response;
+    } catch (_) {
+      // Fallback to local mock RAG
+    }
+
+    return _localQuery(question);
+  }
+
+  // --- Local fallback ---
+
+  Future<RagResponse> _localQuery(String question) async {
     final rows = await _shortsDao.getAllShorts();
     final shorts = rows.map(ShortDto.fromRow).toList();
 
-    // Simple keyword matching to find relevant shorts
     final lowerQ = question.toLowerCase();
     final words = lowerQ
         .split(RegExp(r'\s+'))
@@ -63,7 +82,6 @@ class RagRepository {
       );
     }
 
-    // Compose a mock answer referencing the found shorts
     final answerParts = <String>[
       'Based on your knowledge base, here\'s what I found:\n',
     ];
@@ -71,7 +89,6 @@ class RagRepository {
     final citations = <Citation>[];
     for (var i = 0; i < topResults.length; i++) {
       final r = topResults[i];
-      // Extract first 2 sentences as snippet
       final sentences = r.content
           .replaceAll(RegExp(r'[#*_`]'), '')
           .split(RegExp(r'[.!?]\s'))
@@ -83,11 +100,9 @@ class RagRepository {
           : '$sentences.';
 
       answerParts.add('**${r.title}**: $snippet [${i + 1}]\n');
-
       citations.add(Citation(shortId: r.id, title: r.title, snippet: snippet));
     }
 
-    // Generate follow-up questions based on topics of found shorts
     final allTopics = <String>{};
     for (final r in topResults) {
       final short = shorts.firstWhere((s) => s.id == r.id);

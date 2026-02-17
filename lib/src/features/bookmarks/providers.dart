@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/network/api_service.dart';
 import '../../core/providers/database_provider.dart';
 import '../../services/local/database.dart';
 import '../auth/providers.dart';
@@ -13,7 +14,10 @@ part 'providers.g.dart';
 
 @Riverpod(keepAlive: true)
 BookmarksRepository bookmarksRepository(Ref ref) {
-  return BookmarksRepository(ref.read(appDatabaseProvider));
+  return BookmarksRepository(
+    ref.read(appDatabaseProvider),
+    ref.read(apiServiceProvider),
+  );
 }
 
 /// Watches all bookmarks as a stream.
@@ -48,8 +52,10 @@ class BookmarkToggle extends _$BookmarkToggle {
 
   Future<void> toggle(String shortId) async {
     final db = ref.read(appDatabaseProvider);
+    final repo = ref.read(bookmarksRepositoryProvider);
+
     if (state.contains(shortId)) {
-      await db.bookmarksDao.removeBookmark(shortId);
+      await repo.removeBookmark(shortId);
       state = {...state}..remove(shortId);
     } else {
       final userId = ref.read(currentUserProvider)?.id ?? 'anonymous';
@@ -61,6 +67,7 @@ class BookmarkToggle extends _$BookmarkToggle {
           createdAt: Value(DateTime.now()),
         ),
       );
+      await repo.addBookmark(shortId);
       state = {...state, shortId};
     }
   }

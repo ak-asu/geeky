@@ -102,6 +102,10 @@ class Settings(BaseSettings):
     # --- Source Polling ---
     source_poll_interval_minutes: int = Field(default=60, description="Source polling interval (SYS-02)")
 
+    # --- Deployment ---
+    api_base_url: str = Field(default="http://localhost:8000", description="Self-referential API base URL (Cloud Run)")
+    allowed_hosts: list[str] = Field(default=["*"], description="Trusted hosts for production")
+
 
 @lru_cache
 def get_settings() -> Settings:

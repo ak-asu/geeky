@@ -1,3 +1,5 @@
+import '../../../core/constants/api_constants.dart';
+import '../../../core/network/api_service.dart';
 import '../../../services/local/database.dart';
 import '../../../services/local/daos/quiz_dao.dart';
 import '../../../services/local/daos/shorts_dao.dart';
@@ -9,9 +11,10 @@ import 'quiz_card_dto.dart';
 import 'fsrs_scheduler.dart';
 
 class QuizRepository {
-  QuizRepository(this._db);
+  QuizRepository(this._db, this._api);
 
   final AppDatabase _db;
+  final ApiService _api;
 
   QuizDao get _quizDao => _db.quizDao;
   ShortsDao get _shortsDao => _db.shortsDao;
@@ -24,6 +27,26 @@ class QuizRepository {
   }
 
   Future<List<QuizCardEntity>> getDueCards() async {
+    try {
+      // Try backend FSRS-scheduled due cards
+      final result = await _api.get(
+        '${ApiConstants.quiz}/review/due',
+        (json) => json,
+      );
+      // Backend returns { cards, totalDue, ... } — extract cards
+      if (result is Map<String, dynamic> && result['cards'] is List) {
+        final cards = (result['cards'] as List)
+            .map((c) => QuizCardEntity.fromJson(c as Map<String, dynamic>))
+            .toList();
+        // Cache locally
+        for (final card in cards) {
+          await _quizDao.upsertCard(QuizCardDto.toCompanion(card));
+        }
+        return cards;
+      }
+    } catch (_) {
+      // Fallback to local FSRS
+    }
     final rows = await _quizDao.getDueCards();
     return rows.map(QuizCardDto.fromRow).toList();
   }
@@ -41,13 +64,37 @@ class QuizRepository {
   Future<QuizCardEntity> gradeCard(QuizCardEntity card, FSRSGrade grade) async {
     final updated = FSRSScheduler.schedule(card, grade);
     await saveCard(updated);
+
+    // Submit review to backend
+    try {
+      await _api.post('${ApiConstants.quiz}/review/${card.articleId}', {
+        'rating': grade.index,
+      }, (json) => json);
+    } catch (_) {
+      // Local grade applied; backend sync deferred
+    }
+
     return updated;
   }
 
   // --- Generate questions from shorts ---
 
-  /// Generates mock questions from a short for the quiz.
+  /// Generates questions from a short — tries backend first, falls back to local mock.
   Future<List<QuestionEntity>> generateQuestionsForShort(String shortId) async {
+    try {
+      final result = await _api.post('${ApiConstants.quiz}/generate', {
+        'short_ids': [shortId],
+        'count': 3,
+      }, (json) => json);
+      if (result is Map<String, dynamic> && result['questions'] is List) {
+        return (result['questions'] as List)
+            .map((q) => QuestionEntity.fromJson(q as Map<String, dynamic>))
+            .toList();
+      }
+    } catch (_) {
+      // Fallback to local mock
+    }
+
     final row = await _shortsDao.getShortById(shortId);
     if (row == null) return [];
 

@@ -1,21 +1,23 @@
 import 'dart:convert';
 
+import '../../../core/constants/api_constants.dart';
+import '../../../core/network/api_service.dart';
 import '../../../services/local/database.dart';
 import '../../../services/local/daos/shorts_dao.dart';
 import '../../shorts/data/short_dto.dart';
 import '../../shorts/domain/short_entity.dart';
 
-/// Mock search repository — substring match on title, topics, and tags.
-/// Will be replaced with hybrid keyword + semantic search via backend.
+/// Search repository — delegates to backend hybrid search when online,
+/// falls back to local substring match when offline.
 class SearchRepository {
-  SearchRepository(this._db);
+  SearchRepository(this._db, this._api);
 
   final AppDatabase _db;
+  final ApiService _api;
 
   ShortsDao get _shortsDao => _db.shortsDao;
 
-  /// Searches shorts by keyword (case-insensitive substring match on
-  /// title, topics, and tags). Returns results sorted by relevance.
+  /// Searches shorts — tries backend hybrid search first, falls back to local.
   Future<List<ShortEntity>> searchShorts({
     required String query,
     String? topicFilter,
@@ -25,47 +27,34 @@ class SearchRepository {
   }) async {
     if (query.trim().isEmpty) return [];
 
-    final lowerQuery = query.toLowerCase();
-    final rows = await _shortsDao.getAllShorts();
-    final shorts = rows.map(ShortDto.fromRow).toList();
-
-    // Score each short for relevance
-    final scored = <_ScoredShort>[];
-    for (final short in shorts) {
-      final score = _scoreMatch(short, lowerQuery);
-      if (score <= 0) continue;
-
-      // Apply filters
-      if (topicFilter != null && topicFilter.isNotEmpty) {
-        final hasTopicMatch = short.topics.any(
-          (t) => t.toLowerCase() == topicFilter.toLowerCase(),
-        );
-        if (!hasTopicMatch) continue;
+    // Try backend hybrid search (semantic + keyword)
+    try {
+      final result = await _api.get(
+        ApiConstants.search,
+        (json) => json,
+        queryParams: {
+          'q': query,
+          if (topicFilter != null) 'topic': topicFilter,
+          'limit': 20,
+        },
+      );
+      if (result is Map<String, dynamic> && result['results'] is List) {
+        final shorts = (result['results'] as List)
+            .map((r) => ShortEntity.fromJson(r as Map<String, dynamic>))
+            .toList();
+        return shorts;
       }
-
-      if (difficultyFilter != null) {
-        final diffRange = _difficultyRange(difficultyFilter);
-        if (diffRange != null) {
-          if (short.difficulty < diffRange.$1 ||
-              short.difficulty > diffRange.$2) {
-            continue;
-          }
-        }
-      }
-
-      if (readFilter != null) {
-        final isDone = doneIds.contains(short.id);
-        if (readFilter && !isDone) continue;
-        if (!readFilter && isDone) continue;
-      }
-
-      scored.add(_ScoredShort(short, score));
+    } catch (_) {
+      // Fallback to local search
     }
 
-    // Sort by score descending
-    scored.sort((a, b) => b.score.compareTo(a.score));
-
-    return scored.map((s) => s.short).toList();
+    return _localSearch(
+      query: query,
+      topicFilter: topicFilter,
+      difficultyFilter: difficultyFilter,
+      readFilter: readFilter,
+      doneIds: doneIds,
+    );
   }
 
   /// Returns topic suggestions matching the query prefix.
@@ -103,38 +92,80 @@ class SearchRepository {
     return topicSet.toList()..sort();
   }
 
+  // --- Local fallback search ---
+
+  Future<List<ShortEntity>> _localSearch({
+    required String query,
+    String? topicFilter,
+    String? difficultyFilter,
+    bool? readFilter,
+    Set<String> doneIds = const {},
+  }) async {
+    final lowerQuery = query.toLowerCase();
+    final rows = await _shortsDao.getAllShorts();
+    final shorts = rows.map(ShortDto.fromRow).toList();
+
+    final scored = <_ScoredShort>[];
+    for (final short in shorts) {
+      final score = _scoreMatch(short, lowerQuery);
+      if (score <= 0) continue;
+
+      if (topicFilter != null && topicFilter.isNotEmpty) {
+        final hasTopicMatch = short.topics.any(
+          (t) => t.toLowerCase() == topicFilter.toLowerCase(),
+        );
+        if (!hasTopicMatch) continue;
+      }
+
+      if (difficultyFilter != null) {
+        final diffRange = _difficultyRange(difficultyFilter);
+        if (diffRange != null) {
+          if (short.difficulty < diffRange.$1 ||
+              short.difficulty > diffRange.$2) {
+            continue;
+          }
+        }
+      }
+
+      if (readFilter != null) {
+        final isDone = doneIds.contains(short.id);
+        if (readFilter && !isDone) continue;
+        if (!readFilter && isDone) continue;
+      }
+
+      scored.add(_ScoredShort(short, score));
+    }
+
+    scored.sort((a, b) => b.score.compareTo(a.score));
+    return scored.map((s) => s.short).toList();
+  }
+
   double _scoreMatch(ShortEntity short, String lowerQuery) {
     double score = 0;
 
-    // Title match (highest weight)
     if (short.title.toLowerCase().contains(lowerQuery)) {
       score += 3.0;
-      // Bonus for starts-with
       if (short.title.toLowerCase().startsWith(lowerQuery)) {
         score += 1.0;
       }
     }
 
-    // Topic match
     for (final topic in short.topics) {
       if (topic.toLowerCase().contains(lowerQuery)) {
         score += 2.0;
       }
     }
 
-    // Tag match
     for (final tag in short.tags) {
       if (tag.toLowerCase().contains(lowerQuery)) {
         score += 1.5;
       }
     }
 
-    // Summary match
     if (short.summary.toLowerCase().contains(lowerQuery)) {
       score += 0.5;
     }
 
-    // Content match (lowest weight)
     if (short.content.toLowerCase().contains(lowerQuery)) {
       score += 0.25;
     }

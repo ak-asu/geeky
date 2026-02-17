@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/network/api_service.dart';
 import '../../core/providers/database_provider.dart';
 import '../shorts/domain/short_entity.dart';
 import '../shorts/providers.dart';
@@ -11,7 +12,10 @@ part 'providers.g.dart';
 
 @Riverpod(keepAlive: true)
 SearchRepository searchRepository(Ref ref) {
-  return SearchRepository(ref.read(appDatabaseProvider));
+  return SearchRepository(
+    ref.read(appDatabaseProvider),
+    ref.read(apiServiceProvider),
+  );
 }
 
 /// The current search query text. Updated with 300ms debounce.

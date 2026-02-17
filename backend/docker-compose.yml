@@ -7,9 +7,20 @@ services:
     volumes:
       - ./app:/app/app
     depends_on:
-      - chromadb
-      - redis
+      chromadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - backend
 
   worker:
     build:
@@ -17,18 +28,27 @@ services:
       dockerfile: Dockerfile.worker
     env_file: .env
     depends_on:
-      - chromadb
-      - redis
+      chromadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=2
+    restart: unless-stopped
+    networks:
+      - backend
 
   beat:
     build:
       context: .
-      dockerfile: Dockerfile.worker
+      dockerfile: Dockerfile.beat
     env_file: .env
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     command: celery -A app.workers.celery_app beat --loglevel=info
+    restart: unless-stopped
+    networks:
+      - backend
 
   chromadb:
     image: chromadb/chroma:latest
@@ -36,11 +56,32 @@ services:
       - "8001:8000"
     volumes:
       - chroma_data:/chroma/chroma
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - backend
 
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - backend
 
 volumes:
   chroma_data:
+
+networks:
+  backend:
+    driver: bridge

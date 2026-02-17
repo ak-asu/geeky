@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/network/api_service.dart';
 import '../../core/providers/database_provider.dart';
 import 'data/shorts_repository.dart';
 import 'domain/short_entity.dart';
@@ -8,7 +9,10 @@ part 'providers.g.dart';
 
 @Riverpod(keepAlive: true)
 ShortsRepository shortsRepository(Ref ref) {
-  return ShortsRepository(ref.read(appDatabaseProvider));
+  return ShortsRepository(
+    ref.read(appDatabaseProvider),
+    ref.read(apiServiceProvider),
+  );
 }
 
 /// Watches all shorts from Drift as a stream.
