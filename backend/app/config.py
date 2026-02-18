@@ -28,7 +28,6 @@ class Settings(BaseSettings):
     debug: bool = False
     environment: str = Field(default="development", description="development | staging | production")
     log_level: str = "INFO"
-    cors_origins: list[str] = Field(default=["*"])
 
     # --- Firebase ---
     firebase_credentials_path: str | None = Field(
@@ -105,6 +104,20 @@ class Settings(BaseSettings):
     # --- Deployment ---
     api_base_url: str = Field(default="http://localhost:8000", description="Self-referential API base URL (Cloud Run)")
     allowed_hosts: list[str] = Field(default=["*"], description="Trusted hosts for production")
+    allowed_origins: list[str] = Field(
+        default=["http://localhost:3000", "http://localhost:8080", "http://10.0.2.2:8000"],
+        description="CORS allowed origins. Comma-separated list in env: ALLOWED_ORIGINS",
+    )
+
+    # --- Timeouts ---
+    gemini_timeout_seconds: float = Field(default=30.0, description="Gemini LLM generation timeout")
+    embedding_timeout_seconds: float = Field(default=15.0, description="Embedding API timeout")
+    chromadb_timeout_seconds: float = Field(default=10.0, description="ChromaDB query/add timeout")
+    rag_timeout_seconds: float = Field(default=30.0, description="RAG orchestrator total timeout")
+    health_probe_timeout_seconds: float = Field(default=3.0, description="Health check per-dependency probe timeout")
+
+    # --- File Upload ---
+    max_upload_size_mb: int = Field(default=10, description="Maximum file upload size in megabytes")
 
 
 @lru_cache

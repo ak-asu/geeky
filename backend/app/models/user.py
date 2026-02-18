@@ -51,10 +51,10 @@ class UserDocument(TimestampMixin):
 
 
 class UserProfileUpdate(BaseModel):
-    name: str | None = None
-    interests: list[str] | None = None
-    goals: list[str] | None = None
-    learning_mode: str | None = Field(default=None, alias="learningMode")
-    depth_preference: str | None = Field(default=None, alias="depthPreference")
+    name: str | None = Field(default=None, min_length=1, max_length=200)
+    interests: list[str] | None = Field(default=None, max_length=50)
+    goals: list[str] | None = Field(default=None, max_length=20)
+    learning_mode: str | None = Field(default=None, alias="learningMode", max_length=50)
+    depth_preference: str | None = Field(default=None, alias="depthPreference", max_length=50)
     onboarding_completed: bool | None = Field(default=None, alias="onboardingCompleted")
     model_config = {"populate_by_name": True}

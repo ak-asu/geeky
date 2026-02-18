@@ -57,16 +57,18 @@ def create_app() -> FastAPI:
     # --- CORS ---
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origins,
+        allow_origins=settings.allowed_origins,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Authorization", "Content-Type", "X-Correlation-ID"],
     )
 
     # --- Middleware ---
-    from app.api.middleware.error_handler import CorrelationIdMiddleware
-    from app.api.middleware.logging import RequestLoggingMiddleware
+    from app.api.middleware.error_handler import CorrelationIdMiddleware  # noqa: PLC0415
+    from app.api.middleware.logging import RequestLoggingMiddleware  # noqa: PLC0415
+    from app.api.middleware.security_headers import SecurityHeadersMiddleware  # noqa: PLC0415
 
+    app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RequestLoggingMiddleware)
     app.add_middleware(CorrelationIdMiddleware)
 

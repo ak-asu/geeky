@@ -21,6 +21,31 @@ from app.config import Settings, get_settings
 
 
 # ============================================================
+# Feature Flags
+# ============================================================
+
+
+def get_feature_flags():
+    """Get the feature flag provider. Currently: Firestore-backed with 5-min TTL."""
+    from app.services.feature_flags.firestore_flags import FirestoreFeatureFlags  # noqa: PLC0415
+
+    return FirestoreFeatureFlags(db=get_firestore_db())
+
+
+# ============================================================
+# Text Sanitizer
+# ============================================================
+
+
+@lru_cache
+def get_text_sanitizer():
+    """Get the text sanitizer. Currently: Bleach."""
+    from app.services.sanitization.bleach_sanitizer import BleachSanitizer  # noqa: PLC0415
+
+    return BleachSanitizer()
+
+
+# ============================================================
 # Firebase / Firestore
 # ============================================================
 
@@ -44,7 +69,11 @@ def get_llm_provider():
     from app.services.llm.gemini_llm import GeminiLLM  # noqa: PLC0415
 
     settings = get_settings()
-    return GeminiLLM(api_key=settings.gemini_api_key, model=settings.gemini_model)
+    return GeminiLLM(
+        api_key=settings.gemini_api_key,
+        model=settings.gemini_model,
+        timeout_seconds=settings.gemini_timeout_seconds,
+    )
 
 
 # ============================================================
@@ -62,6 +91,7 @@ def get_embedding_provider():
         api_key=settings.gemini_api_key,
         model=settings.gemini_embedding_model,
         dimensions=settings.gemini_embedding_dimensions,
+        timeout_seconds=settings.embedding_timeout_seconds,
     )
 
 
@@ -80,6 +110,7 @@ def get_vector_store():
         host=settings.chromadb_host,
         port=settings.chromadb_port,
         collection_name=settings.chromadb_collection_name,
+        timeout_seconds=settings.chromadb_timeout_seconds,
     )
 
 

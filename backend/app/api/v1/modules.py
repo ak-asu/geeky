@@ -4,6 +4,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Query
 
 from app.api.middleware.auth import CurrentUserId
+from app.api.middleware.rate_limit import CheckRateLimit
 from app.dependencies import get_module_service
 from app.models.module import ModuleCreate, ModuleUpdate
 
@@ -12,6 +13,7 @@ router = APIRouter(prefix="/modules", tags=["modules"])
 
 @router.post("/")
 async def create_module(
+    _rate_limit: CheckRateLimit,
     data: ModuleCreate,
     user_id: CurrentUserId,
     service=Depends(get_module_service),
@@ -51,6 +53,7 @@ async def get_module(
 
 @router.patch("/{module_id}")
 async def update_module(
+    _rate_limit: CheckRateLimit,
     module_id: str,
     data: ModuleUpdate,
     user_id: CurrentUserId,

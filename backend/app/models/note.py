@@ -8,16 +8,16 @@ from app.models.common import NoteType, TimestampMixin
 
 class NoteCreate(BaseModel):
     type: NoteType = NoteType.TEXT
-    title: str | None = None
-    content: str
-    source_url: str | None = None
-    topics: list[str] = Field(default_factory=list)
+    title: str | None = Field(default=None, max_length=500)
+    content: str = Field(min_length=1, max_length=100_000)
+    source_url: str | None = Field(default=None, max_length=2048)
+    topics: list[str] = Field(default_factory=list, max_length=50)
 
 
 class NoteUpdate(BaseModel):
-    title: str | None = None
-    content: str | None = None
-    topics: list[str] | None = None
+    title: str | None = Field(default=None, max_length=500)
+    content: str | None = Field(default=None, min_length=1, max_length=100_000)
+    topics: list[str] | None = Field(default=None, max_length=50)
 
 
 class NoteDocument(TimestampMixin):

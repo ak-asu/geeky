@@ -7,20 +7,20 @@ from app.models.common import ModuleType, TimestampMixin
 
 
 class ModuleCreate(BaseModel):
-    name: str
-    description: str = ""
-    topics: list[str] = Field(default_factory=list)
-    short_ids: list[str] = Field(default_factory=list, alias="shortIds")
+    name: str = Field(min_length=1, max_length=300)
+    description: str = Field(default="", max_length=5000)
+    topics: list[str] = Field(default_factory=list, max_length=50)
+    short_ids: list[str] = Field(default_factory=list, alias="shortIds", max_length=500)
     type: ModuleType = ModuleType.MANUAL
     is_free: bool = Field(default=False, alias="isFree")
     model_config = {"populate_by_name": True}
 
 
 class ModuleUpdate(BaseModel):
-    name: str | None = None
-    description: str | None = None
-    topics: list[str] | None = None
-    short_ids: list[str] | None = Field(default=None, alias="shortIds")
+    name: str | None = Field(default=None, min_length=1, max_length=300)
+    description: str | None = Field(default=None, max_length=5000)
+    topics: list[str] | None = Field(default=None, max_length=50)
+    short_ids: list[str] | None = Field(default=None, alias="shortIds", max_length=500)
     model_config = {"populate_by_name": True}
 
 

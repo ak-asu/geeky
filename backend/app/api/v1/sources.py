@@ -4,6 +4,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 
 from app.api.middleware.auth import CurrentUserId
+from app.api.middleware.rate_limit import CheckRateLimit
 from app.dependencies import get_source_service
 from app.models.source import SourceCreate
 
@@ -12,6 +13,7 @@ router = APIRouter(prefix="/sources", tags=["sources"])
 
 @router.post("/")
 async def add_source(
+    _rate_limit: CheckRateLimit,
     data: SourceCreate,
     user_id: CurrentUserId,
     service=Depends(get_source_service),

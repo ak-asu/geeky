@@ -43,13 +43,16 @@ class MockModuleService:
 
 def _make_test_app() -> FastAPI:
     from app.api.middleware.auth import verify_firebase_token
+    from app.api.middleware.rate_limit import check_rate_limit
     from app.dependencies import get_module_service
+    from tests.mocks.mock_services import noop_rate_limit
 
     app = FastAPI()
     app.include_router(router, prefix="/api/v1")
 
     app.dependency_overrides[verify_firebase_token] = lambda: "test-user-001"
     app.dependency_overrides[get_module_service] = lambda: MockModuleService()
+    app.dependency_overrides[check_rate_limit] = noop_rate_limit
 
     return app
 

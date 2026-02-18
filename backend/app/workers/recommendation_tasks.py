@@ -23,9 +23,7 @@ def recalculate_recommendations(self, user_id: str) -> dict:
         from app.dependencies import get_feed_ranker  # noqa: PLC0415
 
         ranker = get_feed_ranker()
-        result = asyncio.get_event_loop().run_until_complete(
-            ranker.refresh(user_id)
-        )
+        result = asyncio.run(ranker.refresh(user_id))
 
         logger.info(
             "Recommendation recalculation completed for user %s: %d scored",

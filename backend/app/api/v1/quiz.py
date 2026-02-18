@@ -4,10 +4,12 @@ Covers quiz generation, grading, and FSRS-based review sessions.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.api.middleware.auth import CurrentUserId
+from app.api.middleware.rate_limit import CheckRateLimit
 from app.dependencies import (
+    get_feature_flags,
     get_quiz_generator,
     get_review_manager,
     get_quiz_attempt_repository,
@@ -22,11 +24,15 @@ router = APIRouter(prefix="/quiz", tags=["quiz"])
 
 @router.post("/generate")
 async def generate_quiz(
+    _rate_limit: CheckRateLimit,
     user_id: CurrentUserId,
     body: QuizGenerateRequest,
     generator=Depends(get_quiz_generator),
+    flags=Depends(get_feature_flags),
 ) -> dict:
     """Generate a quiz from Shorts, topic, or module (AL-04)."""
+    if not await flags.is_enabled("quiz_generation_enabled", default=True):
+        raise HTTPException(status_code=503, detail="Quiz generation is temporarily disabled")
     questions = await generator.generate(
         user_id,
         short_ids=body.short_ids,
@@ -44,6 +50,7 @@ async def generate_quiz(
 
 @router.post("/submit")
 async def submit_quiz(
+    _rate_limit: CheckRateLimit,
     user_id: CurrentUserId,
     body: QuizGradeRequest,
     quiz_attempt_repo=Depends(get_quiz_attempt_repository),
@@ -122,6 +129,7 @@ async def get_due_cards(
 
 @router.post("/review/{review_state_id}")
 async def submit_review(
+    _rate_limit: CheckRateLimit,
     review_state_id: str,
     user_id: CurrentUserId,
     body: ReviewSubmitRequest,

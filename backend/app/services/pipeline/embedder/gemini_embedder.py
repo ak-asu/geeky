@@ -34,6 +34,7 @@ class GeminiEmbedder:
         model: str = "models/embedding-001",
         dimensions: int = 768,
         batch_size: int = _DEFAULT_BATCH_SIZE,
+        timeout_seconds: float = 15.0,
     ) -> None:
         from google import genai  # noqa: PLC0415
 
@@ -41,6 +42,7 @@ class GeminiEmbedder:
         self._model = model
         self._dimensions = dimensions
         self._batch_size = batch_size
+        self._timeout = timeout_seconds
 
     @property
     def dimensions(self) -> int:
@@ -65,20 +67,26 @@ class GeminiEmbedder:
         return results[0]
 
     async def _embed_batch(self, texts: list[str]) -> list[list[float]]:
-        """Embed a single batch with retry logic."""
+        """Embed a single batch with retry logic and timeout."""
         from google.genai import types  # noqa: PLC0415
 
         for attempt in range(_MAX_RETRIES):
             try:
-                response = await asyncio.to_thread(
-                    self._client.models.embed_content,
-                    model=self._model,
-                    contents=texts,
-                    config=types.EmbedContentConfig(
-                        output_dimensionality=self._dimensions,
+                response = await asyncio.wait_for(
+                    asyncio.to_thread(
+                        self._client.models.embed_content,
+                        model=self._model,
+                        contents=texts,
+                        config=types.EmbedContentConfig(
+                            output_dimensionality=self._dimensions,
+                        ),
                     ),
+                    timeout=self._timeout,
                 )
                 return [e.values for e in response.embeddings]
+            except asyncio.TimeoutError:
+                logger.error("Gemini embedding timed out after %.1fs", self._timeout)
+                raise ExternalServiceError("Gemini Embeddings", f"Request timed out after {self._timeout}s")
             except Exception as exc:
                 if _is_rate_limit(exc) and attempt < _MAX_RETRIES - 1:
                     delay = _BASE_DELAY * (2**attempt)

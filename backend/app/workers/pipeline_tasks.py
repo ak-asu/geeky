@@ -14,7 +14,13 @@ from app.workers.celery_app import celery_app
 logger = logging.getLogger(__name__)
 
 
-@celery_app.task(bind=True, max_retries=3, default_retry_delay=30)
+@celery_app.task(
+    bind=True,
+    max_retries=3,
+    default_retry_delay=30,
+    soft_time_limit=540,  # 9 min graceful (pipeline can take a while for large docs)
+    time_limit=600,       # 10 min hard kill
+)
 def process_note(self, user_id: str, note_id: str, task_id: str) -> dict:
     """Orchestrate the full note processing pipeline.
 

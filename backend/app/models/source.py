@@ -8,10 +8,10 @@ from app.models.common import SourceStatus, SourceType, TimestampMixin
 
 class SourceCreate(BaseModel):
     type: SourceType
-    name: str
-    url: str
-    fetch_frequency: int = Field(default=60, alias="fetchFrequency", description="Minutes between polls")
-    default_topics: list[str] = Field(default_factory=list, alias="defaultTopics")
+    name: str = Field(min_length=1, max_length=300)
+    url: str = Field(min_length=1, max_length=2048)
+    fetch_frequency: int = Field(default=60, alias="fetchFrequency", ge=1, le=10080, description="Minutes between polls")
+    default_topics: list[str] = Field(default_factory=list, alias="defaultTopics", max_length=50)
     content_filters: dict = Field(default_factory=dict, alias="contentFilters")
     model_config = {"populate_by_name": True}
 

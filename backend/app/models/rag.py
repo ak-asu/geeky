@@ -7,7 +7,7 @@ from app.models.common import RAGMode
 
 
 class RAGQueryRequest(BaseModel):
-    question: str
+    question: str = Field(min_length=1, max_length=1000)
     mode: RAGMode = RAGMode.QA
     top_k: int = Field(default=10, ge=1, le=50)
     session_id: str | None = Field(default=None, alias="sessionId")
@@ -30,7 +30,7 @@ class RAGQueryResponse(BaseModel):
 
 
 class SearchRequest(BaseModel):
-    query: str
+    query: str = Field(min_length=1, max_length=500)
     filters: SearchFilters | None = None
     limit: int = Field(default=20, ge=1, le=100)
     cursor: str | None = None

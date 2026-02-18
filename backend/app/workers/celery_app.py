@@ -34,6 +34,18 @@ celery_app.conf.update(
     task_acks_late=True,  # Acknowledge after completion (for reliability)
     worker_prefetch_multiplier=1,  # One task at a time per worker
 
+    # Worker lifecycle — prevent memory leaks from long-running workers
+    worker_max_tasks_per_child=100,
+
+    # Global time limits — override per-task as needed
+    # Soft: task receives SoftTimeLimitExceeded, can clean up
+    # Hard: worker process is killed after this time
+    task_soft_time_limit=300,   # 5 min graceful
+    task_time_limit=600,        # 10 min hard kill
+
+    # Reliability — re-queue if worker dies during execution
+    task_reject_on_worker_lost=True,
+
     # Retry defaults
     task_default_retry_delay=30,  # 30 seconds
     task_max_retries=3,

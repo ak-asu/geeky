@@ -4,6 +4,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Query
 
 from app.api.middleware.auth import CurrentUserId
+from app.api.middleware.rate_limit import CheckRateLimit
 from app.dependencies import get_bookmark_service
 
 router = APIRouter(prefix="/bookmarks", tags=["bookmarks"])
@@ -11,6 +12,7 @@ router = APIRouter(prefix="/bookmarks", tags=["bookmarks"])
 
 @router.post("/{short_id}")
 async def create_bookmark(
+    _rate_limit: CheckRateLimit,
     short_id: str,
     user_id: CurrentUserId,
     service=Depends(get_bookmark_service),

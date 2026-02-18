@@ -4,6 +4,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 
 from app.api.middleware.auth import CurrentUserId
+from app.api.middleware.rate_limit import CheckRateLimit
 from app.dependencies import get_sync_service
 from app.models.interaction import InteractionBatchRequest
 
@@ -12,6 +13,7 @@ router = APIRouter(prefix="/sync", tags=["sync"])
 
 @router.post("/interactions")
 async def batch_upload_interactions(
+    _rate_limit: CheckRateLimit,
     data: InteractionBatchRequest,
     user_id: CurrentUserId,
     service=Depends(get_sync_service),

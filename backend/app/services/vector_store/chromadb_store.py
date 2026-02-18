@@ -29,11 +29,13 @@ class ChromaDBStore:
         host: str = "localhost",
         port: int = 8001,
         collection_name: str = "geeky_chunks",
+        timeout_seconds: float = 10.0,
     ) -> None:
         import chromadb  # noqa: PLC0415
 
         self._client = chromadb.HttpClient(host=host, port=port)
         self._collection_name = collection_name
+        self._timeout = timeout_seconds
         self._collection = self._client.get_or_create_collection(
             name=collection_name,
             metadata={"hnsw:space": "cosine"},
@@ -50,13 +52,19 @@ class ChromaDBStore:
         """Add vectors with user_id injected into metadata."""
         enriched = [{**m, "user_id": user_id} for m in metadatas]
         try:
-            await asyncio.to_thread(
-                self._collection.add,
-                ids=ids,
-                embeddings=embeddings,
-                documents=documents,
-                metadatas=enriched,
+            await asyncio.wait_for(
+                asyncio.to_thread(
+                    self._collection.add,
+                    ids=ids,
+                    embeddings=embeddings,
+                    documents=documents,
+                    metadatas=enriched,
+                ),
+                timeout=self._timeout,
             )
+        except asyncio.TimeoutError:
+            logger.error("ChromaDB add timed out after %.1fs", self._timeout)
+            raise ExternalServiceError("ChromaDB", f"Add timed out after {self._timeout}s")
         except Exception as exc:
             logger.error("ChromaDB add failed: %s", exc)
             raise ExternalServiceError("ChromaDB", str(exc)) from exc
@@ -68,7 +76,7 @@ class ChromaDBStore:
         n_results: int = 10,
         where: dict | None = None,
     ) -> QueryResult:
-        """Query vectors filtered by user_id."""
+        """Query vectors filtered by user_id. Returns empty result on timeout."""
         user_filter = {"user_id": user_id}
         if where:
             combined = {"$and": [user_filter, where]}
@@ -76,12 +84,15 @@ class ChromaDBStore:
             combined = user_filter
 
         try:
-            result = await asyncio.to_thread(
-                self._collection.query,
-                query_embeddings=[embedding],
-                n_results=n_results,
-                where=combined,
-                include=["documents", "metadatas", "distances"],
+            result = await asyncio.wait_for(
+                asyncio.to_thread(
+                    self._collection.query,
+                    query_embeddings=[embedding],
+                    n_results=n_results,
+                    where=combined,
+                    include=["documents", "metadatas", "distances"],
+                ),
+                timeout=self._timeout,
             )
             return QueryResult(
                 ids=result["ids"][0] if result["ids"] else [],
@@ -89,6 +100,9 @@ class ChromaDBStore:
                 metadatas=result["metadatas"][0] if result["metadatas"] else [],
                 distances=result["distances"][0] if result["distances"] else [],
             )
+        except asyncio.TimeoutError:
+            logger.warning("ChromaDB query timed out after %.1fs — returning empty results", self._timeout)
+            return QueryResult(ids=[], documents=[], metadatas=[], distances=[])
         except Exception as exc:
             logger.error("ChromaDB query failed: %s", exc)
             raise ExternalServiceError("ChromaDB", str(exc)) from exc
