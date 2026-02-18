@@ -52,6 +52,3 @@ class ShortDocument(TimestampMixin):
     conflict_flags: list[ConflictFlag] = Field(default_factory=list, alias="conflictFlags")
 
 
-class ShortListResponse(BaseModel):
-    data: list[ShortDocument]
-    meta: dict = Field(default_factory=dict)

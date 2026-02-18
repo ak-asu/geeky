@@ -5,26 +5,9 @@ from fastapi import APIRouter, Depends
 
 from app.api.middleware.auth import CurrentUserId
 from app.dependencies import get_user_repository
+from app.models.subscription import ENTITLEMENTS
 
 router = APIRouter(prefix="/subscription", tags=["subscription"])
-
-
-_ENTITLEMENTS = {
-    "free": {
-        "maxNotes": 50,
-        "maxSources": 3,
-        "ragQueriesPerDay": 10,
-        "advancedAnalytics": False,
-        "priorityProcessing": False,
-    },
-    "premium": {
-        "maxNotes": -1,  # unlimited
-        "maxSources": -1,
-        "ragQueriesPerDay": -1,
-        "advancedAnalytics": True,
-        "priorityProcessing": True,
-    },
-}
 
 
 @router.get("/status")
@@ -35,9 +18,10 @@ async def get_subscription_status(
     """Get the current user's subscription tier and entitlements."""
     user = await user_repo.get(user_id)
     tier = user.subscription_tier.value if user else "free"
+    entitlements = ENTITLEMENTS.get(tier, ENTITLEMENTS["free"])
     return {
         "data": {
             "tier": tier,
-            "entitlements": _ENTITLEMENTS.get(tier, _ENTITLEMENTS["free"]),
+            "entitlements": entitlements.model_dump(by_alias=True),
         },
     }

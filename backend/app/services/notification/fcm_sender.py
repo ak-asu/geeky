@@ -5,6 +5,7 @@ Implements NotificationSender protocol using firebase-admin SDK.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -51,7 +52,7 @@ class FCMNotificationSender:
                     data=data or {},
                     token=token,
                 )
-                messaging.send(message)
+                await asyncio.to_thread(messaging.send, message)
                 success = True
             except messaging.UnregisteredError:
                 logger.info("Stale FCM token for user %s, token=%s", user_id, token[:10])

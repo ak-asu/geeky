@@ -6,10 +6,13 @@ All repositories follow this pattern:
 - Concrete repos extend FirestoreBaseRepository with entity-specific logic
 
 CRITICAL: Every method requires user_id as first parameter for data isolation.
+NOTE: firebase_admin returns a sync Firestore client; all SDK calls are wrapped
+with asyncio.to_thread() to avoid blocking the event loop.
 """
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import datetime, timezone
 from typing import Any, Generic, TypeVar
@@ -28,7 +31,7 @@ class FirestoreBaseRepository(Generic[T]):
     scoped to a user's subcollection.
 
     Args:
-        db: Firestore client instance.
+        db: Firestore client instance (sync firebase_admin client).
         collection_name: Name of the subcollection under users/{userId}/.
         model_class: Pydantic model class for deserialization.
     """
@@ -45,7 +48,7 @@ class FirestoreBaseRepository(Generic[T]):
     async def get(self, user_id: str, doc_id: str) -> T | None:
         """Get a single document by ID, scoped to user."""
         doc_ref = self._user_collection(user_id).document(doc_id)
-        doc = doc_ref.get()
+        doc = await asyncio.to_thread(doc_ref.get)
         if not doc.exists:
             return None
         data = doc.to_dict()
@@ -73,12 +76,14 @@ class FirestoreBaseRepository(Generic[T]):
         )
 
         if cursor:
-            cursor_doc = self._user_collection(user_id).document(cursor).get()
+            cursor_doc = await asyncio.to_thread(
+                self._user_collection(user_id).document(cursor).get
+            )
             if cursor_doc.exists:
                 query = query.start_after(cursor_doc)
 
         query = query.limit(limit + 1)  # Fetch one extra to check for next page
-        docs = list(query.stream())
+        docs = await asyncio.to_thread(lambda: list(query.stream()))
 
         has_more = len(docs) > limit
         if has_more:
@@ -104,26 +109,31 @@ class FirestoreBaseRepository(Generic[T]):
         doc_data["updatedAt"] = datetime.now(timezone.utc)
 
         if doc_id:
-            self._user_collection(user_id).document(doc_id).set(doc_data)
+            await asyncio.to_thread(
+                self._user_collection(user_id).document(doc_id).set, doc_data
+            )
             return doc_id
         else:
-            _, doc_ref = self._user_collection(user_id).add(doc_data)
+            _, doc_ref = await asyncio.to_thread(
+                self._user_collection(user_id).add, doc_data
+            )
             return doc_ref.id
 
     async def update(self, user_id: str, doc_id: str, data: dict) -> None:
         """Update specific fields of a document, scoped to user."""
         data["updatedAt"] = datetime.now(timezone.utc)
-        self._user_collection(user_id).document(doc_id).update(data)
+        await asyncio.to_thread(
+            self._user_collection(user_id).document(doc_id).update, data
+        )
 
     async def delete(self, user_id: str, doc_id: str) -> None:
         """Delete a document, scoped to user."""
-        self._user_collection(user_id).document(doc_id).delete()
+        await asyncio.to_thread(self._user_collection(user_id).document(doc_id).delete)
 
     async def count(self, user_id: str) -> int:
         """Count documents in the user's subcollection."""
-        # Firestore count aggregation
         query = self._user_collection(user_id)
-        count_result = query.count().get()
+        count_result = await asyncio.to_thread(lambda: query.count().get())
         return count_result[0][0].value if count_result else 0
 
     async def query(
@@ -139,17 +149,17 @@ class FirestoreBaseRepository(Generic[T]):
             filters: List of (field, operator, value) tuples.
                      Operators: ==, !=, <, <=, >, >=, in, array_contains
         """
-        query = self._user_collection(user_id)
+        q = self._user_collection(user_id)
 
         if filters:
             for field, op, value in filters:
-                query = query.where(field, op, value)
+                q = q.where(field, op, value)
 
         if order_by:
-            query = query.order_by(order_by)
+            q = q.order_by(order_by)
 
-        query = query.limit(limit)
-        docs = list(query.stream())
+        q = q.limit(limit)
+        docs = await asyncio.to_thread(lambda: list(q.stream()))
 
         items = []
         for doc in docs:

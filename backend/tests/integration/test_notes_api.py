@@ -76,8 +76,13 @@ class MockProcessingTaskRepository:
 def _make_test_app(note_repo: MockNoteRepository, task_repo: MockProcessingTaskRepository) -> FastAPI:
     from app.api.middleware.auth import verify_firebase_token
     from app.api.middleware.rate_limit import check_rate_limit
-    from app.dependencies import get_note_repository, get_processing_task_repository
-    from tests.mocks.mock_services import noop_rate_limit
+    from app.dependencies import (
+        get_note_repository,
+        get_processing_task_repository,
+        get_subscription_service,
+        get_text_sanitizer,
+    )
+    from tests.mocks.mock_services import MockSubscriptionService, MockTextSanitizer, noop_rate_limit
 
     app = FastAPI()
 
@@ -96,6 +101,8 @@ def _make_test_app(note_repo: MockNoteRepository, task_repo: MockProcessingTaskR
     app.dependency_overrides[get_note_repository] = lambda: note_repo
     app.dependency_overrides[get_processing_task_repository] = lambda: task_repo
     app.dependency_overrides[check_rate_limit] = noop_rate_limit
+    app.dependency_overrides[get_subscription_service] = lambda: MockSubscriptionService()
+    app.dependency_overrides[get_text_sanitizer] = lambda: MockTextSanitizer()
 
     return app
 

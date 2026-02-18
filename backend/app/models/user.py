@@ -48,6 +48,9 @@ class UserDocument(TimestampMixin):
     reading_patterns: ReadingPatterns = Field(default_factory=ReadingPatterns, alias="readingPatterns")
     onboarding_completed: bool = Field(default=False, alias="onboardingCompleted")
     fcm_tokens: list[str] = Field(default_factory=list, alias="fcmTokens")
+    # RAG quota tracking (enforced by SubscriptionService)
+    rag_queries_today: int = Field(default=0, alias="ragQueriesToday")
+    rag_queries_date: str = Field(default="", alias="ragQueriesDate")
 
 
 class UserProfileUpdate(BaseModel):

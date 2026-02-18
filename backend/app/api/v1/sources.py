@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 
 from app.api.middleware.auth import CurrentUserId
 from app.api.middleware.rate_limit import CheckRateLimit
-from app.dependencies import get_source_service
+from app.dependencies import get_source_service, get_subscription_service
 from app.models.source import SourceCreate
 
 router = APIRouter(prefix="/sources", tags=["sources"])
@@ -17,8 +17,10 @@ async def add_source(
     data: SourceCreate,
     user_id: CurrentUserId,
     service=Depends(get_source_service),
+    sub_svc=Depends(get_subscription_service),
 ) -> dict:
     """Add a new external source (URL, RSS, etc.)."""
+    await sub_svc.check_sources_quota(user_id)
     source = await service.add_source(user_id, data)
     return {"data": source.model_dump(mode="json", by_alias=True)}
 

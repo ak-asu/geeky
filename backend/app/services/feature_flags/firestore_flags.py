@@ -16,6 +16,7 @@ hot-spotting on every API request.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from typing import Any
@@ -36,7 +37,7 @@ class FirestoreFeatureFlags:
     def __init__(self, db, *, ttl_seconds: float = 300.0) -> None:
         """
         Args:
-            db: Firestore async client.
+            db: Sync Firestore Admin client (firebase_admin.firestore.client()).
             ttl_seconds: How long to cache the flags map (default 5 min).
         """
         self._db = db
@@ -63,7 +64,7 @@ class FirestoreFeatureFlags:
 
         try:
             doc_ref = self._db.collection(_FLAGS_COLLECTION).document(_FLAGS_DOCUMENT)
-            doc = await doc_ref.get()
+            doc = await asyncio.to_thread(doc_ref.get)
             if doc.exists:
                 data = doc.to_dict() or {}
                 self._cache = data.get(_FLAGS_FIELD, {})

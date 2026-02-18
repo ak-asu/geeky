@@ -11,8 +11,8 @@ from app.api.middleware.rate_limit import CheckRateLimit
 from app.dependencies import (
     get_feature_flags,
     get_quiz_generator,
+    get_quiz_grader,
     get_review_manager,
-    get_quiz_attempt_repository,
 )
 from app.models.quiz import QuizGenerateRequest, QuizGradeRequest, ReviewSubmitRequest
 
@@ -53,57 +53,11 @@ async def submit_quiz(
     _rate_limit: CheckRateLimit,
     user_id: CurrentUserId,
     body: QuizGradeRequest,
-    quiz_attempt_repo=Depends(get_quiz_attempt_repository),
+    grader=Depends(get_quiz_grader),
 ) -> dict:
-    """Submit quiz answers, grade them, and record results."""
-    import uuid  # noqa: PLC0415
-
-    from app.models.quiz import QuizGradeResult  # noqa: PLC0415
-    from app.models.quiz_attempt import QuizAttemptAnswer, QuizAttemptDocument  # noqa: PLC0415
-
-    graded: list[QuizAttemptAnswer] = []
-    results: list[dict] = []
-    correct_count = 0
-
-    for qa in body.answers:
-        is_correct = qa.answer.strip().lower() == qa.correct_answer.strip().lower()
-        if is_correct:
-            correct_count += 1
-
-        graded.append(QuizAttemptAnswer(
-            question_id=qa.question_id,
-            user_answer=qa.answer,
-            correct_answer=qa.correct_answer,
-            correct=is_correct,
-        ))
-        results.append({
-            "questionId": qa.question_id,
-            "correct": is_correct,
-        })
-
-    total = max(len(body.answers), 1)
-    score = correct_count / total
-
-    attempt_id = str(uuid.uuid4())
-    attempt = QuizAttemptDocument(
-        id=attempt_id,
-        short_ids=body.short_ids,
-        answers=graded,
-        total_questions=len(body.answers),
-        correct_count=correct_count,
-        score=score,
-    )
-    await quiz_attempt_repo.create(user_id, attempt, doc_id=attempt_id)
-
-    return {
-        "data": {
-            "attemptId": attempt_id,
-            "results": results,
-            "totalQuestions": len(body.answers),
-            "correctCount": correct_count,
-            "score": score,
-        }
-    }
+    """Submit quiz answers, grade them, update BKT concept mastery, and record results."""
+    result = await grader.grade_and_save(user_id, body)
+    return {"data": result}
 
 
 # --- Spaced Repetition Review ---

@@ -2,14 +2,21 @@
 
 Unlike other repos, users are stored at the top level: users/{userId}
 rather than as subcollections.
+
+NOTE: firebase_admin returns a sync Firestore client; all SDK calls are wrapped
+with asyncio.to_thread() to avoid blocking the event loop.
 """
 from __future__ import annotations
+
+import asyncio
 import logging
 from datetime import datetime, timezone
 from typing import Any
+
 from app.models.user import UserDocument
 
 logger = logging.getLogger(__name__)
+
 
 class UserRepository:
     def __init__(self, db: Any) -> None:
@@ -19,7 +26,7 @@ class UserRepository:
         return self._db.collection("users")
 
     async def get(self, user_id: str) -> UserDocument | None:
-        doc = self._collection().document(user_id).get()
+        doc = await asyncio.to_thread(self._collection().document(user_id).get)
         if not doc.exists:
             return None
         data = doc.to_dict()
@@ -30,12 +37,12 @@ class UserRepository:
         doc_data = data.model_dump(exclude_none=True, mode="json")
         doc_data["createdAt"] = datetime.now(timezone.utc)
         doc_data["updatedAt"] = datetime.now(timezone.utc)
-        self._collection().document(user_id).set(doc_data)
+        await asyncio.to_thread(self._collection().document(user_id).set, doc_data)
         return user_id
 
     async def update(self, user_id: str, data: dict) -> None:
         data["updatedAt"] = datetime.now(timezone.utc)
-        self._collection().document(user_id).update(data)
+        await asyncio.to_thread(self._collection().document(user_id).update, data)
 
     async def delete(self, user_id: str) -> None:
-        self._collection().document(user_id).delete()
+        await asyncio.to_thread(self._collection().document(user_id).delete)

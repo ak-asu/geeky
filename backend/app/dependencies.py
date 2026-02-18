@@ -25,8 +25,13 @@ from app.config import Settings, get_settings
 # ============================================================
 
 
+@lru_cache
 def get_feature_flags():
-    """Get the feature flag provider. Currently: Firestore-backed with 5-min TTL."""
+    """Get the feature flag provider (singleton). Firestore-backed with 5-min TTL.
+
+    Cached with @lru_cache so the same FirestoreFeatureFlags instance is reused
+    across all requests — allowing the in-process TTL cache to function correctly.
+    """
     from app.services.feature_flags.firestore_flags import FirestoreFeatureFlags  # noqa: PLC0415
 
     return FirestoreFeatureFlags(db=get_firestore_db())
@@ -583,3 +588,35 @@ def get_bkt_tracker():
     from app.services.learning.bkt_tracker import BKTTracker  # noqa: PLC0415
 
     return BKTTracker(concept_repo=get_concept_repository())
+
+
+# ============================================================
+# Quiz Grader
+# ============================================================
+
+
+def get_quiz_grader():
+    """Get the quiz grader (grades answers, persists attempts, updates BKT mastery)."""
+    from app.services.learning.quiz_grader import QuizGrader  # noqa: PLC0415
+
+    return QuizGrader(
+        quiz_attempt_repo=get_quiz_attempt_repository(),
+        bkt_tracker=get_bkt_tracker(),
+        short_repo=get_short_repository(),
+    )
+
+
+# ============================================================
+# Subscription Service
+# ============================================================
+
+
+def get_subscription_service():
+    """Get the subscription service (quota enforcement)."""
+    from app.services.subscription.subscription_service import SubscriptionService  # noqa: PLC0415
+
+    return SubscriptionService(
+        user_repo=get_user_repository(),
+        note_repo=get_note_repository(),
+        source_repo=get_source_repository(),
+    )

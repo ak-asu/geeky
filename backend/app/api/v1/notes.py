@@ -18,6 +18,7 @@ from app.config import get_settings
 from app.dependencies import (
     get_note_repository,
     get_processing_task_repository,
+    get_subscription_service,
     get_text_sanitizer,
 )
 from app.exceptions import NoteNotFoundError
@@ -51,12 +52,15 @@ async def create_note(
     note_repo=Depends(get_note_repository),
     task_repo=Depends(get_processing_task_repository),
     sanitizer=Depends(get_text_sanitizer),
+    sub_svc=Depends(get_subscription_service),
 ) -> dict:
     """Create a new note from text content or file upload.
 
     Dispatches async pipeline processing via Celery.
     Returns the note and processing task ID.
     """
+    await sub_svc.check_notes_quota(user_id)
+
     topic_list = [t.strip() for t in topics.split(",") if t.strip()] if topics else []
 
     actual_content = content

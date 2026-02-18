@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Query
 
 from app.api.middleware.auth import CurrentUserId
 from app.dependencies import get_feed_ranker
+from app.models.recommendation import ScoredShortResponse
 
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
 
@@ -19,14 +20,14 @@ async def get_ranked_feed(
     feed = await ranker.get_ranked_feed(user_id, limit=limit)
     return {
         "data": [
-            {
-                "shortId": s.short_id,
-                "score": s.score,
-                "relevanceScore": s.relevance_score,
-                "capabilityScore": s.capability_score,
-                "noveltyScore": s.novelty_score,
-                "explanation": s.explanation,
-            }
+            ScoredShortResponse(
+                shortId=s.short_id,
+                score=s.score,
+                relevanceScore=s.relevance_score,
+                capabilityScore=s.capability_score,
+                noveltyScore=s.novelty_score,
+                explanation=s.explanation,
+            ).model_dump(by_alias=True)
             for s in feed
         ],
     }

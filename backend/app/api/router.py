@@ -41,8 +41,8 @@ async def _probe_firebase(timeout: float) -> dict:
         async def _check():
             db = get_firestore_db()
             # Lightweight: read a known doc (app_config/global)
-            doc = db.collection("app_config").document("global")
-            await doc.get()
+            doc_ref = db.collection("app_config").document("global")
+            await asyncio.to_thread(doc_ref.get)
 
         await asyncio.wait_for(_check(), timeout=timeout)
         return {"status": "ok"}
@@ -62,9 +62,7 @@ async def _probe_chromadb(timeout: float) -> dict:
         async def _check():
             store = get_vector_store()
             # ChromaDB client has a heartbeat method
-            await asyncio.get_event_loop().run_in_executor(
-                None, store._client.heartbeat
-            )
+            await asyncio.to_thread(store._client.heartbeat)
 
         await asyncio.wait_for(_check(), timeout=timeout)
         return {"status": "ok"}
