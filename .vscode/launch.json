@@ -1,0 +1,36 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // Default: emulator/simulator — no dart-define needed (uses 10.0.2.2:8000)
+      "name": "geeky (emulator)",
+      "request": "launch",
+      "type": "dart"
+    },
+    {
+      // Real device via Cloudflare tunnel.
+      // Update API_BASE_URL below each time you start a new quick tunnel.
+      "name": "geeky (tunnel — debug)",
+      "request": "launch",
+      "type": "dart",
+      "toolArgs": [
+        "--dart-define=API_BASE_URL=https://faculty-cams-whale-bar.trycloudflare.com"
+      ]
+    },
+    {
+      "name": "geeky (tunnel — release)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "release",
+      "toolArgs": [
+        "--dart-define=API_BASE_URL=https://faculty-cams-whale-bar.trycloudflare.com"
+      ]
+    },
+    {
+      "name": "geeky (profile mode)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile"
+    }
+  ]
+}

@@ -169,7 +169,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       alignment: Alignment.centerRight,
       child: TextButton(
         onPressed: () {
-          context.showSnackBar('Password reset is not available in mock mode');
+          context.showSnackBar('Password reset coming soon');
         },
         child: Text(
           'Forgot password?',
@@ -223,13 +223,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _loading = true);
+    try {
+      await ref.read(authProvider.notifier).signInWithGoogle();
+      if (mounted) context.go('/');
+    } catch (e) {
+      if (mounted) {
+        context.showSnackBar('Google sign-in failed. Please try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
   Widget _buildSocialLogin() {
     return SocialLoginButton(
       icon: const Icon(Icons.g_mobiledata_rounded, size: 24),
       label: 'Continue with Google',
-      onPressed: () {
-        context.showSnackBar('Google sign-in is not available in mock mode');
-      },
+      onPressed: _loading ? null : _handleGoogleSignIn,
     );
   }
 

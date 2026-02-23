@@ -1,18 +1,32 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/constants/api_constants.dart';
 import '../../../core/constants/storage_keys.dart';
 import '../domain/user_entity.dart';
 
 class AuthRepository {
-  AuthRepository(this._auth, this._prefs);
+  AuthRepository(this._auth, this._prefs) {
+    // A standalone Dio instance without auth interceptors is used for profile
+    // sync to avoid a circular dependency:
+    // authRepository → apiClient → AuthInterceptor → authRepository.
+    _rawDio = Dio(
+      BaseOptions(
+        baseUrl: ApiConstants.baseUrl,
+        connectTimeout: ApiConstants.connectTimeout,
+        receiveTimeout: ApiConstants.receiveTimeout,
+      ),
+    );
+  }
 
   final FirebaseAuth _auth;
   final SharedPreferences _prefs;
+  late final Dio _rawDio;
 
   /// Cached ID token to avoid repeated async calls.
   String? _cachedToken;
@@ -73,6 +87,7 @@ class AuthRepository {
     );
     final user = _mapFirebaseUser(credential.user!);
     await _cacheUser(user);
+    unawaited(_fetchAndCacheUserProfile());
     return user;
   }
 
@@ -90,6 +105,7 @@ class AuthRepository {
 
     final user = _mapFirebaseUser(_auth.currentUser!);
     await _cacheUser(user);
+    unawaited(_fetchAndCacheUserProfile());
     return user;
   }
 
@@ -170,6 +186,7 @@ class AuthRepository {
       final result = await _auth.signInWithCredential(credential);
       final user = _mapFirebaseUser(result.user!);
       await _cacheUser(user);
+      unawaited(_fetchAndCacheUserProfile());
       return user;
     } on GoogleSignInException catch (e) {
       if (e.code == GoogleSignInExceptionCode.canceled) {
@@ -208,11 +225,18 @@ class AuthRepository {
   }
 
   // ---------------------------------------------------------------------------
-  // Profile update (local cache only — backend manages Firestore user doc)
+  // Profile update — local cache + backend sync
   // ---------------------------------------------------------------------------
 
   Future<void> updateUser(UserEntity user) async {
     await _cacheUser(user);
+    // Best-effort backend sync — does not block the UI update
+    _patchUserProfile({
+      'name': user.name,
+      'interests': user.interests,
+      'goals': user.goals,
+      'expertise_level': user.expertiseLevel,
+    }).ignore();
   }
 
   // ---------------------------------------------------------------------------
@@ -254,5 +278,57 @@ class AuthRepository {
       StorageKeys.currentUserJson,
       jsonEncode(user.toJson()),
     );
+  }
+
+  /// Fetches the full user profile from the backend and merges it into the
+  /// local cache. Called in the background after sign-in.
+  Future<void> _fetchAndCacheUserProfile() async {
+    try {
+      final token = await getIdToken();
+      if (token == null) return;
+
+      final response = await _rawDio.get(
+        '${ApiConstants.users}/me',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+
+      final body = response.data;
+      final data = body is Map<String, dynamic> && body.containsKey('data')
+          ? body['data'] as Map<String, dynamic>?
+          : body as Map<String, dynamic>?;
+      if (data == null) return;
+
+      final current = currentUser;
+      if (current == null) return;
+
+      final enriched = current.copyWith(
+        interests:
+            (data['interests'] as List<dynamic>?)?.cast<String>() ??
+            current.interests,
+        goals:
+            (data['goals'] as List<dynamic>?)?.cast<String>() ?? current.goals,
+        expertiseLevel:
+            data['expertiseLevel'] as String? ?? current.expertiseLevel,
+      );
+      await _cacheUser(enriched);
+    } catch (_) {
+      // Non-blocking — local cache remains valid on failure
+    }
+  }
+
+  /// PATCHes user profile fields to the backend. Best-effort, non-blocking.
+  Future<void> _patchUserProfile(Map<String, dynamic> fields) async {
+    try {
+      final token = await getIdToken();
+      if (token == null) return;
+
+      await _rawDio.patch(
+        '${ApiConstants.users}/me',
+        data: fields,
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+    } catch (_) {
+      // Non-blocking — local update already applied
+    }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../core/network/api_service.dart';
 import '../../core/providers/shared_preferences_provider.dart';
 import 'data/onboarding_repository.dart';
 
@@ -7,7 +8,10 @@ part 'providers.g.dart';
 
 @Riverpod(keepAlive: true)
 OnboardingRepository onboardingRepository(Ref ref) {
-  return OnboardingRepository(ref.read(sharedPreferencesProvider));
+  return OnboardingRepository(
+    ref.read(sharedPreferencesProvider),
+    ref.read(apiServiceProvider),
+  );
 }
 
 @Riverpod(keepAlive: true)

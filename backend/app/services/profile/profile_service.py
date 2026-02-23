@@ -55,7 +55,7 @@ class ProfileService:
 
     async def get_profile(self, user_id: str) -> UserDocument:
         """Get user profile by ID."""
-        user = await self._user_repo.get(user_id, user_id)
+        user = await self._user_repo.get(user_id)
         if not user:
             raise UserNotFoundError(user_id)
         return user
@@ -65,7 +65,7 @@ class ProfileService:
     ) -> UserDocument:
         """Update user profile fields (partial update)."""
         # Verify user exists
-        user = await self._user_repo.get(user_id, user_id)
+        user = await self._user_repo.get(user_id)
         if not user:
             raise UserNotFoundError(user_id)
 
@@ -75,14 +75,14 @@ class ProfileService:
         )
 
         if update_data:
-            await self._user_repo.update(user_id, user_id, update_data)
+            await self._user_repo.update(user_id, update_data)
 
         # Return updated profile
         return await self.get_profile(user_id)
 
     async def get_stats(self, user_id: str) -> dict:
         """Get lightweight learning statistics summary."""
-        user = await self._user_repo.get(user_id, user_id)
+        user = await self._user_repo.get(user_id)
         if not user:
             raise UserNotFoundError(user_id)
 
@@ -107,7 +107,7 @@ class ProfileService:
 
         Returns a dict with all user data organized by collection.
         """
-        user = await self._user_repo.get(user_id, user_id)
+        user = await self._user_repo.get(user_id)
         if not user:
             raise UserNotFoundError(user_id)
 
@@ -135,7 +135,7 @@ class ProfileService:
 
         Deletes all subcollections for the user.
         """
-        user = await self._user_repo.get(user_id, user_id)
+        user = await self._user_repo.get(user_id)
         if not user:
             raise UserNotFoundError(user_id)
 
@@ -163,7 +163,7 @@ class ProfileService:
                 logger.error("Failed to delete %s for user %s: %s", collection_name, user_id, exc)
 
         # Finally delete the user document
-        await self._user_repo.delete(user_id, user_id)
+        await self._user_repo.delete(user_id)
         logger.info("Account deletion completed for user %s", user_id)
 
 

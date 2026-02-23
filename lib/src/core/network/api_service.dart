@@ -51,6 +51,20 @@ class ApiService {
     await _dio.post(path, data: body);
   }
 
+  /// POST with multipart/form-data encoding (for file + field submissions).
+  Future<T> postMultipart<T>(
+    String path,
+    FormData formData,
+    T Function(dynamic json) fromJson,
+  ) async {
+    final response = await _dio.post(
+      path,
+      data: formData,
+      options: Options(contentType: 'multipart/form-data'),
+    );
+    return fromJson(_unwrap(response.data));
+  }
+
   /// PUT (update) a resource.
   Future<T> put<T>(
     String path,

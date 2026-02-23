@@ -1,8 +1,11 @@
+import 'package:dio/dio.dart';
+
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/api_service.dart';
 import '../../../services/local/database.dart';
 import '../../../services/local/daos/notes_dao.dart';
 import '../../../services/local/daos/note_feed_dao.dart';
+import '../domain/note_creation_response.dart';
 import '../domain/note_entity.dart';
 import '../domain/note_feed_state.dart';
 import 'note_dto.dart';
@@ -53,13 +56,40 @@ class NotesRepository {
     }
   }
 
-  Future<void> saveNote(NoteEntity note) async {
+  /// Creates a new note via multipart POST.
+  /// Returns the backend-assigned canonical ID, or the temp UUID if offline.
+  Future<String> saveNote(NoteEntity note, {String? filePath}) async {
     try {
-      await _api.post(ApiConstants.notes, note.toJson(), (json) => json);
+      final fields = <String, dynamic>{
+        'content': note.content ?? '',
+        'type': note.type,
+        if (note.title != null) 'title': note.title!,
+        if (note.sourceUrl != null) 'source_url': note.sourceUrl!,
+        if (note.topics.isNotEmpty) 'topics': note.topics.join(','),
+      };
+
+      final formData = filePath != null
+          ? FormData.fromMap({
+              ...fields,
+              'file': await MultipartFile.fromFile(filePath),
+            })
+          : FormData.fromMap(fields);
+
+      final response = await _api.postMultipart(
+        ApiConstants.notes,
+        formData,
+        (json) => NoteCreationResponse.fromJson(json as Map<String, dynamic>),
+      );
+
+      // Persist with backend-assigned canonical ID
+      final canonical = note.copyWith(id: response.noteId);
+      await _notesDao.insertNote(NoteDto.toCompanion(canonical));
+      return response.noteId;
     } catch (_) {
-      // Will be synced later via offline queue
+      // Offline: persist with temp UUID; sync queue will reconcile later
+      await _notesDao.insertNote(NoteDto.toCompanion(note));
+      return note.id;
     }
-    await _notesDao.insertNote(NoteDto.toCompanion(note));
   }
 
   Future<void> saveNotes(List<NoteEntity> notes) async {

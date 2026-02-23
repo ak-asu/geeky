@@ -17,9 +17,6 @@ abstract final class StorageKeys {
   // Subscription
   static const String subscriptionTier = 'subscription_tier';
 
-  // Mock data
-  static const String mockDataSeeded = 'mock_data_seeded';
-
   // Search
   static const String recentSearches = 'recent_searches';
 }

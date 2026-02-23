@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../auth/providers.dart';
 import '../../domain/note_entity.dart';
 import '../../providers.dart';
 
@@ -67,7 +68,7 @@ class _UploadMediaScreenState extends ConsumerState<UploadMediaScreen> {
 
     final note = NoteEntity(
       id: _uuid.v4(),
-      userId: 'mock-user',
+      userId: ref.read(currentUserProvider)?.id ?? '',
       type: type,
       title: _titleController.text.trim().isNotEmpty
           ? _titleController.text.trim()
@@ -77,7 +78,7 @@ class _UploadMediaScreenState extends ConsumerState<UploadMediaScreen> {
       updatedAt: now,
     );
 
-    await ref.read(notesRepositoryProvider).saveNote(note);
+    await ref.read(notesRepositoryProvider).saveNote(note, filePath: file.path);
 
     if (mounted) {
       context.showSnackBar('File uploaded as note');

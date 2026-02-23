@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Android 12+ SplashScreen API (light mode).
+
+        windowSplashScreenBackground   → sets the full-screen background colour.
+        No windowSplashScreenAnimatedIcon is specified, so the OS automatically
+        uses @mipmap/ic_launcher, clips it to a squircle, and centres it on the
+        background — no opaque square-patch artefact.
+
+        windowSplashScreenIconBackgroundColor removes the default white circle
+        drawn behind adaptive icons that lack their own background in the safe zone.
+    -->
+    <style name="LaunchTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <item name="android:windowBackground">@drawable/launch_background</item>
+        <item name="android:windowSplashScreenBackground">@color/splash_background</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/splash_background</item>
+    </style>
+    <style name="NormalTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
+</resources>

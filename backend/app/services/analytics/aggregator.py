@@ -114,7 +114,7 @@ class AnalyticsAggregator:
 
     async def get_streak(self, user_id: str) -> StreakResponse:
         """Get the user's study streak (AN-02)."""
-        user = await self._user_repo.get(user_id, user_id)
+        user = await self._user_repo.get(user_id)
         if not user:
             return StreakResponse()
 

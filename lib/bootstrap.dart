@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'src/services/local/database.dart';
-import 'src/services/mock_data_service.dart';
 
 /// Bootstrap result containing initialized services.
 typedef BootstrapResult = ({SharedPreferences prefs, AppDatabase db});
@@ -33,9 +32,6 @@ Future<BootstrapResult> bootstrap() async {
   // Ensure Drift DB is ready
   final db = AppDatabase();
   await db.customSelect('SELECT 1').get();
-
-  // Seed mock data on first launch
-  await MockDataService(db, prefs).seedIfNeeded();
 
   return (prefs: prefs, db: db);
 }

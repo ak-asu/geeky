@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/extensions/datetime_extensions.dart';
@@ -25,10 +26,13 @@ class NoteDetailScreen extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.open_in_browser_rounded),
               tooltip: 'Open source',
-              onPressed: () {
-                context.showSnackBar(
-                  'Opening URL is not available in mock mode',
-                );
+              onPressed: () async {
+                final uri = Uri.tryParse(note.sourceUrl!);
+                if (uri != null && await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                } else if (context.mounted) {
+                  context.showSnackBar('Could not open URL');
+                }
               },
             ),
         ],

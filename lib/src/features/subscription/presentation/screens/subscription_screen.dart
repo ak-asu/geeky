@@ -59,11 +59,7 @@ class SubscriptionScreen extends ConsumerWidget {
               'Up to ${FreeTierLimits.maxStoreModules} Store Downloads',
             ],
             isActive: !isPremium,
-            onSelect: isPremium
-                ? () => ref
-                      .read(subscriptionProvider.notifier)
-                      .setTier(SubscriptionTier.free)
-                : null,
+            onSelect: null,
           ),
           AppSpacing.gapV12,
 
@@ -86,41 +82,8 @@ class SubscriptionScreen extends ConsumerWidget {
             isActive: isPremium,
             isPremium: true,
             onSelect: !isPremium
-                ? () => ref
-                      .read(subscriptionProvider.notifier)
-                      .setTier(SubscriptionTier.premium)
+                ? () => context.showSnackBar('Premium upgrade coming soon!')
                 : null,
-          ),
-
-          AppSpacing.gapV24,
-
-          // Dev toggle note
-          Container(
-            padding: AppSpacing.paddingAll16,
-            decoration: BoxDecoration(
-              color: context.colorScheme.surfaceContainerHighest.withValues(
-                alpha: 0.5,
-              ),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.science_rounded,
-                  size: 20,
-                  color: context.colorScheme.onSurfaceVariant,
-                ),
-                AppSpacing.gapH12,
-                Expanded(
-                  child: Text(
-                    'Tap a plan to switch. This is a mock toggle for development.',
-                    style: context.textTheme.bodySmall?.copyWith(
-                      color: context.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
         ],
       ),

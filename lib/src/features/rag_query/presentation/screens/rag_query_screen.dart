@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../auth/providers.dart';
 import '../../domain/chat_message.dart';
 import '../../domain/rag_response.dart';
 import '../../providers.dart';
@@ -107,19 +108,30 @@ class _RagQueryScreenState extends ConsumerState<RagQueryScreen> {
   }
 }
 
-class _EmptyState extends StatelessWidget {
+class _EmptyState extends ConsumerWidget {
   const _EmptyState({required this.onSuggestionTap});
 
   final ValueChanged<String> onSuggestionTap;
 
-  static const _suggestions = [
-    'What have I learned about machine learning?',
-    'Summarize my notes on web development',
-    'How do neural networks work?',
-  ];
+  List<String> _buildSuggestions(List<String>? interests) {
+    if (interests == null || interests.isEmpty) {
+      return [
+        'What have I learned recently?',
+        'Summarize my most recent notes',
+        'What are my knowledge gaps?',
+      ];
+    }
+    return interests
+        .take(3)
+        .map((t) => 'What have I learned about $t?')
+        .toList();
+  }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(currentUserProvider);
+    final suggestions = _buildSuggestions(user?.interests);
+
     return Center(
       child: Padding(
         padding: AppSpacing.paddingAll24,
@@ -158,7 +170,7 @@ class _EmptyState extends StatelessWidget {
               spacing: AppSpacing.s8,
               runSpacing: AppSpacing.s8,
               alignment: WrapAlignment.center,
-              children: _suggestions.map((s) {
+              children: suggestions.map((s) {
                 return ActionChip(
                   label: Text(
                     s,

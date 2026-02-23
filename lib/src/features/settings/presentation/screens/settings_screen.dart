@@ -260,8 +260,6 @@ class SettingsScreen extends ConsumerWidget {
               Navigator.of(ctx).pop();
               final prefs = ref.read(sharedPreferencesProvider);
               await prefs.clear();
-              // Re-seed mock data on next launch
-              await prefs.setBool(StorageKeys.mockDataSeeded, false);
               if (context.mounted) {
                 context.showSnackBar('All data reset. Restart the app.');
               }

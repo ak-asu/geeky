@@ -25,7 +25,7 @@ class RagRepository {
       );
       return response;
     } catch (_) {
-      // Fallback to local mock RAG
+      // Fallback to local keyword search (offline)
     }
 
     return _localQuery(question);

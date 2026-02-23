@@ -32,17 +32,6 @@ class HomeScreen extends ConsumerWidget {
           icon: const Icon(Icons.notifications_outlined),
           onPressed: () => context.pushNamed(RouteNames.notifications),
         ),
-        // Dev: toggle premium
-        IconButton(
-          icon: Icon(
-            isPremium
-                ? Icons.workspace_premium_rounded
-                : Icons.workspace_premium_outlined,
-            color: isPremium ? AppColors.primary : null,
-          ),
-          onPressed: () =>
-              ref.read(subscriptionProvider.notifier).togglePremium(),
-        ),
       ],
       body: const AdaptiveFeed(),
     );

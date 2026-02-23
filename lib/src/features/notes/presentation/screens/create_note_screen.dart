@@ -7,6 +7,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../auth/providers.dart';
 import '../../domain/note_entity.dart';
 import '../../providers.dart';
 
@@ -46,7 +47,7 @@ class _CreateNoteScreenState extends ConsumerState<CreateNoteScreen> {
 
     final note = NoteEntity(
       id: _uuid.v4(),
-      userId: 'mock-user',
+      userId: ref.read(currentUserProvider)?.id ?? '',
       type: 'text',
       title: _titleController.text.trim().isNotEmpty
           ? _titleController.text.trim()

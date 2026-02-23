@@ -32,11 +32,7 @@ class SearchRepository {
       final result = await _api.get(
         ApiConstants.search,
         (json) => json,
-        queryParams: {
-          'q': query,
-          if (topicFilter != null) 'topic': topicFilter,
-          'limit': 20,
-        },
+        queryParams: {'q': query, 'topic': ?topicFilter, 'limit': 20},
       );
       if (result is Map<String, dynamic> && result['results'] is List) {
         final shorts = (result['results'] as List)
