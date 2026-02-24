@@ -29,14 +29,32 @@ from app.exceptions import (
 logger = logging.getLogger(__name__)
 
 
+def _configure_logging(log_level: str) -> None:
+    """Configure structured JSON logging for Cloud Logging compatibility."""
+    level = getattr(logging, log_level.upper(), logging.INFO)
+    try:
+        from pythonjsonlogger import jsonlogger  # noqa: PLC0415
+
+        handler = logging.StreamHandler()
+        formatter = jsonlogger.JsonFormatter(
+            fmt="%(asctime)s %(levelname)s %(name)s %(message)s",
+            rename_fields={"asctime": "timestamp", "levelname": "level"},
+        )
+        handler.setFormatter(formatter)
+        logging.basicConfig(level=level, handlers=[handler], force=True)
+    except ImportError:
+        # Fall back to plain text logging if python-json-logger not installed
+        logging.basicConfig(
+            level=level,
+            format="%(asctime)s %(levelname)s %(name)s %(message)s",
+        )
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Application lifespan: startup and shutdown hooks."""
     settings = get_settings()
-    logging.basicConfig(
-        level=getattr(logging, settings.log_level.upper(), logging.INFO),
-        format="%(asctime)s %(levelname)s %(name)s %(message)s",
-    )
+    _configure_logging(settings.log_level)
     logger.info("Starting %s v%s [%s]", settings.app_name, settings.app_version, settings.environment)
     yield
     logger.info("Shutting down %s", settings.app_name)

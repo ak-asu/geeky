@@ -8,6 +8,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../routing/route_names.dart';
 import '../../providers.dart';
+import '../widgets/password_reset_sheet.dart';
 import '../widgets/social_login_button.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -168,9 +169,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Align(
       alignment: Alignment.centerRight,
       child: TextButton(
-        onPressed: () {
-          context.showSnackBar('Password reset coming soon');
-        },
+        onPressed: () => PasswordResetSheet.show(context),
         child: Text(
           'Forgot password?',
           style: context.textTheme.bodySmall?.copyWith(

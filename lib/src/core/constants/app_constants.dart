@@ -3,6 +3,9 @@ abstract final class AppConstants {
   static const String appTagline = 'Notes Recall';
   static const String appVersion = '1.0.0';
 
+  static const String privacyPolicyUrl = 'https://geeky.app/privacy';
+  static const String termsOfServiceUrl = 'https://geeky.app/terms';
+
   /// Side action rail fade delay
   static const Duration railFadeDelay = Duration(seconds: 3);
   static const double railFadeOpacity = 0.4;

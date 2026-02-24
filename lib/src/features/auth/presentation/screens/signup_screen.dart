@@ -229,8 +229,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       await ref.read(authProvider.notifier).signInWithGoogle();
       if (mounted) context.go('/');
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         context.showSnackBar('Google sign-in failed. Please try again.');
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

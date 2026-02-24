@@ -136,13 +136,22 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
           ],
         ),
         AppSpacing.gapV8,
-        ClipRRect(
-          borderRadius: BorderRadius.circular(3),
-          child: LinearProgressIndicator(
-            value: progress,
-            minHeight: 6,
-            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+        Semantics(
+          label: 'Quiz progress',
+          value:
+              '${session.answeredCards} of ${session.totalCards} cards, '
+              '${(progress * 100).round()} percent complete',
+          excludeSemantics: true,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 6,
+              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                AppColors.primary,
+              ),
+            ),
           ),
         ),
       ],
@@ -161,10 +170,13 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.celebration_rounded,
-              size: 64,
-              color: AppColors.primary.withValues(alpha: 0.7),
+            Semantics(
+              excludeSemantics: true,
+              child: Icon(
+                Icons.celebration_rounded,
+                size: 64,
+                color: AppColors.primary.withValues(alpha: 0.7),
+              ),
             ),
             AppSpacing.gapV16,
             Text(

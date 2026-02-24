@@ -7,9 +7,28 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from app.models.notification import FcmNotificationData
 
 logger = logging.getLogger(__name__)
+
+
+def _to_str_dict(data: FcmNotificationData | None) -> dict[str, str]:
+    """Serialize FcmNotificationData to dict[str, str].
+
+    FCM requires all data values to be strings.
+    """
+    if data is None:
+        return {}
+    result: dict[str, str] = {
+        "type": data.type.value,
+        "route": data.route,
+    }
+    if data.entity_id is not None:
+        result["entityId"] = data.entity_id
+    return result
 
 
 class FCMNotificationSender:
@@ -30,7 +49,7 @@ class FCMNotificationSender:
         user_id: str,
         title: str,
         body: str,
-        data: dict | None = None,
+        data: FcmNotificationData | None = None,
     ) -> bool:
         """Send a push notification to a single user.
 
@@ -44,12 +63,13 @@ class FCMNotificationSender:
             logger.debug("No FCM tokens for user %s, skipping push", user_id)
             return False
 
+        str_data = _to_str_dict(data)
         success = False
         for token in user.fcm_tokens:
             try:
                 message = messaging.Message(
                     notification=messaging.Notification(title=title, body=body),
-                    data=data or {},
+                    data=str_data,
                     token=token,
                 )
                 await asyncio.to_thread(messaging.send, message)
@@ -66,7 +86,7 @@ class FCMNotificationSender:
         user_ids: list[str],
         title: str,
         body: str,
-        data: dict | None = None,
+        data: FcmNotificationData | None = None,
     ) -> dict[str, bool]:
         """Send push notifications to multiple users.
 

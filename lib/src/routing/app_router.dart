@@ -36,6 +36,7 @@ import '../features/sources/presentation/screens/source_detail_screen.dart';
 import '../features/sources/presentation/screens/sources_list_screen.dart';
 import '../features/store/domain/store_module_entity.dart';
 import '../features/store/presentation/screens/module_store_screen.dart';
+import '../features/notes/presentation/screens/voice_memo_screen.dart';
 import '../features/store/presentation/screens/store_module_detail_screen.dart';
 import '../features/subscription/presentation/screens/subscription_screen.dart';
 import '../core/providers/share_provider.dart';
@@ -217,7 +218,8 @@ GoRouter appRouter(Ref ref) {
       GoRoute(
         path: '/${RouteNames.ragQuery}',
         name: RouteNames.ragQuery,
-        builder: (context, state) => const RagQueryScreen(),
+        builder: (context, state) =>
+            RagQueryScreen(initialQuery: state.extra as String?),
       ),
 
       // --- Analytics (premium) ---
@@ -313,6 +315,40 @@ GoRouter appRouter(Ref ref) {
           }
           return _slidePage(state, StoreModuleDetailScreen(module: module));
         },
+      ),
+
+      // --- Voice Memo ---
+      GoRoute(
+        path: '/${RouteNames.voiceMemo}',
+        name: RouteNames.voiceMemo,
+        pageBuilder: (context, state) =>
+            _slidePage(state, const VoiceMemoScreen()),
+      ),
+
+      // --- Deep-link path-param routes (custom URI scheme + App Links) ---
+      // geeky://shorts/<id>  or  https://geeky.app/shorts/<id>
+      GoRoute(
+        path: '/shorts/:shortId',
+        name: RouteNames.shortDeepLink,
+        builder: (context, state) {
+          final shortId = state.pathParameters['shortId'] ?? '';
+          return Scaffold(
+            appBar: AppBar(elevation: 0, scrolledUnderElevation: 0),
+            body: ShortsFeedScreen(filterShortIds: [shortId]),
+          );
+        },
+      ),
+      // geeky://modules/<id>  or  https://geeky.app/modules/<id>
+      GoRoute(
+        path: '/modules/:moduleId',
+        name: RouteNames.moduleDeepLink,
+        builder: (context, state) => const ModulesListScreen(),
+      ),
+      // geeky://quiz/<id>  or  https://geeky.app/quiz/<id>
+      GoRoute(
+        path: '/quiz/:quizId',
+        name: RouteNames.quizDeepLink,
+        builder: (context, state) => const QuizScreen(),
       ),
     ],
   );

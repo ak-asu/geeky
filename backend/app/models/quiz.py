@@ -33,6 +33,11 @@ class QuizAnswer(BaseModel):
     question_id: str = Field(alias="questionId", min_length=1)
     answer: str = Field(min_length=1, max_length=2000)
     correct_answer: str = Field(alias="correctAnswer", min_length=1, max_length=2000)
+    question_type: QuizQuestionType = Field(
+        default=QuizQuestionType.MCQ,
+        alias="questionType",
+        description="Question type — determines exact vs semantic grading",
+    )
     model_config = {"populate_by_name": True}
 
 

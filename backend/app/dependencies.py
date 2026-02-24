@@ -603,6 +603,7 @@ def get_quiz_grader():
         quiz_attempt_repo=get_quiz_attempt_repository(),
         bkt_tracker=get_bkt_tracker(),
         short_repo=get_short_repository(),
+        embedding_provider=get_embedding_provider(),
     )
 
 

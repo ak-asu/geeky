@@ -3,9 +3,16 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/storage_keys.dart';
+import '../../core/network/api_service.dart';
 import '../../core/providers/shared_preferences_provider.dart';
+import 'data/settings_repository.dart';
 
 part 'providers.g.dart';
+
+@Riverpod(keepAlive: true)
+SettingsRepository settingsRepository(Ref ref) {
+  return SettingsRepository(ref.read(apiServiceProvider));
+}
 
 // --- Theme Mode ---
 

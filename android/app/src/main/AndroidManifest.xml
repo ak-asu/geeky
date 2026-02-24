@@ -2,6 +2,11 @@
     <!-- Required for reading shared files on Android 12 and below -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"/>
+    <!-- Camera — whiteboard OCR / image capture -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- Voice memo recording -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+
     <application
         android:label="Geeky"
         android:name="${applicationName}"
@@ -54,6 +59,22 @@
                 <action android:name="android.intent.action.SEND"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <data android:mimeType="*/*"/>
+            </intent-filter>
+
+            <!-- Custom URI scheme deep links: geeky://shorts/abc123 etc. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="geeky"/>
+            </intent-filter>
+
+            <!-- HTTPS App Links (requires assetlinks.json on geeky.app) -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="geeky.app"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

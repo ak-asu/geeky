@@ -15,6 +15,7 @@ class ShortActionRail extends StatelessWidget {
     this.onRelated,
     this.onFeedback,
     this.onTts,
+    this.isSpeaking = false,
     this.onExploreFurther,
     this.onSource,
   });
@@ -29,6 +30,9 @@ class ShortActionRail extends StatelessWidget {
   final VoidCallback? onRelated;
   final VoidCallback? onFeedback;
   final VoidCallback? onTts;
+
+  /// Whether TTS is currently speaking — toggles the listen icon.
+  final bool isSpeaking;
   final VoidCallback? onExploreFurther;
   final VoidCallback? onSource;
 
@@ -87,8 +91,12 @@ class ShortActionRail extends StatelessWidget {
           ),
         if (onTts != null)
           RailAction(
-            icon: Icons.volume_up_rounded,
-            label: 'Listen',
+            icon: isSpeaking
+                ? Icons.stop_circle_outlined
+                : Icons.play_circle_outline_rounded,
+            activeIcon: Icons.stop_circle_outlined,
+            isActive: isSpeaking,
+            label: isSpeaking ? 'Stop' : 'Listen',
             onTap: onTts!,
           ),
         if (onSource != null)

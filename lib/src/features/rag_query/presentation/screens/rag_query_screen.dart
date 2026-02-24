@@ -13,7 +13,10 @@ import '../widgets/citation_card.dart';
 import '../widgets/follow_up_chips.dart';
 
 class RagQueryScreen extends ConsumerStatefulWidget {
-  const RagQueryScreen({super.key});
+  const RagQueryScreen({super.key, this.initialQuery});
+
+  /// When provided, the query is pre-filled and sent automatically.
+  final String? initialQuery;
 
   @override
   ConsumerState<RagQueryScreen> createState() => _RagQueryScreenState();
@@ -22,6 +25,17 @@ class RagQueryScreen extends ConsumerStatefulWidget {
 class _RagQueryScreenState extends ConsumerState<RagQueryScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    final q = widget.initialQuery?.trim() ?? '';
+    if (q.isNotEmpty) {
+      _controller.text = q;
+      // Send after first frame so the provider tree is ready.
+      WidgetsBinding.instance.addPostFrameCallback((_) => _send());
+    }
+  }
 
   @override
   void dispose() {

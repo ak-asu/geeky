@@ -109,6 +109,9 @@ class AuthRepository {
     return user;
   }
 
+  Future<void> sendPasswordReset(String email) =>
+      _auth.sendPasswordResetEmail(email: email.trim());
+
   // ---------------------------------------------------------------------------
   // Google Sign-In
   // ---------------------------------------------------------------------------

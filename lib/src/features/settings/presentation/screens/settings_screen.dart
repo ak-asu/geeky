@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/storage_keys.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -8,14 +10,22 @@ import '../../../../core/providers/shared_preferences_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../routing/route_names.dart';
+import '../../../auth/providers.dart';
 import '../../../subscription/providers.dart';
 import '../../providers.dart';
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  bool _exporting = false;
+
+  @override
+  Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
     final fontSize = ref.watch(fontSizeProvider);
     final prefs = ref.watch(sharedPreferencesProvider);
@@ -169,6 +179,52 @@ class SettingsScreen extends ConsumerWidget {
 
           AppSpacing.gapV24,
 
+          // --- Privacy ---
+          const _SectionHeader(label: 'Privacy'),
+          AppSpacing.gapV8,
+
+          _SettingsTile(
+            icon: Icons.download_rounded,
+            title: 'Export My Data',
+            trailing: _exporting
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: context.colorScheme.onSurfaceVariant,
+                  ),
+            onTap: _exporting ? null : _handleExportData,
+          ),
+
+          _SettingsTile(
+            icon: Icons.privacy_tip_outlined,
+            title: 'Privacy Policy',
+            trailing: Icon(
+              Icons.open_in_new_rounded,
+              size: 20,
+              color: context.colorScheme.onSurfaceVariant,
+            ),
+            onTap: () => launchUrl(Uri.parse(AppConstants.privacyPolicyUrl)),
+          ),
+
+          _SettingsTile(
+            icon: Icons.delete_forever_rounded,
+            title: 'Delete Account',
+            titleColor: AppColors.error,
+            trailing: Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: AppColors.error.withValues(alpha: 0.7),
+            ),
+            onTap: _showDeleteAccountDialog,
+          ),
+
+          AppSpacing.gapV24,
+
           // --- Data Management ---
           const _SectionHeader(label: 'Data Management'),
           AppSpacing.gapV8,
@@ -181,7 +237,7 @@ class SettingsScreen extends ConsumerWidget {
               size: 20,
               color: context.colorScheme.onSurfaceVariant,
             ),
-            onTap: () => _showClearCacheDialog(context, ref),
+            onTap: _showClearCacheDialog,
           ),
 
           _SettingsTile(
@@ -192,7 +248,7 @@ class SettingsScreen extends ConsumerWidget {
               size: 20,
               color: AppColors.error.withValues(alpha: 0.7),
             ),
-            onTap: () => _showResetDialog(context, ref),
+            onTap: _showResetDialog,
           ),
 
           AppSpacing.gapV24,
@@ -216,8 +272,90 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showClearCacheDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
+  Future<void> _handleExportData() async {
+    setState(() => _exporting = true);
+    try {
+      await ref.read(settingsRepositoryProvider).exportData();
+      if (mounted) {
+        context.showSnackBar('Your data export is ready.');
+      }
+    } catch (_) {
+      if (mounted) {
+        context.showSnackBar('Export failed. Please try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  void _showDeleteAccountDialog() {
+    final confirmController = TextEditingController();
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          return AlertDialog(
+            title: const Text('Delete Account'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'This will permanently delete your account and all associated data. This cannot be undone.',
+                ),
+                AppSpacing.gapV16,
+                const Text(
+                  'Type DELETE to confirm:',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                AppSpacing.gapV8,
+                TextField(
+                  controller: confirmController,
+                  autofocus: true,
+                  onChanged: (_) => setDialogState(() {}),
+                  decoration: const InputDecoration(
+                    hintText: 'DELETE',
+                    isDense: true,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+                onPressed: confirmController.text == 'DELETE'
+                    ? () async {
+                        Navigator.of(ctx).pop();
+                        await _handleDeleteAccount();
+                      }
+                    : null,
+                child: const Text('Delete'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _handleDeleteAccount() async {
+    try {
+      await ref.read(settingsRepositoryProvider).deleteAccount();
+      await ref.read(authProvider.notifier).logout();
+      if (mounted) context.go('/');
+    } catch (_) {
+      if (mounted) {
+        context.showSnackBar('Failed to delete account. Please try again.');
+      }
+    }
+  }
+
+  void _showClearCacheDialog() {
+    showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Clear Cache'),
@@ -241,8 +379,8 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showResetDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
+  void _showResetDialog() {
+    showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Reset All Data'),
@@ -260,7 +398,7 @@ class SettingsScreen extends ConsumerWidget {
               Navigator.of(ctx).pop();
               final prefs = ref.read(sharedPreferencesProvider);
               await prefs.clear();
-              if (context.mounted) {
+              if (mounted) {
                 context.showSnackBar('All data reset. Restart the app.');
               }
             },
@@ -296,12 +434,14 @@ class _SettingsTile extends StatelessWidget {
     required this.title,
     required this.trailing,
     this.onTap,
+    this.titleColor,
   });
 
   final IconData icon;
   final String title;
   final Widget trailing;
   final VoidCallback? onTap;
+  final Color? titleColor;
 
   @override
   Widget build(BuildContext context) {
@@ -311,7 +451,12 @@ class _SettingsTile extends StatelessWidget {
         children: [
           Icon(icon, size: 22, color: context.colorScheme.onSurfaceVariant),
           AppSpacing.gapH12,
-          Expanded(child: Text(title, style: context.textTheme.bodyMedium)),
+          Expanded(
+            child: Text(
+              title,
+              style: context.textTheme.bodyMedium?.copyWith(color: titleColor),
+            ),
+          ),
           trailing,
         ],
       ),

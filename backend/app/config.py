@@ -89,6 +89,12 @@ class Settings(BaseSettings):
     # --- Quiz ---
     quiz_default_count: int = Field(default=5, description="Default number of quiz questions")
     quiz_max_count: int = Field(default=20, description="Maximum quiz questions per request")
+    quiz_semantic_threshold: float = Field(
+        default=0.75,
+        ge=0.0,
+        le=1.0,
+        description="Cosine similarity threshold for semantic open-ended/short-answer quiz grading",
+    )
 
     # --- Review ---
     review_default_batch: int = Field(default=20, description="Default review cards per session")

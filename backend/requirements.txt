@@ -34,8 +34,10 @@ fsrs>=6.3.0
 
 # Deduplication
 datasketch>=1.9.0
+pybloom-live>=3.0.3
 
 # Utilities
 httpx>=0.28.1
 bleach>=6.3.0
 python-multipart>=0.0.22
+python-json-logger>=2.0.7

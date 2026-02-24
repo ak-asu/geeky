@@ -42,11 +42,13 @@ class HomeScreen extends ConsumerWidget {
         // Search
         IconButton(
           icon: const Icon(Icons.search_rounded),
+          tooltip: 'Search',
           onPressed: () => context.pushNamed(RouteNames.search),
         ),
         // Notifications
         IconButton(
           icon: const Icon(Icons.notifications_outlined),
+          tooltip: 'Notifications',
           onPressed: () => context.pushNamed(RouteNames.notifications),
         ),
       ],
@@ -58,10 +60,13 @@ class HomeScreen extends ConsumerWidget {
     return GeekyDrawer(
       header: Row(
         children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-            child: const Icon(Icons.person_rounded, color: AppColors.primary),
+          Semantics(
+            label: 'User profile picture',
+            child: CircleAvatar(
+              radius: 20,
+              backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+              child: const Icon(Icons.person_rounded, color: AppColors.primary),
+            ),
           ),
           AppSpacing.gapH12,
           Expanded(

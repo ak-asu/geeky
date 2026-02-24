@@ -24,6 +24,11 @@ class NotesListScreen extends ConsumerWidget {
         title: const Text('Notes'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.mic_rounded),
+            tooltip: 'Voice memo',
+            onPressed: () => context.pushNamed(RouteNames.voiceMemo),
+          ),
+          IconButton(
             icon: const Icon(Icons.upload_file_rounded),
             tooltip: 'Upload media',
             onPressed: () => context.pushNamed(RouteNames.uploadMedia),
