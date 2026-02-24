@@ -1,9 +1,10 @@
 """Multi-factor recommendation scorer (AL-02).
 
-Scores shorts using three factors:
+Scores shorts using four factors:
 - Relevance (40%): topic overlap between user interests and short topics
 - Capability (30%): match short difficulty to user mastery level
 - Novelty (30%): inverse interaction count (fewer views = more novel)
+- Geographic boost (+12% additive): local content relevance when enabled
 """
 
 from __future__ import annotations
@@ -14,6 +15,7 @@ from typing import Any
 
 from app.config import Settings
 from app.services.recommendation.base import ScoredShort
+from app.services.recommendation.location_scorer import LocationScorer
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +29,7 @@ class MultiFactorScorer:
         review_state_repo: Review state repository for mastery levels.
         short_repo: Short repository for short metadata.
         settings: Application settings with weight configuration.
+        location_scorer: Geographic relevance scorer (optional, injected).
     """
 
     def __init__(
@@ -37,6 +40,7 @@ class MultiFactorScorer:
         review_state_repo: Any,
         short_repo: Any,
         settings: Settings,
+        location_scorer: LocationScorer | None = None,
     ) -> None:
         self._user_repo = user_repo
         self._interaction_repo = interaction_repo
@@ -45,6 +49,8 @@ class MultiFactorScorer:
         self._w_relevance = settings.rec_weight_relevance
         self._w_capability = settings.rec_weight_capability
         self._w_novelty = settings.rec_weight_novelty
+        self._location_boost = settings.rec_location_boost
+        self._location_scorer = location_scorer or LocationScorer()
 
     async def score(
         self, user_id: str, short_ids: list[str]
@@ -60,6 +66,8 @@ class MultiFactorScorer:
         user = await self._user_repo.get(user_id)
         user_interests = set(user.interests) if user else set()
         user_expertise = user.expertise_level if user else "beginner"
+        home_region: str | None = getattr(user, "home_region", None) if user else None
+        location_enabled: bool = getattr(user, "location_enabled", False) if user else False
 
         # Fetch review states for mastery info
         review_states = await self._review_state_repo.query(user_id, limit=5000)
@@ -88,11 +96,22 @@ class MultiFactorScorer:
             )
             novelty = self._compute_novelty(interaction_counts.get(short_id, 0))
 
-            total = (
+            base_score = (
                 self._w_relevance * relevance
                 + self._w_capability * capability
                 + self._w_novelty * novelty
             )
+
+            # Geographic boost — additive, only when user has enabled location
+            # and has a home region set. Gracefully no-ops when disabled.
+            geo_score = 0.0
+            if location_enabled and home_region:
+                content_locations = getattr(short, "location_entities", []) or []
+                geo_score = self._location_scorer.compute_score(
+                    content_locations, home_region
+                )
+
+            total = base_score + self._location_boost * geo_score
 
             scored.append(ScoredShort(
                 short_id=short_id,

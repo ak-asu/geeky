@@ -54,6 +54,7 @@ async def _run_pipeline(user_id: str, note_id: str, task_id: str) -> dict:
         get_document_parser,
         get_embedding_provider,
         get_llm_provider,
+        get_ner_extractor,
         get_note_repository,
         get_processing_task_repository,
         get_short_repository,
@@ -71,6 +72,7 @@ async def _run_pipeline(user_id: str, note_id: str, task_id: str) -> dict:
         short_repo=get_short_repository(),
         processing_task_repo=get_processing_task_repository(),
         settings=get_settings(),
+        ner_extractor=get_ner_extractor(),
     )
 
     return await orchestrator.process(user_id, note_id, task_id)

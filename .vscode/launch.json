@@ -14,7 +14,7 @@
       "request": "launch",
       "type": "dart",
       "toolArgs": [
-        "--dart-define=API_BASE_URL=https://faculty-cams-whale-bar.trycloudflare.com"
+        "--dart-define=API_BASE_URL=https://watershed-event-fingers-done.trycloudflare.com"
       ]
     },
     {
@@ -23,7 +23,7 @@
       "type": "dart",
       "flutterMode": "release",
       "toolArgs": [
-        "--dart-define=API_BASE_URL=https://faculty-cams-whale-bar.trycloudflare.com"
+        "--dart-define=API_BASE_URL=https://watershed-event-fingers-done.trycloudflare.com"
       ]
     },
     {

@@ -44,6 +44,7 @@ class PipelineOrchestrator:
         short_repo,
         processing_task_repo,
         settings: Settings,
+        ner_extractor=None,  # Optional: enables location entity tagging on shorts
     ) -> None:
         self._parser = document_parser
         self._embedder = embedding_provider
@@ -54,6 +55,7 @@ class PipelineOrchestrator:
         self._short_repo = short_repo
         self._task_repo = processing_task_repo
         self._settings = settings
+        self._ner_extractor = ner_extractor
 
         self._chunker = HierarchicalChunker(ChunkerConfig(
             target_words=settings.chunk_target_words,
@@ -292,6 +294,19 @@ class PipelineOrchestrator:
                 if a == i or b == i:
                     conflict_flags.append(ConflictFlag(claim=claim, sources=[note_id]))
 
+            # Extract location entities from chunk content when NER is available.
+            # Non-critical: failures are logged and the short is saved without tags.
+            location_entities: list[str] = []
+            if self._ner_extractor is not None and i < len(chunks_to_process):
+                try:
+                    location_entities = await self._ner_extractor.extract_location_entities(
+                        chunks_to_process[i].content
+                    )
+                except Exception as exc:
+                    logger.warning(
+                        "Location NER failed for short in note=%s: %s", note_id, exc
+                    )
+
             short_doc = ShortDocument(
                 id=short_id,
                 title=gen_short.title,
@@ -305,6 +320,7 @@ class PipelineOrchestrator:
                 prompts=gen_short.prompts,
                 chunk_ids=[chunk_ids[i]] if i < len(chunk_ids) else [],
                 conflict_flags=conflict_flags,
+                location_entities=location_entities,
             )
 
             await self._short_repo.create(user_id, short_doc, doc_id=short_id)

@@ -75,6 +75,7 @@ class Settings(BaseSettings):
     rec_weight_relevance: float = Field(default=0.4, description="Relevance weight (AL-02)")
     rec_weight_capability: float = Field(default=0.3, description="Capability weight (AL-02)")
     rec_weight_novelty: float = Field(default=0.3, description="Novelty weight (AL-02)")
+    rec_location_boost: float = Field(default=0.12, description="Additive geographic relevance boost for local content (AL-02)")
 
     # --- Spaced Repetition ---
     fsrs_desired_retention: float = Field(default=0.9, description="FSRS target retention rate")

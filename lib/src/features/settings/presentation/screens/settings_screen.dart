@@ -7,6 +7,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/storage_keys.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/providers/shared_preferences_provider.dart';
+import '../../../../core/services/location_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../routing/route_names.dart';
@@ -23,6 +24,7 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _exporting = false;
+  bool _detectingLocation = false;
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +35,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final notificationsEnabled =
         prefs.getBool(StorageKeys.notificationsEnabled) ?? true;
     final isPremium = ref.watch(isPremiumProvider);
+    final locationPref = ref.watch(locationPreferenceProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
@@ -144,6 +147,78 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   prefs.setBool(StorageKeys.notificationsEnabled, value),
             ),
           ),
+
+          AppSpacing.gapV24,
+
+          // --- Location ---
+          const _SectionHeader(label: 'Location'),
+          AppSpacing.gapV8,
+
+          _SettingsTile(
+            icon: Icons.location_on_rounded,
+            title: 'Prioritize local content',
+            trailing: Switch.adaptive(
+              value: locationPref.enabled,
+              activeTrackColor: AppColors.primary,
+              onChanged: (value) => ref
+                  .read(locationPreferenceProvider.notifier)
+                  .setEnabled(value),
+            ),
+          ),
+
+          if (locationPref.enabled) ...[
+            Padding(
+              padding: const EdgeInsets.only(left: 34),
+              child: Text(
+                'Content from your region gets a small ranking boost (~12%)',
+                style: context.textTheme.bodySmall?.copyWith(
+                  color: context.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            AppSpacing.gapV4,
+            _SettingsTile(
+              icon: Icons.my_location_rounded,
+              title: locationPref.homeRegion != null
+                  ? locationPref.homeRegion!
+                  : 'No region set',
+              trailing: _detectingLocation
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Auto-detect button
+                        IconButton(
+                          tooltip: 'Auto-detect',
+                          visualDensity: VisualDensity.compact,
+                          icon: Icon(
+                            Icons.gps_fixed_rounded,
+                            size: 20,
+                            color: context.colorScheme.onSurfaceVariant,
+                          ),
+                          onPressed: _detectingLocation
+                              ? null
+                              : _handleDetectLocation,
+                        ),
+                        // Manual edit button
+                        IconButton(
+                          tooltip: 'Set manually',
+                          visualDensity: VisualDensity.compact,
+                          icon: Icon(
+                            Icons.edit_rounded,
+                            size: 20,
+                            color: context.colorScheme.onSurfaceVariant,
+                          ),
+                          onPressed: _showManualRegionDialog,
+                        ),
+                      ],
+                    ),
+            ),
+          ],
 
           AppSpacing.gapV24,
 
@@ -266,6 +341,88 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 color: context.colorScheme.onSurfaceVariant,
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleDetectLocation() async {
+    setState(() => _detectingLocation = true);
+    try {
+      final result = await ref
+          .read(locationPreferenceProvider.notifier)
+          .detectRegion();
+      if (!mounted) return;
+      switch (result) {
+        case LocationSuccess(:final region):
+          context.showSnackBar('Region set to $region');
+        case LocationDenied():
+          context.showSnackBar(
+            'Location permission denied. Set your region manually.',
+          );
+        case LocationDisabled():
+          context.showSnackBar(
+            'Location services are disabled. Enable them in device settings.',
+          );
+        case LocationError(:final message):
+          context.showSnackBar('Could not detect location: $message');
+      }
+    } finally {
+      if (mounted) setState(() => _detectingLocation = false);
+    }
+  }
+
+  void _showManualRegionDialog() {
+    final controller = TextEditingController(
+      text: ref.read(locationPreferenceProvider).homeRegion ?? '',
+    );
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Set Home Region'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Enter your city or state, e.g. "Arizona, US"'),
+            AppSpacing.gapV12,
+            TextField(
+              controller: controller,
+              autofocus: true,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(
+                hintText: 'e.g. Arizona, US',
+                isDense: true,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          if (ref.read(locationPreferenceProvider).homeRegion != null)
+            TextButton(
+              onPressed: () {
+                ref.read(locationPreferenceProvider.notifier).clearRegion();
+                Navigator.of(ctx).pop();
+              },
+              child: const Text(
+                'Clear',
+                style: TextStyle(color: AppColors.error),
+              ),
+            ),
+          FilledButton(
+            onPressed: () {
+              final value = controller.text.trim();
+              if (value.isNotEmpty) {
+                ref.read(locationPreferenceProvider.notifier).setRegion(value);
+              }
+              Navigator.of(ctx).pop();
+            },
+            child: const Text('Save'),
           ),
         ],
       ),

@@ -22,7 +22,8 @@ logger = logging.getLogger(__name__)
 _SPACY_TO_ENTITY_TYPE: dict[str, EntityType] = {
     "PERSON": EntityType.PERSON,
     "ORG": EntityType.ORGANIZATION,
-    "GPE": EntityType.ORGANIZATION,
+    "GPE": EntityType.LOCATION,   # Geopolitical entity (country, city, state)
+    "LOC": EntityType.LOCATION,   # Non-GPE locations (mountains, rivers, etc.)
     "PRODUCT": EntityType.TECHNOLOGY,
     "WORK_OF_ART": EntityType.THEORY,
     "LAW": EntityType.THEORY,
@@ -31,6 +32,9 @@ _SPACY_TO_ENTITY_TYPE: dict[str, EntityType] = {
     "FAC": EntityType.CONCEPT,
     "LANGUAGE": EntityType.TECHNOLOGY,
 }
+
+# spaCy labels that represent geographic locations
+_LOCATION_LABELS: frozenset[str] = frozenset({"GPE", "LOC"})
 
 # Noun-chunk based entities are concepts by default
 _DEFAULT_ENTITY_TYPE = EntityType.CONCEPT
@@ -139,6 +143,33 @@ class SpacyNERExtractor:
                     ))
 
         return relations
+
+    async def extract_location_entities(self, text: str) -> list[str]:
+        """Extract geographic location labels (GPE/LOC) from text.
+
+        Returns a deduplicated list of location name strings (not Entity objects)
+        for lightweight storage on ShortDocument.location_entities.
+
+        Examples: ["Arizona", "Phoenix", "United States", "Silicon Valley"]
+        """
+        nlp = self._get_nlp()
+        doc = await asyncio.to_thread(nlp, text)
+
+        seen: set[str] = set()
+        locations: list[str] = []
+        for ent in doc.ents:
+            if ent.label_ not in _LOCATION_LABELS:
+                continue
+            name = ent.text.strip()
+            if not name or len(name) < 2:
+                continue
+            # Deduplicate case-insensitively, preserve original casing
+            key = name.lower()
+            if key not in seen:
+                seen.add(key)
+                locations.append(name)
+
+        return locations
 
 
 class _ClassifiedEdgeResponse(BaseModel):

@@ -19,4 +19,8 @@ abstract final class StorageKeys {
 
   // Search
   static const String recentSearches = 'recent_searches';
+
+  // Location
+  static const String locationEnabled = 'location_enabled';
+  static const String homeRegion = 'home_region';
 }
