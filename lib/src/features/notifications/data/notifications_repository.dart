@@ -10,13 +10,13 @@ class NotificationsRepository {
   final AppDatabase _db;
   final ApiService _api;
 
-  Stream<List<NotificationEntity>> watchAll() {
-    return _db.notificationsDao.watchAll().map(
-      (rows) => rows.map(NotificationDto.fromRow).toList(),
-    );
+  Stream<List<NotificationEntity>> watchAll(String userId) {
+    return _db.notificationsDao
+        .watchAll(userId)
+        .map((rows) => rows.map(NotificationDto.fromRow).toList());
   }
 
-  Future<List<NotificationEntity>> getAll() async {
+  Future<List<NotificationEntity>> getAll(String userId) async {
     try {
       final notifications = await _api.getList(
         ApiConstants.notifications,
@@ -29,30 +29,30 @@ class NotificationsRepository {
       }
       return notifications;
     } catch (_) {
-      final rows = await _db.notificationsDao.getAll();
+      final rows = await _db.notificationsDao.getAll(userId);
       return rows.map(NotificationDto.fromRow).toList();
     }
   }
 
-  Future<void> markAsRead(String id) async {
+  Future<void> markAsRead(String userId, String id) async {
     try {
       await _api.postVoid('${ApiConstants.notifications}/$id/read', null);
     } catch (_) {
       // Will be synced later
     }
-    await _db.notificationsDao.markAsRead(id);
+    await _db.notificationsDao.markAsRead(userId, id);
   }
 
-  Future<void> markAllAsRead() async {
+  Future<void> markAllAsRead(String userId) async {
     try {
       await _api.postVoid('${ApiConstants.notifications}/read-all', null);
     } catch (_) {
       // Will be synced later
     }
-    await _db.notificationsDao.markAllAsRead();
+    await _db.notificationsDao.markAllAsRead(userId);
   }
 
-  Stream<int> watchUnreadCount() {
-    return _db.notificationsDao.watchUnreadCount();
+  Stream<int> watchUnreadCount(String userId) {
+    return _db.notificationsDao.watchUnreadCount(userId);
   }
 }

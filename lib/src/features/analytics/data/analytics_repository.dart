@@ -30,7 +30,7 @@ class AnalyticsRepository {
     return const LearningStreak();
   }
 
-  Future<AnalyticsStats> getStats() async {
+  Future<AnalyticsStats> getStats(String userId) async {
     try {
       final dashboard = await _api.get(
         '${ApiConstants.analytics}/dashboard',
@@ -49,7 +49,7 @@ class AnalyticsRepository {
       // Offline: compute what we can from local cache
     }
 
-    final rows = await _shortsDao.getAllShorts();
+    final rows = await _shortsDao.getAllShorts(userId);
     final topicSet = <String>{};
     for (final row in rows) {
       final topics = (jsonDecode(row.topicsJson) as List<dynamic>)
@@ -65,7 +65,7 @@ class AnalyticsRepository {
     );
   }
 
-  Future<List<TopicProgress>> getTopicProgress() async {
+  Future<List<TopicProgress>> getTopicProgress(String userId) async {
     try {
       final mastery = await _api.get(
         '${ApiConstants.analytics}/mastery',
@@ -80,7 +80,7 @@ class AnalyticsRepository {
       // Offline: compute topic list from local cache, mastery unknown
     }
 
-    final rows = await _shortsDao.getAllShorts();
+    final rows = await _shortsDao.getAllShorts(userId);
     final topicCounts = <String, int>{};
     for (final row in rows) {
       final topics = (jsonDecode(row.topicsJson) as List<dynamic>)

@@ -17,11 +17,13 @@ UserEntity? userProfile(Ref ref) {
 /// Topic expertise data for the radar chart on profile.
 @riverpod
 Future<List<TopicProgress>> profileExpertise(Ref ref) {
-  return ref.read(analyticsRepositoryProvider).getTopicProgress();
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
+  return ref.read(analyticsRepositoryProvider).getTopicProgress(userId);
 }
 
 /// Profile stats summary.
 @riverpod
 Future<AnalyticsStats> profileStats(Ref ref) {
-  return ref.read(analyticsRepositoryProvider).getStats();
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
+  return ref.read(analyticsRepositoryProvider).getStats(userId);
 }

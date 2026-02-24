@@ -73,7 +73,7 @@ class _CreateModuleScreenState extends ConsumerState<CreateModuleScreen> {
     final now = DateTime.now();
     final module = ModuleEntity(
       id: const Uuid().v4(),
-      userId: ref.read(currentUserProvider)?.id ?? 'anonymous',
+      userId: ref.read(currentUserProvider)?.id ?? '',
       name: name,
       description: _descriptionController.text.trim().isNotEmpty
           ? _descriptionController.text.trim()

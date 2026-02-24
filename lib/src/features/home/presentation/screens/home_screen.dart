@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/providers/share_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/geeky_drawer.dart';
@@ -18,6 +19,22 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isPremium = ref.watch(isPremiumProvider);
+
+    // Deliver any share intent that arrived before the user was on this screen
+    // (e.g. cold-start share while unauthenticated — stored in pendingShareProvider
+    // by app.dart, then picked up here after login redirects to home).
+    ref.listen(pendingShareProvider, (_, next) {
+      if (next == null) return;
+      ref.read(pendingShareProvider.notifier).clear();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted) return;
+        if (next.text != null) {
+          context.pushNamed(RouteNames.createNote, extra: next);
+        } else if (next.filePath != null) {
+          context.pushNamed(RouteNames.uploadMedia, extra: next);
+        }
+      });
+    });
 
     return GeekyScaffold(
       drawer: _buildDrawer(context, ref, isPremium),

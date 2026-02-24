@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/providers/database_provider.dart';
+import '../../../features/auth/providers.dart';
 import '../../../services/local/database.dart';
 
 part 'interaction_notifier.g.dart';
@@ -76,6 +77,7 @@ class InteractionNotifier extends _$InteractionNotifier {
     final db = ref.read(appDatabaseProvider);
     await db.syncDao.insertInteraction(
       PendingInteractionsCompanion.insert(
+        userId: Value(ref.read(currentUserProvider)?.id ?? ''),
         articleId: articleId,
         type: type,
         timestamp: DateTime.now(),

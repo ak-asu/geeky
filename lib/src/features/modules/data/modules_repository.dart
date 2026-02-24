@@ -13,7 +13,7 @@ class ModulesRepository {
 
   ModulesDao get _modulesDao => _db.modulesDao;
 
-  Future<List<ModuleEntity>> getAllModules() async {
+  Future<List<ModuleEntity>> getAllModules(String userId) async {
     try {
       final modules = await _api.getList(
         ApiConstants.modules,
@@ -24,15 +24,15 @@ class ModulesRepository {
       }
       return modules;
     } catch (_) {
-      final rows = await _modulesDao.getAllModules();
+      final rows = await _modulesDao.getAllModules(userId);
       return rows.map(ModuleDto.fromRow).toList();
     }
   }
 
-  Stream<List<ModuleEntity>> watchAllModules() {
-    return _modulesDao.watchAllModules().map(
-      (rows) => rows.map(ModuleDto.fromRow).toList(),
-    );
+  Stream<List<ModuleEntity>> watchAllModules(String userId) {
+    return _modulesDao
+        .watchAllModules(userId)
+        .map((rows) => rows.map(ModuleDto.fromRow).toList());
   }
 
   Future<ModuleEntity?> getModuleById(String id) async {

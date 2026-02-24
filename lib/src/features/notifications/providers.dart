@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/network/api_service.dart';
 import '../../core/providers/database_provider.dart';
+import '../auth/providers.dart';
 import 'data/notifications_repository.dart';
 import 'domain/notification_entity.dart';
 
@@ -17,5 +18,6 @@ NotificationsRepository notificationsRepository(Ref ref) {
 
 @riverpod
 Stream<List<NotificationEntity>> allNotifications(Ref ref) {
-  return ref.watch(notificationsRepositoryProvider).watchAll();
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
+  return ref.watch(notificationsRepositoryProvider).watchAll(userId);
 }

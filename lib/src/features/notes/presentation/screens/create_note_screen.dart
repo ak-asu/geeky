@@ -12,7 +12,10 @@ import '../../domain/note_entity.dart';
 import '../../providers.dart';
 
 class CreateNoteScreen extends ConsumerStatefulWidget {
-  const CreateNoteScreen({super.key});
+  const CreateNoteScreen({super.key, this.initialContent});
+
+  /// Pre-fills the content field — used when the screen is opened via a share intent.
+  final String? initialContent;
 
   @override
   ConsumerState<CreateNoteScreen> createState() => _CreateNoteScreenState();
@@ -25,6 +28,14 @@ class _CreateNoteScreenState extends ConsumerState<CreateNoteScreen> {
   bool _saving = false;
 
   static const _uuid = Uuid();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialContent != null) {
+      _contentController.text = widget.initialContent!;
+    }
+  }
 
   @override
   void dispose() {

@@ -7,6 +7,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/geeky_empty_state.dart';
 import '../../../../core/widgets/geeky_shimmer.dart';
 import '../../../../core/widgets/horizontal_card_feed.dart';
+import '../../../auth/providers.dart';
 import '../../../bookmarks/providers.dart';
 import '../../../notes/data/interaction_notifier.dart';
 import '../../../quiz/domain/quiz_card_entity.dart';
@@ -100,6 +101,7 @@ class _ShortsFeedBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final doneSet = ref.watch(shortsFeedProvider);
     final bookmarkSet = ref.watch(bookmarkToggleProvider);
+    final userId = ref.watch(currentUserProvider)?.id ?? '';
 
     return HorizontalCardFeed<ShortEntity>(
       items: shorts,
@@ -123,9 +125,10 @@ class _ShortsFeedBody extends ConsumerWidget {
             // until the backend pipeline generates cards server-side).
             if (!wasDone) {
               final quizRepo = ref.read(quizRepositoryProvider);
-              quizRepo.getCardForArticle(short.id).then((existing) {
+              quizRepo.getCardForArticle(userId, short.id).then((existing) {
                 if (existing == null) {
                   quizRepo.saveCard(
+                    userId,
                     QuizCardEntity(
                       articleId: short.id,
                       dueDate: DateTime.now(),

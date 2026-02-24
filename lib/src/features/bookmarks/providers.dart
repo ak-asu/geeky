@@ -23,7 +23,8 @@ BookmarksRepository bookmarksRepository(Ref ref) {
 /// Watches all bookmarks as a stream.
 @riverpod
 Stream<List<BookmarkEntity>> allBookmarks(Ref ref) {
-  return ref.watch(bookmarksRepositoryProvider).watchAllBookmarks();
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
+  return ref.watch(bookmarksRepositoryProvider).watchAllBookmarks(userId);
 }
 
 /// Resolves bookmarked short IDs to full ShortEntity list.
@@ -46,19 +47,20 @@ class BookmarkToggle extends _$BookmarkToggle {
 
   Future<void> _loadBookmarks() async {
     final db = ref.read(appDatabaseProvider);
-    final bookmarks = await db.bookmarksDao.getAllBookmarks();
+    final userId = ref.read(currentUserProvider)?.id ?? '';
+    final bookmarks = await db.bookmarksDao.getAllBookmarks(userId);
     state = bookmarks.map((b) => b.shortId).toSet();
   }
 
   Future<void> toggle(String shortId) async {
     final db = ref.read(appDatabaseProvider);
     final repo = ref.read(bookmarksRepositoryProvider);
+    final userId = ref.read(currentUserProvider)?.id ?? '';
 
     if (state.contains(shortId)) {
-      await repo.removeBookmark(shortId);
+      await repo.removeBookmark(userId, shortId);
       state = {...state}..remove(shortId);
     } else {
-      final userId = ref.read(currentUserProvider)?.id ?? 'anonymous';
       await db.bookmarksDao.addBookmark(
         CachedBookmarksCompanion(
           id: Value(const Uuid().v4()),

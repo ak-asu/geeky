@@ -8,6 +8,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/geeky_empty_state.dart';
 import '../../../../core/widgets/geeky_error_widget.dart';
 import '../../../../core/widgets/geeky_shimmer.dart';
+import '../../../../features/auth/providers.dart';
 import '../../domain/notification_entity.dart';
 import '../../providers.dart';
 
@@ -17,6 +18,7 @@ class NotificationsListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notificationsAsync = ref.watch(allNotificationsProvider);
+    final userId = ref.watch(currentUserProvider)?.id ?? '';
 
     return Scaffold(
       appBar: AppBar(
@@ -24,7 +26,9 @@ class NotificationsListScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () async {
-              await ref.read(notificationsRepositoryProvider).markAllAsRead();
+              await ref
+                  .read(notificationsRepositoryProvider)
+                  .markAllAsRead(userId);
               ref.invalidate(allNotificationsProvider);
             },
             child: Text(
@@ -71,7 +75,7 @@ class NotificationsListScreen extends ConsumerWidget {
                       if (!notification.isRead) {
                         await ref
                             .read(notificationsRepositoryProvider)
-                            .markAsRead(notification.id);
+                            .markAsRead(userId, notification.id);
                         ref.invalidate(allNotificationsProvider);
                       }
                     },

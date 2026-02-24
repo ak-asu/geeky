@@ -1,3 +1,5 @@
+import 'dart:io' as io;
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,7 +14,10 @@ import '../../domain/note_entity.dart';
 import '../../providers.dart';
 
 class UploadMediaScreen extends ConsumerStatefulWidget {
-  const UploadMediaScreen({super.key});
+  const UploadMediaScreen({super.key, this.initialFilePath});
+
+  /// Pre-selects a file — used when the screen is opened via a share intent.
+  final String? initialFilePath;
 
   @override
   ConsumerState<UploadMediaScreen> createState() => _UploadMediaScreenState();
@@ -36,6 +41,25 @@ class _UploadMediaScreenState extends ConsumerState<UploadMediaScreen> {
     'wav',
     'mp4',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialFilePath != null) {
+      _initFromSharedFile(widget.initialFilePath!);
+    }
+  }
+
+  Future<void> _initFromSharedFile(String path) async {
+    final file = io.File(path);
+    if (!await file.exists()) return;
+    final stat = await file.stat();
+    final name = path.split('/').last;
+    if (!mounted) return;
+    setState(() {
+      _selectedFile = PlatformFile(path: path, name: name, size: stat.size);
+    });
+  }
 
   @override
   void dispose() {

@@ -38,6 +38,7 @@ import '../features/store/domain/store_module_entity.dart';
 import '../features/store/presentation/screens/module_store_screen.dart';
 import '../features/store/presentation/screens/store_module_detail_screen.dart';
 import '../features/subscription/presentation/screens/subscription_screen.dart';
+import '../core/providers/share_provider.dart';
 import 'premium_guard.dart';
 import 'route_names.dart';
 
@@ -135,12 +136,18 @@ GoRouter appRouter(Ref ref) {
       GoRoute(
         path: '/${RouteNames.createNote}',
         name: RouteNames.createNote,
-        builder: (context, state) => const CreateNoteScreen(),
+        builder: (context, state) {
+          final share = state.extra as ShareContent?;
+          return CreateNoteScreen(initialContent: share?.text);
+        },
       ),
       GoRoute(
         path: '/${RouteNames.uploadMedia}',
         name: RouteNames.uploadMedia,
-        builder: (context, state) => const UploadMediaScreen(),
+        builder: (context, state) {
+          final share = state.extra as ShareContent?;
+          return UploadMediaScreen(initialFilePath: share?.filePath);
+        },
       ),
 
       // --- Shorts (module-scoped or filtered view) ---

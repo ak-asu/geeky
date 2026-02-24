@@ -14,13 +14,13 @@ class SyncRepository {
   final ApiService _api;
 
   /// Stream of unsynced interaction count.
-  Stream<int> watchPendingCount() {
-    return _db.syncDao.watchPendingCount();
+  Stream<int> watchPendingCount(String userId) {
+    return _db.syncDao.watchPendingCount(userId);
   }
 
   /// Gets the number of unsynced interactions.
-  Future<int> getPendingCount() async {
-    final pending = await _db.syncDao.getPendingInteractions();
+  Future<int> getPendingCount(String userId) async {
+    final pending = await _db.syncDao.getPendingInteractions(userId);
     return pending.length;
   }
 
@@ -28,8 +28,8 @@ class SyncRepository {
   /// Posts in batch to /api/v1/sync/interactions.
   /// Marks each interaction as synced on success.
   /// Stops on first failure to preserve ordering.
-  Future<int> flushQueue() async {
-    final pending = await _db.syncDao.getPendingInteractions();
+  Future<int> flushQueue(String userId) async {
+    final pending = await _db.syncDao.getPendingInteractions(userId);
     if (pending.isEmpty) return 0;
 
     // Build batch payload matching InteractionBatchRequest
@@ -54,7 +54,7 @@ class SyncRepository {
         'interactions': interactions,
       }, (json) => json);
       // All synced successfully — mark in Drift
-      await _db.syncDao.markAllSynced();
+      await _db.syncDao.markAllSynced(userId);
       return pending.length;
     } catch (_) {
       // Batch failed — try one-by-one for partial progress

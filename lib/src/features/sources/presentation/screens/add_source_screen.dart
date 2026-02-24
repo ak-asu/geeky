@@ -38,7 +38,7 @@ class _AddSourceScreenState extends ConsumerState<AddSourceScreen> {
 
     final source = ContentSourceEntity(
       id: const Uuid().v4(),
-      userId: ref.read(currentUserProvider)?.id ?? 'anonymous',
+      userId: ref.read(currentUserProvider)?.id ?? '',
       type: _selectedType,
       name: name,
       url: _urlController.text.trim().isNotEmpty

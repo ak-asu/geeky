@@ -9,9 +9,11 @@ part 'notes_dao.g.dart';
 class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
   NotesDao(super.db);
 
-  Future<List<CachedNote>> getAllNotes() => select(cachedNotes).get();
+  Future<List<CachedNote>> getAllNotes(String userId) =>
+      (select(cachedNotes)..where((t) => t.userId.equals(userId))).get();
 
-  Stream<List<CachedNote>> watchAllNotes() => select(cachedNotes).watch();
+  Stream<List<CachedNote>> watchAllNotes(String userId) =>
+      (select(cachedNotes)..where((t) => t.userId.equals(userId))).watch();
 
   Future<CachedNote?> getNoteById(String id) =>
       (select(cachedNotes)..where((t) => t.id.equals(id))).getSingleOrNull();
@@ -28,9 +30,11 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
   Future<void> deleteNote(String id) =>
       (delete(cachedNotes)..where((t) => t.id.equals(id))).go();
 
-  Future<int> countNotes() async {
+  Future<int> countNotes(String userId) async {
     final count = cachedNotes.id.count();
-    final query = selectOnly(cachedNotes)..addColumns([count]);
+    final query = selectOnly(cachedNotes)
+      ..addColumns([count])
+      ..where(cachedNotes.userId.equals(userId));
     final result = await query.getSingle();
     return result.read(count)!;
   }

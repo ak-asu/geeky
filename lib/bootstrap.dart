@@ -29,9 +29,7 @@ Future<BootstrapResult> bootstrap() async {
   // SharedPreferences
   final prefs = await SharedPreferences.getInstance();
 
-  // Ensure Drift DB is ready
   final db = AppDatabase();
-  await db.customSelect('SELECT 1').get();
 
   return (prefs: prefs, db: db);
 }

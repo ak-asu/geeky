@@ -9,13 +9,17 @@ part 'sources_dao.g.dart';
 class SourcesDao extends DatabaseAccessor<AppDatabase> with _$SourcesDaoMixin {
   SourcesDao(super.db);
 
-  Future<List<CachedSource>> getAllSources() => (select(
-    cachedSources,
-  )..orderBy([(t) => OrderingTerm.desc(t.createdAt)])).get();
+  Future<List<CachedSource>> getAllSources(String userId) =>
+      (select(cachedSources)
+            ..where((t) => t.userId.equals(userId))
+            ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+          .get();
 
-  Stream<List<CachedSource>> watchAllSources() => (select(
-    cachedSources,
-  )..orderBy([(t) => OrderingTerm.desc(t.createdAt)])).watch();
+  Stream<List<CachedSource>> watchAllSources(String userId) =>
+      (select(cachedSources)
+            ..where((t) => t.userId.equals(userId))
+            ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+          .watch();
 
   Future<CachedSource?> getSourceById(String id) =>
       (select(cachedSources)..where((t) => t.id.equals(id))).getSingleOrNull();
@@ -26,5 +30,6 @@ class SourcesDao extends DatabaseAccessor<AppDatabase> with _$SourcesDaoMixin {
   Future<void> deleteSource(String id) =>
       (delete(cachedSources)..where((t) => t.id.equals(id))).go();
 
-  Future<void> deleteAll() => delete(cachedSources).go();
+  Future<void> deleteAll(String userId) =>
+      (delete(cachedSources)..where((t) => t.userId.equals(userId))).go();
 }

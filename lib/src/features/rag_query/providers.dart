@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../core/network/api_service.dart';
 import '../../core/providers/database_provider.dart';
+import '../auth/providers.dart';
 import 'data/rag_repository.dart';
 import 'domain/chat_message.dart';
 import 'domain/rag_chat_state.dart';
@@ -41,7 +42,8 @@ class RagChat extends _$RagChat {
 
     try {
       final repo = ref.read(ragRepositoryProvider);
-      final response = await repo.query(question);
+      final userId = ref.read(currentUserProvider)?.id ?? '';
+      final response = await repo.query(userId, question);
 
       final assistantMsg = ChatMessage(
         id: const Uuid().v4(),

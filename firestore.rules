@@ -1,0 +1,25 @@
+rules_version = '2';
+
+// Geeky — Firestore Security Rules
+//
+// Architecture note: The Flutter frontend never calls Firestore directly.
+// All reads/writes go through the FastAPI backend, which uses the Firebase
+// Admin SDK (bypasses these rules). These rules exist as defence-in-depth:
+// they block any direct client-side Firestore access, so a compromised
+// client cannot read or modify any user's data even with a valid auth token.
+//
+// The ONLY exception is app_config/global, which is a public read-only
+// document the backend uses for feature flags. We keep it client-unreadable
+// too since the backend reads it via Admin SDK.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Deny all client-side access ─────────────────────────────────────────
+    // Everything is managed through the FastAPI backend (Admin SDK).
+    // No Flutter code calls Firestore directly.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

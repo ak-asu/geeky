@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 class CachedQuizCards extends Table {
+  TextColumn get userId => text().withDefault(const Constant(''))();
   TextColumn get articleId => text()();
   RealColumn get stability => real().withDefault(const Constant(1.0))();
   RealColumn get difficulty => real().withDefault(const Constant(0.5))();
@@ -11,5 +12,5 @@ class CachedQuizCards extends Table {
   DateTimeColumn get lastReviewDate => dateTime().nullable()();
 
   @override
-  Set<Column> get primaryKey => {articleId};
+  Set<Column> get primaryKey => {userId, articleId};
 }

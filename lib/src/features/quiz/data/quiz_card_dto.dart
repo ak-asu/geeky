@@ -17,8 +17,12 @@ abstract final class QuizCardDto {
     );
   }
 
-  static CachedQuizCardsCompanion toCompanion(QuizCardEntity entity) {
+  static CachedQuizCardsCompanion toCompanion(
+    QuizCardEntity entity,
+    String userId,
+  ) {
     return CachedQuizCardsCompanion(
+      userId: Value(userId),
       articleId: Value(entity.articleId),
       stability: Value(entity.stability),
       difficulty: Value(entity.difficulty),

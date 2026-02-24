@@ -53,6 +53,7 @@ dependencies:
   # Features
   file_picker: ^10.3.10
   flutter_tts: ^4.2.5
+  share_handler: ^0.0.23
 
 dev_dependencies:
   flutter_test:

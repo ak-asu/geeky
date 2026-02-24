@@ -9,9 +9,11 @@ part 'modules_dao.g.dart';
 class ModulesDao extends DatabaseAccessor<AppDatabase> with _$ModulesDaoMixin {
   ModulesDao(super.db);
 
-  Future<List<CachedModule>> getAllModules() => select(cachedModules).get();
+  Future<List<CachedModule>> getAllModules(String userId) =>
+      (select(cachedModules)..where((t) => t.userId.equals(userId))).get();
 
-  Stream<List<CachedModule>> watchAllModules() => select(cachedModules).watch();
+  Stream<List<CachedModule>> watchAllModules(String userId) =>
+      (select(cachedModules)..where((t) => t.userId.equals(userId))).watch();
 
   Future<CachedModule?> getModuleById(String id) =>
       (select(cachedModules)..where((t) => t.id.equals(id))).getSingleOrNull();

@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
 class NoteFeedStateEntries extends Table {
-  IntColumn get id => integer().withDefault(const Constant(1))();
+  TextColumn get userId => text()();
   TextColumn get skipCountsJson => text().withDefault(const Constant('{}'))();
   TextColumn get lastSeenJson => text().withDefault(const Constant('{}'))();
   TextColumn get readNoteIdsJson => text().withDefault(const Constant('[]'))();
@@ -11,5 +11,5 @@ class NoteFeedStateEntries extends Table {
   RealColumn get avgReadLengthWords => real().withDefault(const Constant(0))();
 
   @override
-  Set<Column> get primaryKey => {id};
+  Set<Column> get primaryKey => {userId};
 }

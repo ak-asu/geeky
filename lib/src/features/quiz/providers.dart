@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/network/api_service.dart';
 import '../../core/providers/database_provider.dart';
+import '../auth/providers.dart';
 import 'data/fsrs_scheduler.dart';
 import 'data/quiz_repository.dart';
 import 'domain/quiz_card_entity.dart';
@@ -22,7 +23,8 @@ QuizRepository quizRepository(Ref ref) {
 /// Due cards for quiz review.
 @riverpod
 Future<List<QuizCardEntity>> dueQuizCards(Ref ref) {
-  return ref.watch(quizRepositoryProvider).getDueCards();
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
+  return ref.watch(quizRepositoryProvider).getDueCards(userId);
 }
 
 /// Manages quiz session state.
@@ -49,6 +51,7 @@ class QuizSession extends _$QuizSession {
     state = state.copyWith(currentIndex: nextIndex, results: newResults);
 
     // Apply the grade via repository
-    ref.read(quizRepositoryProvider).gradeCard(currentCard, grade);
+    final userId = ref.read(currentUserProvider)?.id ?? '';
+    ref.read(quizRepositoryProvider).gradeCard(userId, currentCard, grade);
   }
 }

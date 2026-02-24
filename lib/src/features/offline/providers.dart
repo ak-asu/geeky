@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../core/network/api_service.dart';
 import '../../core/providers/connectivity_provider.dart';
 import '../../core/providers/database_provider.dart';
+import '../auth/providers.dart';
 import 'data/sync_repository.dart';
 
 part 'providers.g.dart';
@@ -18,7 +19,8 @@ SyncRepository syncRepository(Ref ref) {
 /// Watches the count of unsynced pending interactions.
 @riverpod
 Stream<int> pendingSyncCount(Ref ref) {
-  return ref.watch(syncRepositoryProvider).watchPendingCount();
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
+  return ref.watch(syncRepositoryProvider).watchPendingCount(userId);
 }
 
 /// Auto-flush: watches connectivity and flushes queue when back online.
@@ -30,7 +32,8 @@ Future<int> syncOnReconnect(Ref ref) async {
   // Only flush when online
   if (isOffline) return 0;
 
-  return ref.read(syncRepositoryProvider).flushQueue();
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
+  return ref.read(syncRepositoryProvider).flushQueue(userId);
 }
 
 /// Full sync: pull all user data from backend to populate Drift cache.

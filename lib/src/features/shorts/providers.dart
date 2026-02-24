@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/network/api_service.dart';
 import '../../core/providers/database_provider.dart';
+import '../auth/providers.dart';
 import 'data/shorts_repository.dart';
 import 'domain/short_entity.dart';
 
@@ -18,13 +19,15 @@ ShortsRepository shortsRepository(Ref ref) {
 /// Watches all shorts from Drift as a stream.
 @riverpod
 Stream<List<ShortEntity>> allShorts(Ref ref) {
-  return ref.watch(shortsRepositoryProvider).watchAllShorts();
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
+  return ref.watch(shortsRepositoryProvider).watchAllShorts(userId);
 }
 
 /// Watches bookmarked short IDs.
 @riverpod
 Stream<List<String>> bookmarkedShortIds(Ref ref) {
-  return ref.watch(shortsRepositoryProvider).watchBookmarkedIds();
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
+  return ref.watch(shortsRepositoryProvider).watchBookmarkedIds(userId);
 }
 
 /// Manages shorts feed state: done set.

@@ -10,13 +10,13 @@ class SourcesRepository {
   final AppDatabase _db;
   final ApiService _api;
 
-  Stream<List<ContentSourceEntity>> watchAllSources() {
-    return _db.sourcesDao.watchAllSources().map(
-      (rows) => rows.map(SourceDto.fromRow).toList(),
-    );
+  Stream<List<ContentSourceEntity>> watchAllSources(String userId) {
+    return _db.sourcesDao
+        .watchAllSources(userId)
+        .map((rows) => rows.map(SourceDto.fromRow).toList());
   }
 
-  Future<List<ContentSourceEntity>> getAllSources() async {
+  Future<List<ContentSourceEntity>> getAllSources(String userId) async {
     try {
       final sources = await _api.getList(
         ApiConstants.sources,
@@ -27,7 +27,7 @@ class SourcesRepository {
       }
       return sources;
     } catch (_) {
-      final rows = await _db.sourcesDao.getAllSources();
+      final rows = await _db.sourcesDao.getAllSources(userId);
       return rows.map(SourceDto.fromRow).toList();
     }
   }

@@ -22,7 +22,7 @@ class NotesRepository {
 
   // --- Notes CRUD ---
 
-  Future<List<NoteEntity>> getAllNotes() async {
+  Future<List<NoteEntity>> getAllNotes(String userId) async {
     try {
       final notes = await _api.getList(
         ApiConstants.notes,
@@ -31,15 +31,15 @@ class NotesRepository {
       await _notesDao.insertNotes(notes.map(NoteDto.toCompanion).toList());
       return notes;
     } catch (_) {
-      final rows = await _notesDao.getAllNotes();
+      final rows = await _notesDao.getAllNotes(userId);
       return rows.map(NoteDto.fromRow).toList();
     }
   }
 
-  Stream<List<NoteEntity>> watchAllNotes() {
-    return _notesDao.watchAllNotes().map(
-      (rows) => rows.map(NoteDto.fromRow).toList(),
-    );
+  Stream<List<NoteEntity>> watchAllNotes(String userId) {
+    return _notesDao
+        .watchAllNotes(userId)
+        .map((rows) => rows.map(NoteDto.fromRow).toList());
   }
 
   Future<NoteEntity?> getNoteById(String id) async {
@@ -105,16 +105,18 @@ class NotesRepository {
     await _notesDao.deleteNote(id);
   }
 
-  Future<int> countNotes() => _notesDao.countNotes();
+  Future<int> countNotes(String userId) => _notesDao.countNotes(userId);
 
   // --- Feed State (local-only) ---
 
-  Future<NoteFeedState> getFeedState() async {
-    final row = await _feedDao.getFeedState();
+  Future<NoteFeedState> getFeedState(String userId) async {
+    final row = await _feedDao.getFeedState(userId);
     return row != null ? NoteFeedStateDto.fromRow(row) : const NoteFeedState();
   }
 
-  Future<void> saveFeedState(NoteFeedState feedState) async {
-    await _feedDao.saveFeedState(NoteFeedStateDto.toCompanion(feedState));
+  Future<void> saveFeedState(NoteFeedState feedState, String userId) async {
+    await _feedDao.saveFeedState(
+      NoteFeedStateDto.toCompanion(feedState, userId),
+    );
   }
 }

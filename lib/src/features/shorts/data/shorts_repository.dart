@@ -17,7 +17,7 @@ class ShortsRepository {
 
   // --- Shorts CRUD ---
 
-  Future<List<ShortEntity>> getAllShorts() async {
+  Future<List<ShortEntity>> getAllShorts(String userId) async {
     try {
       final shorts = await _api.getList(
         ApiConstants.shorts,
@@ -28,15 +28,15 @@ class ShortsRepository {
       }
       return shorts;
     } catch (_) {
-      final rows = await _shortsDao.getAllShorts();
+      final rows = await _shortsDao.getAllShorts(userId);
       return rows.map(ShortDto.fromRow).toList();
     }
   }
 
-  Stream<List<ShortEntity>> watchAllShorts() {
-    return _shortsDao.watchAllShorts().map(
-      (rows) => rows.map(ShortDto.fromRow).toList(),
-    );
+  Stream<List<ShortEntity>> watchAllShorts(String userId) {
+    return _shortsDao
+        .watchAllShorts(userId)
+        .map((rows) => rows.map(ShortDto.fromRow).toList());
   }
 
   Future<ShortEntity?> getShortById(String id) async {
@@ -68,13 +68,13 @@ class ShortsRepository {
 
   // --- Bookmarks ---
 
-  Future<bool> isBookmarked(String shortId) {
-    return _bookmarksDao.isBookmarked(shortId);
+  Future<bool> isBookmarked(String userId, String shortId) {
+    return _bookmarksDao.isBookmarked(userId, shortId);
   }
 
-  Stream<List<String>> watchBookmarkedIds() {
-    return _bookmarksDao.watchAllBookmarks().map(
-      (rows) => rows.map((r) => r.shortId).toList(),
-    );
+  Stream<List<String>> watchBookmarkedIds(String userId) {
+    return _bookmarksDao
+        .watchAllBookmarks(userId)
+        .map((rows) => rows.map((r) => r.shortId).toList());
   }
 }

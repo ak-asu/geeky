@@ -25,9 +25,12 @@ abstract final class NoteFeedStateDto {
     );
   }
 
-  static NoteFeedStateEntriesCompanion toCompanion(NoteFeedState state) {
+  static NoteFeedStateEntriesCompanion toCompanion(
+    NoteFeedState state,
+    String userId,
+  ) {
     return NoteFeedStateEntriesCompanion(
-      id: const Value(1),
+      userId: Value(userId),
       skipCountsJson: Value(jsonEncode(state.skipCounts)),
       lastSeenJson: Value(jsonEncode(state.lastSeen)),
       readNoteIdsJson: Value(jsonEncode(state.readNoteIds)),

@@ -17,12 +17,12 @@ class QuizRepository {
 
   // --- Quiz Cards (FSRS state) ---
 
-  Future<List<QuizCardEntity>> getAllCards() async {
-    final rows = await _quizDao.getAllCards();
+  Future<List<QuizCardEntity>> getAllCards(String userId) async {
+    final rows = await _quizDao.getAllCards(userId);
     return rows.map(QuizCardDto.fromRow).toList();
   }
 
-  Future<List<QuizCardEntity>> getDueCards() async {
+  Future<List<QuizCardEntity>> getDueCards(String userId) async {
     try {
       // Try backend FSRS-scheduled due cards
       final result = await _api.get(
@@ -36,30 +36,37 @@ class QuizRepository {
             .toList();
         // Cache locally
         for (final card in cards) {
-          await _quizDao.upsertCard(QuizCardDto.toCompanion(card));
+          await _quizDao.upsertCard(QuizCardDto.toCompanion(card, userId));
         }
         return cards;
       }
     } catch (_) {
       // Fallback to local FSRS
     }
-    final rows = await _quizDao.getDueCards();
+    final rows = await _quizDao.getDueCards(userId);
     return rows.map(QuizCardDto.fromRow).toList();
   }
 
-  Future<QuizCardEntity?> getCardForArticle(String articleId) async {
-    final row = await _quizDao.getCardForArticle(articleId);
+  Future<QuizCardEntity?> getCardForArticle(
+    String userId,
+    String articleId,
+  ) async {
+    final row = await _quizDao.getCardForArticle(userId, articleId);
     return row != null ? QuizCardDto.fromRow(row) : null;
   }
 
-  Future<void> saveCard(QuizCardEntity card) async {
-    await _quizDao.upsertCard(QuizCardDto.toCompanion(card));
+  Future<void> saveCard(String userId, QuizCardEntity card) async {
+    await _quizDao.upsertCard(QuizCardDto.toCompanion(card, userId));
   }
 
   /// Apply a grade to a card using simplified FSRS scheduling.
-  Future<QuizCardEntity> gradeCard(QuizCardEntity card, FSRSGrade grade) async {
+  Future<QuizCardEntity> gradeCard(
+    String userId,
+    QuizCardEntity card,
+    FSRSGrade grade,
+  ) async {
     final updated = FSRSScheduler.schedule(card, grade);
-    await saveCard(updated);
+    await saveCard(userId, updated);
 
     // Submit review to backend
     try {

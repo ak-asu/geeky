@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/network/api_service.dart';
 import '../../core/providers/database_provider.dart';
+import '../auth/providers.dart';
 import 'data/analytics_repository.dart';
 import 'domain/achievement.dart';
 import 'domain/learning_streak.dart';
@@ -24,12 +25,14 @@ Future<LearningStreak> learningStreak(Ref ref) {
 
 @riverpod
 Future<AnalyticsStats> analyticsStats(Ref ref) {
-  return ref.read(analyticsRepositoryProvider).getStats();
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
+  return ref.read(analyticsRepositoryProvider).getStats(userId);
 }
 
 @riverpod
 Future<List<TopicProgress>> topicProgress(Ref ref) {
-  return ref.read(analyticsRepositoryProvider).getTopicProgress();
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
+  return ref.read(analyticsRepositoryProvider).getTopicProgress(userId);
 }
 
 @riverpod
