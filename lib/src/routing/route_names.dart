@@ -47,7 +47,6 @@ abstract final class RouteNames {
 
   // Settings
   static const String settings = 'settings';
-  static const String dataManagement = 'data-management';
 
   // Sources
   static const String sourcesList = 'sources-list';

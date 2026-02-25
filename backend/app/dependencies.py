@@ -88,7 +88,7 @@ def get_llm_provider():
 
 @lru_cache
 def get_embedding_provider():
-    """Get the embedding provider. Currently: Gemini embedding-001."""
+    """Get the embedding provider. Currently: gemini-embedding-001."""
     from app.services.pipeline.embedder.gemini_embedder import GeminiEmbedder  # noqa: PLC0415
 
     settings = get_settings()

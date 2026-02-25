@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     # --- Gemini AI ---
     gemini_api_key: str = Field(default="", description="Google Gemini API key")
     gemini_model: str = Field(default="gemini-2.5-flash", description="Gemini model for generation")
-    gemini_embedding_model: str = Field(default="models/embedding-001", description="Gemini embedding model")
+    gemini_embedding_model: str = Field(default="gemini-embedding-001", description="Gemini embedding model")
     gemini_embedding_dimensions: int = Field(default=768, description="Embedding vector dimensions")
 
     # --- ChromaDB ---

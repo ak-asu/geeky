@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import '../core/constants/storage_keys.dart';
 import '../core/providers/shared_preferences_provider.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/signup_screen.dart';
@@ -42,6 +39,7 @@ import '../features/subscription/presentation/screens/subscription_screen.dart';
 import '../core/providers/share_provider.dart';
 import 'premium_guard.dart';
 import 'route_names.dart';
+import 'router_notifier.dart';
 
 part 'app_router.g.dart';
 
@@ -61,16 +59,23 @@ class _NotFoundScreen extends StatelessWidget {
 @Riverpod(keepAlive: true)
 GoRouter appRouter(Ref ref) {
   final prefs = ref.read(sharedPreferencesProvider);
+  // ref.read — NOT ref.watch. Watching would rebuild (and recreate) the
+  // GoRouter every time auth state changes, resetting the navigation stack.
+  // The refreshListenable below is the reactive bridge instead.
+  // routerProvider is generated from RouterNotifier (Riverpod drops "Notifier" suffix).
+  final notifier = ref.read(routerProvider.notifier);
 
   return GoRouter(
     initialLocation: '/',
     debugLogDiagnostics: true,
+    // Tells GoRouter to re-run redirect whenever auth state changes.
+    refreshListenable: notifier,
     redirect: (context, state) {
-      // Root redirect (auth / onboarding)
-      final rootRedirect = _rootRedirect(prefs, state);
-      if (rootRedirect != null) return rootRedirect;
+      // Auth / onboarding guard (reactive via RouterNotifier).
+      final authRedirect = notifier.handleRedirect(state, prefs);
+      if (authRedirect != null) return authRedirect;
 
-      // Premium guard
+      // Premium feature guard.
       return checkPremiumAccess(ref, state.matchedLocation);
     },
     routes: [
@@ -114,7 +119,10 @@ GoRouter appRouter(Ref ref) {
       GoRoute(
         path: '/${RouteNames.interestSelection}',
         name: RouteNames.interestSelection,
-        builder: (context, state) => const InterestSelectionScreen(),
+        builder: (context, state) => InterestSelectionScreen(
+          // extra == true when navigated from profile for editing.
+          isEditing: state.extra as bool? ?? false,
+        ),
       ),
 
       // --- Notes ---
@@ -352,31 +360,6 @@ GoRouter appRouter(Ref ref) {
       ),
     ],
   );
-}
-
-/// Root redirect logic: onboarding → login → home
-String? _rootRedirect(SharedPreferences prefs, GoRouterState state) {
-  final path = state.matchedLocation;
-  final onboardingDone =
-      prefs.getBool(StorageKeys.onboardingCompleted) ?? false;
-  final isLoggedIn = prefs.getBool(StorageKeys.isLoggedIn) ?? false;
-
-  // Allow auth and onboarding routes through
-  const authPaths = [
-    '/${RouteNames.login}',
-    '/${RouteNames.signup}',
-    '/${RouteNames.onboarding}',
-    '/${RouteNames.interestSelection}',
-  ];
-  if (authPaths.contains(path)) return null;
-
-  // Not onboarded → send to onboarding
-  if (!onboardingDone) return '/${RouteNames.onboarding}';
-
-  // Not logged in → send to login
-  if (!isLoggedIn) return '/${RouteNames.login}';
-
-  return null;
 }
 
 Widget _fadeTransition(

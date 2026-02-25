@@ -31,7 +31,7 @@ class GeminiEmbedder:
     def __init__(
         self,
         api_key: str,
-        model: str = "models/embedding-001",
+        model: str = "gemini-embedding-001",
         dimensions: int = 768,
         batch_size: int = _DEFAULT_BATCH_SIZE,
         timeout_seconds: float = 15.0,

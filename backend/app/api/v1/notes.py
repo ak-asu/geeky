@@ -39,7 +39,7 @@ from app.models.processing_task import ProcessingTaskDocument
 router = APIRouter(prefix="/notes", tags=["notes"])
 
 
-@router.post("/")
+@router.post("")
 async def create_note(
     _rate_limit: CheckRateLimit,
     user_id: CurrentUserId,
@@ -127,7 +127,7 @@ async def create_note(
     }
 
 
-@router.get("/")
+@router.get("")
 async def list_notes(
     user_id: CurrentUserId,
     limit: int = 50,

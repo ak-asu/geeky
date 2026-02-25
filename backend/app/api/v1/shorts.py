@@ -16,7 +16,7 @@ from app.models.common import PaginatedResponse, PaginationMeta
 router = APIRouter(prefix="/shorts", tags=["shorts"])
 
 
-@router.get("/")
+@router.get("")
 async def list_shorts(
     user_id: CurrentUserId,
     limit: int = 50,

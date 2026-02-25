@@ -8,6 +8,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from app.api.middleware.auth import TokenClaims
 from app.api.v1.users import router
 from app.exceptions import UserNotFoundError
 from app.models.user import UserDocument, UserProfileUpdate
@@ -30,7 +31,12 @@ class MockProfileService:
             raise UserNotFoundError(user_id)
         return self._user
 
-    async def update_profile(self, user_id, update: UserProfileUpdate):
+    async def get_or_create_profile(self, user_id, *, name="", email="", avatar_url=""):
+        if user_id != "test-user-001":
+            raise UserNotFoundError(user_id)
+        return self._user
+
+    async def update_profile(self, user_id, update: UserProfileUpdate, *, name="", email="", avatar_url=""):
         if user_id != "test-user-001":
             raise UserNotFoundError(user_id)
         if update.name:
@@ -61,9 +67,16 @@ class MockProfileService:
 
 # ---- App setup ----
 
+_TEST_CLAIMS = TokenClaims(
+    uid="test-user-001",
+    name="Test User",
+    email="test@example.com",
+    avatar_url="",
+)
+
 
 def _make_test_app() -> FastAPI:
-    from app.api.middleware.auth import verify_firebase_token
+    from app.api.middleware.auth import verify_firebase_claims, verify_firebase_token
     from app.dependencies import get_profile_service
 
     app = FastAPI()
@@ -77,6 +90,8 @@ def _make_test_app() -> FastAPI:
     async def not_found_handler(_request, exc):
         return JSONResponse(status_code=404, content={"error": {"code": exc.code, "message": exc.message}})
 
+    # GET/PATCH /me use CurrentUserClaims; stats/export/delete use CurrentUserId
+    app.dependency_overrides[verify_firebase_claims] = lambda: _TEST_CLAIMS
     app.dependency_overrides[verify_firebase_token] = lambda: "test-user-001"
     app.dependency_overrides[get_profile_service] = lambda: MockProfileService()
 

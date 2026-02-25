@@ -6,10 +6,22 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/topic_chip.dart';
+import '../../../auth/providers.dart';
 import '../../providers.dart';
 
+/// Interest selection screen used in two modes:
+///
+/// **First-run** (`isEditing = false`, default):
+///   Shown automatically after sign-up when `onboardingCompleted` is false.
+///   Saving marks onboarding complete and navigates to the app.
+///
+/// **Edit** (`isEditing = true`):
+///   Reached from profile via `context.push(..., extra: true)`.
+///   Saving updates the user profile and pops back to profile.
 class InterestSelectionScreen extends ConsumerStatefulWidget {
-  const InterestSelectionScreen({super.key});
+  const InterestSelectionScreen({super.key, this.isEditing = false});
+
+  final bool isEditing;
 
   @override
   ConsumerState<InterestSelectionScreen> createState() =>
@@ -19,8 +31,9 @@ class InterestSelectionScreen extends ConsumerStatefulWidget {
 class _InterestSelectionScreenState
     extends ConsumerState<InterestSelectionScreen> {
   final _searchController = TextEditingController();
-  final _selected = <String>{};
+  late final Set<String> _selected;
   String _query = '';
+  bool _saving = false;
 
   static const _availableTopics = [
     'Artificial Intelligence',
@@ -66,61 +79,116 @@ class _InterestSelectionScreenState
   }
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.isEditing) {
+      // Pre-populate with the user's existing interests from auth state.
+      final existingInterests =
+          ref.read(currentUserProvider)?.interests ?? const [];
+      _selected = existingInterests.toSet();
+    } else {
+      _selected = {};
+    }
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 
-  Future<void> _continue() async {
-    await ref.read(selectedInterestsProvider.notifier).save(_selected.toList());
-    await ref.read(onboardingStateProvider.notifier).complete();
-    if (mounted) context.go('/');
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    try {
+      final interests = _selected.toList();
+
+      if (widget.isEditing) {
+        // Edit mode: update user profile (auth state + backend + local cache).
+        final currentUser = ref.read(currentUserProvider);
+        if (currentUser != null) {
+          await ref
+              .read(authProvider.notifier)
+              .updateUser(currentUser.copyWith(interests: interests));
+        }
+        if (mounted) {
+          context.pop();
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Interests updated')));
+        }
+      } else {
+        // First-run mode: update user profile + mark onboarding complete.
+        final currentUser = ref.read(currentUserProvider);
+        if (currentUser != null) {
+          await ref
+              .read(authProvider.notifier)
+              .updateUser(currentUser.copyWith(interests: interests));
+        }
+        // Mark onboarding done locally + best-effort backend sync.
+        await ref.read(onboardingStateProvider.notifier).complete();
+        if (mounted) context.go('/');
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: widget.isEditing
+          ? AppBar(
+              title: const Text('Edit Interests'),
+              leading: BackButton(onPressed: () => context.pop()),
+            )
+          : null,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header
+            // ── Header (first-run only) ──────────────────────────────────
+            if (!widget.isEditing)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.s24,
+                  AppSpacing.s32,
+                  AppSpacing.s24,
+                  AppSpacing.s8,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'What interests you?',
+                      style: context.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    AppSpacing.gapV8,
+                    Text(
+                      'Pick a few topics to personalise your feed. '
+                      'You can change these later in your profile.',
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            // ── Search ──────────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.s24,
-                AppSpacing.s32,
+                AppSpacing.s16,
                 AppSpacing.s24,
-                AppSpacing.s8,
+                0,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'What interests you?',
-                    style: context.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  AppSpacing.gapV8,
-                  Text(
-                    'Pick a few topics to personalize your feed. '
-                    'You can change these later.',
-                    style: context.textTheme.bodyMedium?.copyWith(
-                      color: context.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Search
-            Padding(
-              padding: AppSpacing.paddingH24,
               child: TextField(
                 controller: _searchController,
                 onChanged: (v) => setState(() => _query = v),
                 decoration: InputDecoration(
-                  hintText: 'Search topics...',
+                  hintText: 'Search topics…',
                   prefixIcon: const Icon(Icons.search_rounded),
                   suffixIcon: _query.isNotEmpty
                       ? IconButton(
@@ -134,9 +202,9 @@ class _InterestSelectionScreenState
                 ),
               ),
             ),
-            AppSpacing.gapV16,
+            AppSpacing.gapV12,
 
-            // Selected count
+            // ── Selection count ──────────────────────────────────────────
             if (_selected.isNotEmpty)
               Padding(
                 padding: AppSpacing.paddingH24,
@@ -150,7 +218,7 @@ class _InterestSelectionScreenState
               ),
             AppSpacing.gapV8,
 
-            // Topic chips
+            // ── Topic chips ──────────────────────────────────────────────
             Expanded(
               child: SingleChildScrollView(
                 padding: AppSpacing.paddingH24,
@@ -177,7 +245,7 @@ class _InterestSelectionScreenState
               ),
             ),
 
-            // Continue button
+            // ── Action button(s) ─────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.s24,
@@ -185,19 +253,57 @@ class _InterestSelectionScreenState
                 AppSpacing.s24,
                 AppSpacing.s32,
               ),
-              child: FilledButton(
-                onPressed: _continue,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.s16),
-                  backgroundColor: AppColors.primary,
-                ),
-                child: Text(
-                  _selected.isEmpty ? 'Skip for now' : 'Continue',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  FilledButton(
+                    onPressed: _saving ? null : _save,
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.s16,
+                      ),
+                      backgroundColor: AppColors.primary,
+                    ),
+                    child: _saving
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            widget.isEditing
+                                ? 'Save'
+                                : (_selected.isEmpty
+                                      ? 'Skip for now'
+                                      : 'Continue'),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
                   ),
-                ),
+                  // "Skip for now" secondary link — first-run only
+                  if (!widget.isEditing && _selected.isNotEmpty) ...[
+                    AppSpacing.gapV8,
+                    TextButton(
+                      onPressed: _saving
+                          ? null
+                          : () {
+                              _selected.clear();
+                              _save();
+                            },
+                      child: Text(
+                        'Skip for now',
+                        style: context.textTheme.bodyMedium?.copyWith(
+                          color: context.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ],

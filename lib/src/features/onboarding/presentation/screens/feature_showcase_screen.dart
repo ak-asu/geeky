@@ -6,6 +6,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../routing/route_names.dart';
+import '../../providers.dart';
 
 class FeatureShowcaseScreen extends ConsumerStatefulWidget {
   const FeatureShowcaseScreen({super.key});
@@ -56,12 +57,18 @@ class _FeatureShowcaseScreenState extends ConsumerState<FeatureShowcaseScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      context.go('/${RouteNames.interestSelection}');
+      _leave();
     }
   }
 
-  void _skip() {
-    context.go('/${RouteNames.interestSelection}');
+  void _skip() => _leave();
+
+  /// Marks the feature showcase as seen, then navigates to login.
+  /// SharedPreferences write is awaited so the router sees the updated flag
+  /// when it evaluates the redirect for the next navigation.
+  Future<void> _leave() async {
+    await ref.read(onboardingRepositoryProvider).completeShowcase();
+    if (mounted) context.go('/${RouteNames.login}');
   }
 
   @override

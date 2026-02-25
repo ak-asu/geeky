@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/providers/database_provider.dart';
+import '../auth/providers.dart';
 import 'data/kg_repository.dart';
 import 'domain/concept_entity.dart';
 import 'domain/graph_node.dart';
@@ -16,17 +17,20 @@ KgRepository kgRepository(Ref ref) {
 /// Watches all concepts from Drift as a stream.
 @riverpod
 Stream<List<ConceptEntity>> allConcepts(Ref ref) {
-  return ref.watch(kgRepositoryProvider).watchAllConcepts();
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
+  return ref.watch(kgRepositoryProvider).watchAllConcepts(userId);
 }
 
 /// Watches all relationships from Drift as a stream.
 @riverpod
 Stream<List<RelationshipEntity>> allRelationships(Ref ref) {
-  return ref.watch(kgRepositoryProvider).watchAllRelationships();
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
+  return ref.watch(kgRepositoryProvider).watchAllRelationships(userId);
 }
 
 /// Builds graph nodes with status information.
 @riverpod
 Future<List<GraphNode>> graphNodes(Ref ref) {
-  return ref.watch(kgRepositoryProvider).buildGraphNodes();
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
+  return ref.watch(kgRepositoryProvider).buildGraphNodes(userId);
 }

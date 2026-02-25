@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 class CachedRelationships extends Table {
   TextColumn get id => text()();
+  TextColumn get userId => text()();
   TextColumn get sourceId => text()();
   TextColumn get targetId => text()();
   TextColumn get type => text()();

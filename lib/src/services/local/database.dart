@@ -73,6 +73,49 @@ class AppDatabase extends _$AppDatabase {
   @override
   MigrationStrategy get migration =>
       MigrationStrategy(onCreate: (m) => m.createAll());
+
+  /// Deletes all cached content for [userId].
+  ///
+  /// User-scoped tables are filtered by [userId]. The store catalogue
+  /// (`cachedStoreModules`) is a global cache and is cleared entirely.
+  /// [UserPreferencesEntries] is excluded — those are user settings
+  /// (theme, font size, etc.), not content cache.
+  Future<void> deleteAllUserData(String userId) async {
+    await transaction(() async {
+      // ── User-scoped tables (filtered by userId) ──────────────────────
+      await (delete(cachedNotes)..where((t) => t.userId.equals(userId))).go();
+      await (delete(cachedShorts)..where((t) => t.userId.equals(userId))).go();
+      await (delete(cachedModules)..where((t) => t.userId.equals(userId))).go();
+      await (delete(
+        cachedBookmarks,
+      )..where((t) => t.userId.equals(userId))).go();
+      await (delete(
+        cachedQuizCards,
+      )..where((t) => t.userId.equals(userId))).go();
+      await (delete(
+        pendingInteractions,
+      )..where((t) => t.userId.equals(userId))).go();
+      await (delete(
+        noteFeedStateEntries,
+      )..where((t) => t.userId.equals(userId))).go();
+      await (delete(cachedSources)..where((t) => t.userId.equals(userId))).go();
+      await (delete(
+        cachedNotifications,
+      )..where((t) => t.userId.equals(userId))).go();
+
+      // ── KG tables (user-scoped — filter by userId) ───────────────────
+      await (delete(
+        cachedConcepts,
+      )..where((t) => t.userId.equals(userId))).go();
+      await (delete(
+        cachedRelationships,
+      )..where((t) => t.userId.equals(userId))).go();
+
+      // ── Global cache tables (no userId — clear all rows) ─────────────
+      // Store catalogue is a global content cache shared across users.
+      await delete(cachedStoreModules).go();
+    });
+  }
 }
 
 LazyDatabase _openConnection() {

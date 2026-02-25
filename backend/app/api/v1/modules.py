@@ -11,7 +11,7 @@ from app.models.module import ModuleCreate, ModuleUpdate
 router = APIRouter(prefix="/modules", tags=["modules"])
 
 
-@router.post("/")
+@router.post("")
 async def create_module(
     _rate_limit: CheckRateLimit,
     data: ModuleCreate,
@@ -23,7 +23,7 @@ async def create_module(
     return {"data": module.model_dump(mode="json", by_alias=True)}
 
 
-@router.get("/")
+@router.get("")
 async def list_modules(
     user_id: CurrentUserId,
     limit: int = Query(default=50, ge=1, le=100),

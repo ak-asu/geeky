@@ -13,42 +13,43 @@ class KgRepository {
 
   KgDao get _kgDao => _db.kgDao;
 
-  // --- Concepts ---
+  // ── Concepts ──────────────────────────────────────────────────────────────
 
-  Future<List<ConceptEntity>> getAllConcepts() async {
-    final rows = await _kgDao.getAllConcepts();
+  Future<List<ConceptEntity>> getAllConcepts(String userId) async {
+    final rows = await _kgDao.getAllConcepts(userId);
     return rows.map(ConceptDto.fromRow).toList();
   }
 
-  Stream<List<ConceptEntity>> watchAllConcepts() {
-    return _kgDao.watchAllConcepts().map(
-      (rows) => rows.map(ConceptDto.fromRow).toList(),
-    );
+  Stream<List<ConceptEntity>> watchAllConcepts(String userId) {
+    return _kgDao
+        .watchAllConcepts(userId)
+        .map((rows) => rows.map(ConceptDto.fromRow).toList());
   }
 
-  // --- Relationships ---
+  // ── Relationships ─────────────────────────────────────────────────────────
 
-  Future<List<RelationshipEntity>> getAllRelationships() async {
-    final rows = await _kgDao.getAllRelationships();
+  Future<List<RelationshipEntity>> getAllRelationships(String userId) async {
+    final rows = await _kgDao.getAllRelationships(userId);
     return rows.map(RelationshipDto.fromRow).toList();
   }
 
-  Stream<List<RelationshipEntity>> watchAllRelationships() {
-    return _kgDao.watchAllRelationships().map(
-      (rows) => rows.map(RelationshipDto.fromRow).toList(),
-    );
+  Stream<List<RelationshipEntity>> watchAllRelationships(String userId) {
+    return _kgDao
+        .watchAllRelationships(userId)
+        .map((rows) => rows.map(RelationshipDto.fromRow).toList());
   }
 
-  // --- Graph nodes (concepts enriched with connection info) ---
+  // ── Graph nodes (concepts enriched with connection info) ──────────────────
 
-  Future<List<GraphNode>> buildGraphNodes({
+  Future<List<GraphNode>> buildGraphNodes(
+    String userId, {
     Set<String> masteredIds = const {},
     Set<String> inProgressIds = const {},
   }) async {
-    final concepts = await getAllConcepts();
-    final relationships = await getAllRelationships();
+    final concepts = await getAllConcepts(userId);
+    final relationships = await getAllRelationships(userId);
 
-    // Build adjacency map
+    // Build adjacency map (bidirectional)
     final adjacency = <String, Set<String>>{};
     for (final rel in relationships) {
       adjacency.putIfAbsent(rel.sourceId, () => {}).add(rel.targetId);

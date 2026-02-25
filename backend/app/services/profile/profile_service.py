@@ -60,14 +60,54 @@ class ProfileService:
             raise UserNotFoundError(user_id)
         return user
 
-    async def update_profile(
-        self, user_id: str, update: UserProfileUpdate
+    async def get_or_create_profile(
+        self,
+        user_id: str,
+        *,
+        name: str = "",
+        email: str = "",
+        avatar_url: str = "",
     ) -> UserDocument:
-        """Update user profile fields (partial update)."""
-        # Verify user exists
+        """Get user profile, creating it from token claims if it doesn't exist.
+
+        Called on GET /users/me and PATCH /users/me so the first sign-in
+        (Google OAuth or email/password) auto-provisions the Firestore document
+        without requiring a separate registration endpoint.
+        """
         user = await self._user_repo.get(user_id)
-        if not user:
-            raise UserNotFoundError(user_id)
+        if user:
+            return user
+
+        logger.info("Auto-creating profile for new user %s", user_id)
+        new_user = UserDocument(
+            id=user_id,
+            name=name,
+            email=email,
+            avatar_url=avatar_url or None,
+        )
+        await self._user_repo.create(user_id, new_user)
+        # Re-fetch to get server-set timestamps
+        created = await self._user_repo.get(user_id)
+        return created or new_user
+
+    async def update_profile(
+        self,
+        user_id: str,
+        update: UserProfileUpdate,
+        *,
+        name: str = "",
+        email: str = "",
+        avatar_url: str = "",
+    ) -> UserDocument:
+        """Update user profile fields (partial update).
+
+        Auto-creates the profile from token claims if it doesn't exist yet,
+        so a PATCH from onboarding never fails with 404 on first sign-in.
+        """
+        # Upsert: ensure the document exists before patching
+        await self.get_or_create_profile(
+            user_id, name=name, email=email, avatar_url=avatar_url
+        )
 
         # Build update dict from non-None fields
         update_data = update.model_dump(
