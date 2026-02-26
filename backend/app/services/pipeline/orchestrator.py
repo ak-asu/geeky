@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from app.config import Settings
 from app.models.chunk import ChunkDocument
 from app.models.common import ProcessingStatus
-from app.models.short import Citation, ConflictFlag, ShortDocument
+from app.models.short import ConflictFlag, ShortDocument
 from app.services.pipeline.chunker import ChunkerConfig, HierarchicalChunker
 from app.services.pipeline.deduplicator import DedupConfig, Deduplicator
 from app.services.pipeline.short_generator import ShortGenerator
@@ -117,7 +117,7 @@ class PipelineOrchestrator:
             )
 
             # Stage 5: Short generation
-            shorts_created = await self._stage_short_generation(
+            short_ids, shorts_created = await self._stage_short_generation(
                 kept_chunks, chunk_ids, user_id, note_id, task_id
             )
 
@@ -133,7 +133,7 @@ class PipelineOrchestrator:
 
             # Dispatch KG update + review state creation for new shorts
             if shorts_created > 0:
-                self._dispatch_post_pipeline_tasks(user_id, chunk_ids, shorts_created)
+                self._dispatch_post_pipeline_tasks(user_id, short_ids, shorts_created)
 
             summary = {"chunks_created": len(chunk_ids), "shorts_created": shorts_created}
             logger.info("Pipeline completed for note=%s: %s", note_id, summary)
@@ -270,7 +270,7 @@ class PipelineOrchestrator:
                 note_id, len(existing_shorts), self._settings.anti_density_max_per_source,
             )
             await self._complete_stage(task_id, "short_generation")
-            return 0
+            return [], 0
 
         max_new = self._settings.anti_density_max_per_source - len(existing_shorts)
         chunks_to_process = chunks[:max_new]
@@ -283,7 +283,7 @@ class PipelineOrchestrator:
         # Detect conflicts
         conflicts = await self._short_generator.detect_conflicts(generated)
 
-        shorts_created = 0
+        created_short_ids: list[str] = []
         for i, gen_short in enumerate(generated):
             short_id = str(uuid.uuid4())
 
@@ -294,13 +294,14 @@ class PipelineOrchestrator:
 
             short_doc = ShortDocument(
                 id=short_id,
+                user_id=user_id,
                 title=gen_short.title,
                 content=gen_short.summary,
                 summary=gen_short.summary,
                 topics=gen_short.topics,
                 tags=gen_short.tags,
                 prerequisites=gen_short.prerequisites,
-                citations=[Citation(note_id=note_id, chunk_id=chunk_ids[i] if i < len(chunk_ids) else "")],
+                citations=[note_id],
                 difficulty=gen_short.difficulty,
                 prompts=gen_short.prompts,
                 chunk_ids=[chunk_ids[i]] if i < len(chunk_ids) else [],
@@ -308,10 +309,10 @@ class PipelineOrchestrator:
             )
 
             await self._short_repo.create(user_id, short_doc, doc_id=short_id)
-            shorts_created += 1
+            created_short_ids.append(short_id)
 
         await self._complete_stage(task_id, "short_generation")
-        return shorts_created
+        return created_short_ids, len(created_short_ids)
 
     # --- Task status helpers ---
 
@@ -348,14 +349,16 @@ class PipelineOrchestrator:
                 ensure_review_states,
                 update_kg_for_short,
             )
+            from app.workers.quiz_tasks import generate_quiz_for_short  # noqa: PLC0415
 
             for short_id in short_ids[:shorts_created]:
                 update_kg_for_short.delay(user_id, short_id)
+                generate_quiz_for_short.delay(user_id, short_id)
 
             ensure_review_states.delay(user_id, short_ids[:shorts_created])
 
             logger.info(
-                "Dispatched KG update + review state tasks for %d shorts",
+                "Dispatched KG update + quiz + review state tasks for %d shorts",
                 shorts_created,
             )
         except Exception as exc:

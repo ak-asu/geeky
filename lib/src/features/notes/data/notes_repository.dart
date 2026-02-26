@@ -107,6 +107,21 @@ class NotesRepository {
 
   Future<int> countNotes(String userId) => _notesDao.countNotes(userId);
 
+  /// Polls the backend for the processing status of a note's pipeline task.
+  /// Returns status string: "pending", "processing", "completed", "failed", or "unknown".
+  Future<String> getNoteProcessingStatus(String noteId) async {
+    try {
+      final status = await _api.get(
+        '${ApiConstants.notes}/$noteId/status',
+        (json) =>
+            (json as Map<String, dynamic>)['status'] as String? ?? 'unknown',
+      );
+      return status;
+    } catch (_) {
+      return 'unknown';
+    }
+  }
+
   // --- Feed State (local-only) ---
 
   Future<NoteFeedState> getFeedState(String userId) async {

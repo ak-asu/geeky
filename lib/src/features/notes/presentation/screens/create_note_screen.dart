@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -69,10 +71,18 @@ class _CreateNoteScreenState extends ConsumerState<CreateNoteScreen> {
       updatedAt: now,
     );
 
-    await ref.read(notesRepositoryProvider).saveNote(note);
+    final noteId = await ref.read(notesRepositoryProvider).saveNote(note);
+    final userId = ref.read(currentUserProvider)?.id ?? '';
+
+    // Background: polls pipeline status every 5 s and syncs shorts when done.
+    unawaited(
+      ref
+          .read(noteProcessingWatcherProvider.notifier)
+          .watchUntilComplete(noteId, userId),
+    );
 
     if (mounted) {
-      context.showSnackBar('Note saved');
+      context.showSnackBar('Note saved — shorts will appear shortly');
       context.pop();
     }
   }

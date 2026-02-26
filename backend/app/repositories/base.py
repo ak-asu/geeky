@@ -53,6 +53,7 @@ class FirestoreBaseRepository(Generic[T]):
             return None
         data = doc.to_dict()
         data["id"] = doc.id
+        data["userId"] = user_id
         return self._model_class.model_validate(data)
 
     async def list(
@@ -93,6 +94,7 @@ class FirestoreBaseRepository(Generic[T]):
         for doc in docs:
             data = doc.to_dict()
             data["id"] = doc.id
+            data["userId"] = user_id
             items.append(self._model_class.model_validate(data))
 
         next_cursor = docs[-1].id if has_more and docs else None
@@ -104,7 +106,7 @@ class FirestoreBaseRepository(Generic[T]):
         Returns:
             The document ID.
         """
-        doc_data = data.model_dump(exclude_none=True, mode="json")
+        doc_data = data.model_dump(exclude_none=True, mode="json", by_alias=True)
         doc_data["createdAt"] = datetime.now(timezone.utc)
         doc_data["updatedAt"] = datetime.now(timezone.utc)
 
@@ -152,8 +154,10 @@ class FirestoreBaseRepository(Generic[T]):
         q = self._user_collection(user_id)
 
         if filters:
+            from google.cloud.firestore_v1 import FieldFilter  # noqa: PLC0415
+
             for field, op, value in filters:
-                q = q.where(field, op, value)
+                q = q.where(filter=FieldFilter(field, op, value))
 
         if order_by:
             q = q.order_by(order_by)
@@ -165,6 +169,7 @@ class FirestoreBaseRepository(Generic[T]):
         for doc in docs:
             data = doc.to_dict()
             data["id"] = doc.id
+            data["userId"] = user_id
             items.append(self._model_class.model_validate(data))
 
         return items

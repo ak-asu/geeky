@@ -33,6 +33,7 @@ class ShortDocument(TimestampMixin):
     model_config = {"populate_by_name": True}
 
     id: str = ""
+    user_id: str = Field(default="", alias="userId")
     title: str = ""
     content: str = ""
     summary: str = ""
@@ -40,7 +41,7 @@ class ShortDocument(TimestampMixin):
     tags: list[str] = Field(default_factory=list)
     prerequisites: list[str] = Field(default_factory=list)
     related: list[str] = Field(default_factory=list)
-    citations: list[Citation] = Field(default_factory=list)
+    citations: list[str] = Field(default_factory=list)
     difficulty: float = 0.5
     level: int = 1
     prompts: list[str] = Field(default_factory=list)

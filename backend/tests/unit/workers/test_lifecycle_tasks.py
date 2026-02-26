@@ -20,14 +20,6 @@ class _MockChunk:
 
 
 @dataclass
-class _MockCitation:
-    chunk_id: str = "chunk1"
-
-    def model_dump(self, **kwargs):
-        return {"chunkId": self.chunk_id}
-
-
-@dataclass
 class _MockShort:
     id: str = "short1"
     chunk_ids: list = field(default_factory=lambda: ["chunk1"])

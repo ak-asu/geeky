@@ -64,7 +64,8 @@ async def _run_poll_active_sources() -> dict:
     users_checked = 0
     sources_dispatched = 0
 
-    for user_doc in db.collection("users").stream():
+    user_docs = await asyncio.to_thread(lambda: list(db.collection("users").stream()))
+    for user_doc in user_docs:
         user_id = user_doc.id
         users_checked += 1
 
