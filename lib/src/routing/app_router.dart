@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../core/providers/shared_preferences_provider.dart';
@@ -24,6 +25,7 @@ import '../features/modules/domain/module_entity.dart';
 import '../features/modules/presentation/screens/create_module_screen.dart';
 import '../features/modules/presentation/screens/module_detail_screen.dart';
 import '../features/modules/presentation/screens/modules_list_screen.dart';
+import '../features/modules/providers.dart';
 import '../features/quiz/presentation/screens/quiz_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/shorts/presentation/screens/shorts_feed_screen.dart';
@@ -52,6 +54,30 @@ class _NotFoundScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: Center(child: Text(title)),
+    );
+  }
+}
+
+/// Loads a [ModuleEntity] by ID and forwards to [ModuleDetailScreen].
+///
+/// Used by the `/modules/:moduleId` deep-link route so that external URIs
+/// (e.g. `geeky://modules/abc123`) open the correct module detail screen
+/// rather than the generic modules list.
+class _ModuleDeepLinkScreen extends ConsumerWidget {
+  const _ModuleDeepLinkScreen({required this.moduleId});
+
+  final String moduleId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final moduleAsync = ref.watch(moduleByIdProvider(moduleId));
+    return moduleAsync.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (_, _) => const _NotFoundScreen('Module not found'),
+      data: (module) => module != null
+          ? ModuleDetailScreen(module: module)
+          : const _NotFoundScreen('Module not found'),
     );
   }
 }
@@ -350,9 +376,14 @@ GoRouter appRouter(Ref ref) {
       GoRoute(
         path: '/modules/:moduleId',
         name: RouteNames.moduleDeepLink,
-        builder: (context, state) => const ModulesListScreen(),
+        builder: (context, state) {
+          final moduleId = state.pathParameters['moduleId'] ?? '';
+          return _ModuleDeepLinkScreen(moduleId: moduleId);
+        },
       ),
       // geeky://quiz/<id>  or  https://geeky.app/quiz/<id>
+      // quizId is reserved for future quiz-session deep links; currently
+      // navigates to the spaced-repetition queue (all due cards).
       GoRoute(
         path: '/quiz/:quizId',
         name: RouteNames.quizDeepLink,

@@ -1,14 +1,12 @@
 """Chunk Pydantic schemas."""
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from app.models.common import TimestampMixin
 
 
 class ChunkDocument(TimestampMixin):
-    model_config = {"populate_by_name": True}
-
     id: str = ""
     note_id: str = Field(default="", alias="noteId")
     content: str = ""

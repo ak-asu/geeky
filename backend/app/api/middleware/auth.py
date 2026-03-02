@@ -14,7 +14,7 @@ from typing import Annotated
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from app.exceptions import AuthenticationError
+from app.exceptions import AuthenticationError, ExternalServiceError
 
 logger = logging.getLogger(__name__)
 
@@ -49,8 +49,35 @@ async def _decode_token(credentials: HTTPAuthorizationCredentials | None) -> dic
         logger.warning("firebase_admin not available, using dev mode auth")
         raise AuthenticationError("Firebase not configured")
     except Exception as exc:
-        logger.warning("Token verification failed: %s", exc)
-        raise AuthenticationError("Invalid or expired token")
+        # Distinguish token-level rejections from infrastructure failures so
+        # callers receive the correct HTTP status (401 vs 503) and so that
+        # programming errors (AttributeError, etc.) are not silently masked.
+        try:
+            from firebase_admin import auth as _fb_auth  # noqa: PLC0415
+
+            _token_errors = (
+                _fb_auth.InvalidIdTokenError,
+                _fb_auth.ExpiredIdTokenError,
+                _fb_auth.RevokedIdTokenError,
+                _fb_auth.UserDisabledError,
+                _fb_auth.CertificateFetchError,
+            )
+        except ImportError:
+            _token_errors = ()  # type: ignore[assignment]
+
+        if isinstance(exc, _token_errors):
+            logger.warning("Token verification rejected: %s: %s", type(exc).__name__, exc)
+            raise AuthenticationError("Invalid or expired token") from exc
+
+        # Anything else (network error, timeout, unexpected exception) is an
+        # infrastructure failure — log as ERROR and surface as 503, not 401.
+        logger.error(
+            "Firebase auth infrastructure error: %s: %s",
+            type(exc).__name__,
+            exc,
+            exc_info=True,
+        )
+        raise ExternalServiceError("Firebase", str(exc)) from exc
 
 
 async def verify_firebase_token(

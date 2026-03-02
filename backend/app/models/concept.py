@@ -1,27 +1,24 @@
 """Concept Pydantic schemas."""
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from app.models.common import TimestampMixin
+from app.models.common import GeekyBaseModel, TimestampMixin
 
 
-class BKTParams(BaseModel):
+class BKTParams(GeekyBaseModel):
     p_learn: float = Field(default=0.3, alias="pLearn")
     p_slip: float = Field(default=0.1, alias="pSlip")
     p_guess: float = Field(default=0.25, alias="pGuess")
     p_known: float = Field(default=0.0, alias="pKnown")
-    model_config = {"populate_by_name": True}
 
 
-class TemporalEvent(BaseModel):
+class TemporalEvent(GeekyBaseModel):
     timestamp: str
     event: str
 
 
 class ConceptDocument(TimestampMixin):
-    model_config = {"populate_by_name": True}
-
     id: str = ""
     name: str = ""
     description: str = ""

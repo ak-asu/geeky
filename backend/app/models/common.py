@@ -5,7 +5,8 @@ from __future__ import annotations
 from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+from pydantic.alias_generators import to_camel
 
 
 # ============================================================
@@ -141,10 +142,43 @@ class PaginationParams(BaseModel):
     cursor: str | None = None
 
 
-class TimestampMixin(BaseModel):
-    """Mixin for created/updated timestamps."""
+# ============================================================
+# Shared base model
+# ============================================================
+
+
+class GeekyBaseModel(BaseModel):
+    """Project-wide base model with a uniform camelCase alias strategy (M18).
+
+    All Geeky Pydantic models should inherit from this class (directly or via
+    ``TimestampMixin``) so that:
+
+    - API responses are consistently camelCase — matching Flutter's JSON keys.
+    - ``populate_by_name=True`` lets internal Python code use snake_case field
+      names while still accepting the camelCase wire format.
+    - Explicit ``Field(alias=...)`` declarations take precedence over the
+      auto-generated alias, so existing aliases are not overridden.
+    - Request models (NoteCreate, ModuleCreate, …) inherit the same config,
+      eliminating the inconsistency where some models accepted camelCase and
+      others only accepted snake_case.
+
+    Do NOT apply this to pure-internal dataclasses or error envelopes that are
+    never serialised to the API wire format.
+    """
+
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+    )
+
+
+class TimestampMixin(GeekyBaseModel):
+    """Mixin for created/updated timestamps.
+
+    Inherits camelCase alias config from GeekyBaseModel.  The explicit aliases
+    on the fields below are redundant with the auto-generated ones but are
+    kept for self-documentation.
+    """
 
     created_at: datetime | None = Field(default=None, alias="createdAt")
     updated_at: datetime | None = Field(default=None, alias="updatedAt")
-
-    model_config = {"populate_by_name": True}

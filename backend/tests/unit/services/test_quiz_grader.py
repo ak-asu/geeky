@@ -7,7 +7,8 @@ import pytest
 
 from app.models.common import QuizQuestionType
 from app.models.quiz import QuizAnswer, QuizGradeRequest
-from app.services.learning.quiz_grader import QuizGrader, _cosine_similarity, _exact_match
+from app.services.learning.quiz_grader import QuizGrader, _exact_match
+from app.utils.math_utils import cosine_similarity as _cosine_similarity
 
 
 def _make_grader(

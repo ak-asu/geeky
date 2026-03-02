@@ -11,6 +11,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../auth/providers.dart';
 import '../../domain/note_entity.dart';
+import '../../domain/note_type.dart';
 import '../../providers.dart';
 
 class CreateNoteScreen extends ConsumerStatefulWidget {
@@ -61,7 +62,7 @@ class _CreateNoteScreenState extends ConsumerState<CreateNoteScreen> {
     final note = NoteEntity(
       id: _uuid.v4(),
       userId: ref.read(currentUserProvider)?.id ?? '',
-      type: 'text',
+      type: NoteType.text.name,
       title: _titleController.text.trim().isNotEmpty
           ? _titleController.text.trim()
           : null,

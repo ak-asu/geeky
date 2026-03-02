@@ -9,13 +9,13 @@ Supports multiple modes: QA, study guide, mind map, outline (RQ-03, RQ-08).
 from __future__ import annotations
 
 import logging
-import math
 from typing import Any
 
 from app.config import Settings
 from app.exceptions import RAGError
 from app.models.common import RAGMode
 from app.models.rag import RAGCitation, RAGQueryRequest, RAGQueryResponse
+from app.utils.math_utils import cosine_similarity
 
 logger = logging.getLogger(__name__)
 
@@ -46,18 +46,28 @@ _SYSTEM_PROMPTS: dict[RAGMode, str] = {
 
 
 def _estimate_tokens(text: str) -> int:
-    """Approximate token count from word count (1 word ≈ 1.3 tokens)."""
-    return int(len(text.split()) * 1.3)
+    """Heuristic token count used for context-window budgeting.
 
+    Approximates Gemini tokenization:
+    - Base rate: ~1.3 tokens per whitespace-delimited word
+    - Code/URL adjustment: +20 % when the text contains URLs or code blocks
+      (these tokenize more densely than prose)
 
-def _cosine_similarity(a: list[float], b: list[float]) -> float:
-    """Compute cosine similarity between two vectors."""
-    dot = sum(x * y for x, y in zip(a, b))
-    norm_a = math.sqrt(sum(x * x for x in a))
-    norm_b = math.sqrt(sum(x * x for x in b))
-    if norm_a == 0 or norm_b == 0:
-        return 0.0
-    return dot / (norm_a * norm_b)
+    This is intentionally a fast, synchronous approximation.  An async
+    ``count_tokens()`` call to the Gemini API would be more accurate but
+    would add one extra round-trip per candidate in the RAG context-assembly
+    loop — a 10× latency multiplier for no perceptible quality gain.
+
+    The assembly loop already applies a conservative ``rag_context_max_tokens``
+    budget.  If the budget is set ~20 % below the true model limit the
+    heuristic is safe even for code-heavy content.
+    """
+    words = text.split()
+    base = int(len(words) * 1.3)
+    # Code and URL-heavy content tokenizes more densely — apply a 20 % surcharge
+    if "```" in text or "http" in text:
+        return int(base * 1.2)
+    return base
 
 
 class RAGOrchestrator:
@@ -160,15 +170,36 @@ class RAGOrchestrator:
     async def _retrieve(
         self, user_id: str, request: RAGQueryRequest
     ) -> list[dict]:
-        """Stage 1: Hybrid search for candidate documents."""
+        """Stage 1: Hybrid search for candidate documents.
+
+        Uses a single batched ``get_many()`` call instead of N sequential
+        ``get()`` calls to eliminate the N+1 Firestore read pattern (H4).
+        Result order follows the search-result ranking so reranking receives
+        correctly ordered candidates.
+        """
         top_k = request.top_k or self._settings.rag_top_k
         search_results = await self._search.search(
             user_id, request.question, top_k=top_k * 2
         )
 
-        candidates = []
+        if not search_results:
+            return []
+
+        # De-duplicate short IDs while preserving search-result order.
+        seen: set[str] = set()
+        ordered_ids: list[str] = []
         for result in search_results:
-            short = await self._short_repo.get(user_id, result.short_id)
+            if result.short_id not in seen:
+                seen.add(result.short_id)
+                ordered_ids.append(result.short_id)
+
+        # One Firestore round-trip for all IDs (replaces N sequential get() calls).
+        shorts = await self._short_repo.get_many(user_id, ordered_ids)
+        shorts_by_id = {s.id: s for s in shorts}
+
+        candidates = []
+        for short_id in ordered_ids:
+            short = shorts_by_id.get(short_id)
             if short:
                 candidates.append({
                     "short_id": short.id,
@@ -232,7 +263,7 @@ class RAGOrchestrator:
 
             # Max similarity to any already-selected document
             max_sim = max(
-                _cosine_similarity(emb, sel_emb)
+                cosine_similarity(emb, sel_emb)
                 for sel_emb in selected_embeddings
             )
 

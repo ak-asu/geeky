@@ -138,6 +138,45 @@ class FirestoreBaseRepository(Generic[T]):
         count_result = await asyncio.to_thread(lambda: query.count().get())
         return count_result[0][0].value if count_result else 0
 
+    async def get_many(self, user_id: str, doc_ids: list[str]) -> list[T]:
+        """Batch-fetch multiple documents by ID in a single Firestore round-trip.
+
+        Uses ``db.get_all()`` which issues one gRPC streaming request instead of
+        N sequential ``doc.get()`` calls (H4: eliminates N+1 query in RAG retrieve).
+
+        Documents that do not exist or belong to a different user are silently
+        skipped — consistent with the behaviour of ``get()``.
+
+        Args:
+            user_id: The authenticated user.  Used both to build the collection
+                     path and to inject ``userId`` into the returned models.
+            doc_ids: List of document IDs to fetch.  Duplicates are de-duped
+                     automatically by Firestore.
+
+        Returns:
+            List of deserialized model instances, in the same order as
+            ``doc_ids`` (missing documents are omitted, not None-padded).
+        """
+        if not doc_ids:
+            return []
+
+        collection = self._user_collection(user_id)
+        refs = [collection.document(doc_id) for doc_id in doc_ids]
+
+        # db.get_all() is synchronous — run in a thread pool thread.
+        docs = await asyncio.to_thread(self._db.get_all, refs)
+
+        items: list[T] = []
+        for doc in docs:
+            if not doc.exists:
+                continue
+            data = doc.to_dict()
+            data["id"] = doc.id
+            data["userId"] = user_id
+            items.append(self._model_class.model_validate(data))
+
+        return items
+
     async def query(
         self,
         user_id: str,

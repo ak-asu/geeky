@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 extension DateTimeExtensions on DateTime {
   bool get isToday {
     final now = DateTime.now();
@@ -30,31 +32,15 @@ extension DateTimeExtensions on DateTime {
     return '${(diff.inDays / 365).floor()}y ago';
   }
 
+  /// Locale-aware date formatted as "Today", "Yesterday", or "March 15, 2024".
   String get formatDate {
     if (isToday) return 'Today';
     if (isYesterday) return 'Yesterday';
-    return '${_monthName(month)} $day, $year';
+    return DateFormat.yMMMMd().format(this);
   }
 
+  /// Locale-aware short date formatted as "Mar 15".
   String get formatShort {
-    return '${_monthName(month).substring(0, 3)} $day';
-  }
-
-  static String _monthName(int month) {
-    const months = [
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
-    ];
-    return months[month - 1];
+    return DateFormat.MMMd().format(this);
   }
 }

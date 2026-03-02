@@ -1,22 +1,19 @@
 """Processing task Pydantic schemas."""
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from app.models.common import ProcessingStatus, TimestampMixin
+from app.models.common import GeekyBaseModel, ProcessingStatus, TimestampMixin
 
 
-class StageStatus(BaseModel):
+class StageStatus(GeekyBaseModel):
     status: ProcessingStatus = ProcessingStatus.PENDING
     started_at: str | None = Field(default=None, alias="startedAt")
     completed_at: str | None = Field(default=None, alias="completedAt")
     error: str | None = None
-    model_config = {"populate_by_name": True}
 
 
 class ProcessingTaskDocument(TimestampMixin):
-    model_config = {"populate_by_name": True}
-
     id: str = ""
     user_id: str = Field(default="", alias="userId")
     note_id: str = Field(default="", alias="noteId")

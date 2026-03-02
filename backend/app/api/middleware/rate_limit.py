@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import Depends
 
@@ -21,6 +21,33 @@ logger = logging.getLogger(__name__)
 # In-memory fallback when Redis is unavailable
 _local_counters: dict[str, list[float]] = {}
 
+# ---------------------------------------------------------------------------
+# Connection pool registry
+# ---------------------------------------------------------------------------
+# Keyed by (redis_url, socket_timeout) so each unique combination gets exactly
+# one pool, regardless of how many RateLimiter instances are created.  The
+# pool outlives individual request/RateLimiter instances and is never closed
+# mid-request.  Using a plain dict is safe because dict access in CPython is
+# GIL-protected; duplicate pool creation on the very first concurrent pair of
+# requests is harmless (both pools are identical and one is discarded).
+_pool_registry: dict[tuple[str, float], Any] = {}
+
+
+def _get_or_create_pool(redis_url: str, socket_timeout: float) -> Any:
+    """Return a shared ``ConnectionPool`` for this (url, timeout) pair."""
+    import redis.asyncio as aioredis  # noqa: PLC0415
+
+    key = (redis_url, socket_timeout)
+    if key not in _pool_registry:
+        _pool_registry[key] = aioredis.ConnectionPool.from_url(
+            redis_url,
+            decode_responses=True,
+            socket_timeout=socket_timeout,
+            socket_connect_timeout=socket_timeout,
+            max_connections=20,
+        )
+    return _pool_registry[key]
+
 
 class RateLimiter:
     """Token-bucket rate limiter with Redis backend and in-memory fallback."""
@@ -29,22 +56,36 @@ class RateLimiter:
         self._daily_limit = settings.rate_limit_per_day
         self._burst_limit = settings.rate_limit_burst
         self._redis_url = settings.redis_url
+        self._socket_timeout = settings.redis_socket_timeout_seconds
 
     async def check(self, user_id: str) -> None:
         """Check if user is within rate limits. Raises RateLimitExceededError if not."""
         try:
             await self._check_redis(user_id)
+        except RateLimitExceededError:
+            raise  # never swallow limit violations — always propagate to the caller
         except ImportError:
             self._check_local(user_id)
         except Exception:
-            # Redis unavailable — fall back to local
+            # Redis unavailable — fall back to local burst-only check
+            logger.warning(
+                "Redis unavailable for rate limiting (user=%s) — falling back to in-memory counter",
+                user_id,
+                exc_info=True,
+            )
             self._check_local(user_id)
 
     async def _check_redis(self, user_id: str) -> None:
-        """Check rate limit using Redis counters."""
+        """Check rate limit using Redis counters.
+
+        Borrows a connection from the shared pool (M1: no new connection per
+        request).  ``r.aclose()`` returns the connection to the pool — it does
+        NOT tear down the pool itself.
+        """
         import redis.asyncio as aioredis  # noqa: PLC0415
 
-        r = aioredis.from_url(self._redis_url, decode_responses=True)
+        pool = _get_or_create_pool(self._redis_url, self._socket_timeout)
+        r = aioredis.Redis(connection_pool=pool)
         try:
             daily_key = f"rate:{user_id}:daily"
             burst_key = f"rate:{user_id}:burst"

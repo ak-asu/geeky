@@ -61,16 +61,16 @@ class ProcessingTaskRepository:
         )
 
     async def get_by_note(self, user_id: str, note_id: str) -> ProcessingTaskDocument | None:
+        # Avoid composite index requirement by omitting order_by; sort in Python.
         query = (
             self._collection()
             .where(filter=FieldFilter("userId", "==", user_id))
             .where(filter=FieldFilter("noteId", "==", note_id))
-            .order_by("createdAt", direction="DESCENDING")
-            .limit(1)
         )
         docs = await asyncio.to_thread(lambda: list(query.stream()))
         if not docs:
             return None
+        docs.sort(key=lambda d: d.to_dict().get("createdAt") or datetime.min, reverse=True)
         data = docs[0].to_dict()
         data["id"] = docs[0].id
         return ProcessingTaskDocument.model_validate(data)
