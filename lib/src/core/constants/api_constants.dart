@@ -14,7 +14,7 @@ abstract final class ApiConstants {
   static const String notes = '/api/v1/notes';
   static const String shorts = '/api/v1/shorts';
   static const String modules = '/api/v1/modules';
-  static const String knowledgeGraph = '/api/v1/knowledge-graph';
+  static const String knowledgeGraph = '/api/v1/kg';
   static const String rag = '/api/v1/rag';
   static const String quiz = '/api/v1/quiz';
   static const String search = '/api/v1/search';

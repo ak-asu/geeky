@@ -14,7 +14,7 @@
       "request": "launch",
       "type": "dart",
       "toolArgs": [
-        "--dart-define=API_BASE_URL=https://streams-why-enables-lovers.trycloudflare.com"
+        "--dart-define=API_BASE_URL=https://priest-mitsubishi-promising-pics.trycloudflare.com"
       ]
     },
     {
@@ -23,7 +23,7 @@
       "type": "dart",
       "flutterMode": "release",
       "toolArgs": [
-        "--dart-define=API_BASE_URL=https://streams-why-enables-lovers.trycloudflare.com"
+        "--dart-define=API_BASE_URL=https://priest-mitsubishi-promising-pics.trycloudflare.com"
       ]
     },
     {

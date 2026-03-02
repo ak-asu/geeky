@@ -16,11 +16,19 @@ ShortsRepository shortsRepository(Ref ref) {
   );
 }
 
-/// Watches all shorts from Drift as a stream.
-@riverpod
+/// Watches all shorts from Drift as a live stream.
+///
+/// Kept alive so the stream persists across navigation and mode toggles.
+/// Triggers an API fetch on first build to hydrate Drift; the Drift stream
+/// reacts to the resulting writes automatically.
+@Riverpod(keepAlive: true)
 Stream<List<ShortEntity>> allShorts(Ref ref) {
   final userId = ref.watch(currentUserProvider)?.id ?? '';
-  return ref.watch(shortsRepositoryProvider).watchAllShorts(userId);
+  final repo = ref.watch(shortsRepositoryProvider);
+  if (userId.isNotEmpty) {
+    repo.getAllShorts(userId).ignore();
+  }
+  return repo.watchAllShorts(userId);
 }
 
 /// Watches bookmarked short IDs.
