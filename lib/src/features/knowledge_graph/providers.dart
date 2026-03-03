@@ -18,24 +18,26 @@ KgRepository kgRepository(Ref ref) {
   );
 }
 
-/// Watches all concepts from Drift as a stream.
+/// One-shot API sync for the knowledge graph (keepAlive = once per session).
 ///
-/// Kept alive so the stream persists across navigation.
-/// Triggers an API fetch on first build to hydrate Drift; the stream
-/// reacts to the resulting writes automatically.
+/// Errors are swallowed inside [KgRepository.fetchAndCacheAll], so this
+/// always completes — success or failure — allowing the screen to fall back
+/// to whatever is already cached in Drift.
+@Riverpod(keepAlive: true)
+Future<void> kgSync(Ref ref) async {
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
+  if (userId.isEmpty) return;
+  await ref.read(kgRepositoryProvider).fetchAndCacheAll(userId);
+}
+
+/// Watches all concepts from Drift as a stream (keepAlive for related-shorts).
 @Riverpod(keepAlive: true)
 Stream<List<ConceptEntity>> allConcepts(Ref ref) {
   final userId = ref.watch(currentUserProvider)?.id ?? '';
-  final repo = ref.watch(kgRepositoryProvider);
-  if (userId.isNotEmpty) {
-    repo.fetchAndCacheAll(userId).ignore();
-  }
-  return repo.watchAllConcepts(userId);
+  return ref.watch(kgRepositoryProvider).watchAllConcepts(userId);
 }
 
-/// Watches all relationships from Drift as a stream.
-///
-/// Kept alive so the stream persists across navigation.
+/// Watches all relationships from Drift as a stream (keepAlive for related-shorts).
 @Riverpod(keepAlive: true)
 Stream<List<RelationshipEntity>> allRelationships(Ref ref) {
   final userId = ref.watch(currentUserProvider)?.id ?? '';
@@ -44,15 +46,14 @@ Stream<List<RelationshipEntity>> allRelationships(Ref ref) {
 
 /// Builds graph nodes with status information.
 ///
-/// Derives from [allConceptsProvider] and [allRelationshipsProvider] so it
-/// rebuilds reactively whenever Drift is updated by the background fetch.
+/// Awaits [kgSyncProvider] first, so the screen shows its loading shimmer
+/// for the full duration of the API fetch rather than briefly flashing an
+/// empty state while the network call is in progress.
+/// On subsequent visits within the same session [kgSync] is already
+/// resolved (keepAlive), so this reads from Drift instantly.
 @riverpod
 Future<List<GraphNode>> graphNodes(Ref ref) async {
-  // Await the first emission from each Drift-backed stream.
-  // allConceptsProvider also triggers the background API fetch that populates Drift.
-  final concepts = await ref.watch(allConceptsProvider.future);
-  final relationships = await ref.watch(allRelationshipsProvider.future);
-  return ref
-      .watch(kgRepositoryProvider)
-      .buildGraphNodesFromData(concepts, relationships);
+  await ref.watch(kgSyncProvider.future);
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
+  return ref.read(kgRepositoryProvider).buildGraphNodes(userId);
 }

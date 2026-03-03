@@ -10,6 +10,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../auth/providers.dart';
+import '../../../subscription/providers.dart';
 import '../../domain/note_entity.dart';
 import '../../domain/note_type.dart';
 import '../../providers.dart';
@@ -83,7 +84,10 @@ class _CreateNoteScreenState extends ConsumerState<CreateNoteScreen> {
     );
 
     if (mounted) {
-      context.showSnackBar('Note saved — shorts will appear shortly');
+      final isPremium = ref.read(isPremiumProvider);
+      context.showSnackBar(
+        isPremium ? 'Note saved — shorts will appear shortly' : 'Note saved.',
+      );
       context.pop();
     }
   }

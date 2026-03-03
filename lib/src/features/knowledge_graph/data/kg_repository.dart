@@ -21,10 +21,8 @@ class KgRepository {
   /// Fetches concepts and relationships from the backend and caches them in
   /// Drift. Both calls are run in parallel; individual failures are swallowed
   /// so the existing Drift cache is used as a fallback.
-  Future<void> fetchAndCacheAll(String userId) => Future.wait([
-        _fetchConcepts(userId),
-        _fetchRelationships(userId),
-      ]);
+  Future<void> fetchAndCacheAll(String userId) =>
+      Future.wait([_fetchConcepts(userId), _fetchRelationships(userId)]);
 
   Future<void> _fetchConcepts(String userId) async {
     try {
@@ -47,7 +45,9 @@ class KgRepository {
         queryParams: {'limit': '200'},
       );
       await _kgDao.insertRelationships(
-        relationships.map((r) => RelationshipDto.toCompanion(r, userId)).toList(),
+        relationships
+            .map((r) => RelationshipDto.toCompanion(r, userId))
+            .toList(),
       );
     } catch (_) {}
   }
@@ -87,8 +87,7 @@ class KgRepository {
     List<RelationshipEntity> relationships, {
     Set<String> masteredIds = const {},
     Set<String> inProgressIds = const {},
-  }) =>
-      _toGraphNodes(concepts, relationships, masteredIds, inProgressIds);
+  }) => _toGraphNodes(concepts, relationships, masteredIds, inProgressIds);
 
   /// Convenience overload that reads concepts/relationships from Drift once.
   Future<List<GraphNode>> buildGraphNodes(

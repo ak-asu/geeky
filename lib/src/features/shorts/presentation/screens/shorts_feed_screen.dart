@@ -242,7 +242,7 @@ class _ShortsFeedBodyState extends ConsumerState<_ShortsFeedBody> {
           onFeedback: () {
             ref
                 .read(interactionProvider.notifier)
-                .recordFeedback(articleId: short.id, feedbackType: 'general');
+                .recordFeedback(articleId: short.id);
           },
           onTts: () => _handleTts(short),
           onExploreFurther: short.prompts.isNotEmpty

@@ -32,6 +32,9 @@ class MockSubscriptionService:
     async def check_rag_quota(self, user_id: str) -> None:
         return None
 
+    async def check_processing_quota(self, user_id: str) -> None:
+        return None
+
 
 class MockTextSanitizer:
     """Pass-through text sanitizer for integration tests."""

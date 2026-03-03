@@ -14,6 +14,10 @@ class SubscriptionEntitlements(GeekyBaseModel):
     rag_queries_per_day: int = Field(alias="ragQueriesPerDay", description="-1 means unlimited")
     advanced_analytics: bool = Field(alias="advancedAnalytics")
     priority_processing: bool = Field(alias="priorityProcessing")
+    can_process_notes: bool = Field(
+        alias="canProcessNotes",
+        description="Whether the AI pipeline (embedding + Shorts generation) runs for user notes",
+    )
 
 
 # Single source of truth for subscription tier entitlements.
@@ -25,6 +29,7 @@ ENTITLEMENTS: dict[str, SubscriptionEntitlements] = {
         ragQueriesPerDay=10,
         advancedAnalytics=False,
         priorityProcessing=False,
+        canProcessNotes=False,  # Free users cannot run the AI pipeline
     ),
     "premium": SubscriptionEntitlements(
         maxNotes=-1,
@@ -32,5 +37,6 @@ ENTITLEMENTS: dict[str, SubscriptionEntitlements] = {
         ragQueriesPerDay=-1,
         advancedAnalytics=True,
         priorityProcessing=True,
+        canProcessNotes=True,
     ),
 }

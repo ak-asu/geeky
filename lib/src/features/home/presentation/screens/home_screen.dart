@@ -50,8 +50,12 @@ class HomeScreen extends ConsumerWidget {
       });
     });
 
+    // Free users cannot access Shorts — effectiveIsShorts gates both the feed
+    // body and the toggle so the premium paywall fires before any content loads.
+    final effectiveIsShorts = isShorts && isPremium;
+
     return GeekyScaffold(
-      title: isShorts ? 'Shorts' : 'Notes',
+      title: effectiveIsShorts ? 'Shorts' : 'Notes',
       drawer: _buildDrawer(context, ref, isPremium),
       actions: [
         IconButton(
@@ -61,14 +65,26 @@ class HomeScreen extends ConsumerWidget {
         ),
         IconButton(
           icon: Icon(
-            isShorts ? Icons.auto_awesome_rounded : Icons.article_rounded,
+            effectiveIsShorts
+                ? Icons.auto_awesome_rounded
+                : Icons.article_rounded,
             color: AppColors.primary,
           ),
-          tooltip: isShorts ? 'Viewing Shorts — tap for Notes' : 'Viewing Notes — tap for Shorts',
-          onPressed: () => ref.read(feedModeProvider.notifier).toggle(),
+          tooltip: effectiveIsShorts
+              ? 'Viewing Shorts — tap for Notes'
+              : 'Viewing Notes — tap for Shorts',
+          onPressed: () {
+            if (!isPremium) {
+              PaywallSheet.show(context, featureName: 'Shorts Feed');
+              return;
+            }
+            ref.read(feedModeProvider.notifier).toggle();
+          },
         ),
       ],
-      body: isShorts ? const ShortsFeedScreen() : const NoteFeedScreen(),
+      body: effectiveIsShorts
+          ? const ShortsFeedScreen()
+          : const NoteFeedScreen(),
     );
   }
 

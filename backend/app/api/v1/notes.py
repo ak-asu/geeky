@@ -21,7 +21,7 @@ from app.dependencies import (
     get_subscription_service,
     get_text_sanitizer,
 )
-from app.exceptions import NoteNotFoundError
+from app.exceptions import NoteNotFoundError, PremiumRequiredError
 
 _ALLOWED_MIME_TYPES = {
     "text/plain",
@@ -166,8 +166,9 @@ async def update_note(
     note_repo=Depends(get_note_repository),
     task_repo=Depends(get_processing_task_repository),
     sanitizer=Depends(get_text_sanitizer),
+    sub_svc=Depends(get_subscription_service),
 ) -> dict:
-    """Update an existing note. Triggers re-processing pipeline (LM-01)."""
+    """Update an existing note. Triggers re-processing pipeline for premium users (LM-01)."""
     note = await note_repo.get(user_id, note_id)
     if note is None:
         raise NoteNotFoundError(note_id)
@@ -182,22 +183,29 @@ async def update_note(
 
     await note_repo.update(user_id, note_id, update_data)
 
-    # If content changed, trigger re-processing
+    # If content changed, trigger re-processing — premium users only.
+    # Free users get their text saved but the AI cascade is skipped entirely,
+    # preventing both unnecessary task records and premature cascade-delete
+    # of any existing premium-generated content.
     if "content" in update_data:
-        task_doc = ProcessingTaskDocument(
-            user_id=user_id,
-            note_id=note_id,
-            status=ProcessingStatus.PENDING,
-        )
-        task_id = await task_repo.create(task_doc)
-        await note_repo.update(user_id, note_id, {
-            "processed": False,
-            "processingTaskId": task_id,
-        })
+        try:
+            await sub_svc.check_processing_quota(user_id)
+            task_doc = ProcessingTaskDocument(
+                user_id=user_id,
+                note_id=note_id,
+                status=ProcessingStatus.PENDING,
+            )
+            task_id = await task_repo.create(task_doc)
+            await note_repo.update(user_id, note_id, {
+                "processed": False,
+                "processingTaskId": task_id,
+            })
 
-        from app.workers.lifecycle_tasks import cascade_note_update  # noqa: PLC0415
+            from app.workers.lifecycle_tasks import cascade_note_update  # noqa: PLC0415
 
-        cascade_note_update.delay(user_id, note_id, task_id)
+            cascade_note_update.delay(user_id, note_id, task_id)
+        except PremiumRequiredError:
+            pass  # Free-tier: text update is saved; re-processing is a premium feature
 
     updated = await note_repo.get(user_id, note_id)
     return {"data": updated.model_dump(mode="json", by_alias=True)}

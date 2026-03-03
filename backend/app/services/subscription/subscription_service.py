@@ -103,3 +103,20 @@ class SubscriptionService:
             "RAG quota: user=%s used=%d limit=%d",
             user_id, user.rag_queries_today + 1, entitlements.rag_queries_per_day,
         )
+
+    async def check_processing_quota(self, user_id: str) -> None:
+        """Raise PremiumRequiredError if the user's tier does not allow AI pipeline processing.
+
+        Controls both the Celery pipeline task and the Shorts API endpoints.
+        Free users can create and store notes but cannot run the AI pipeline
+        (embedding, Shorts generation) or access generated Shorts.
+        """
+        user = await self._user_repo.get(user_id)
+        tier = user.subscription_tier.value if user else "free"
+        entitlements = ENTITLEMENTS.get(tier, ENTITLEMENTS["free"])
+
+        if not entitlements.can_process_notes:
+            raise PremiumRequiredError(
+                "AI note processing and Shorts require a Premium subscription. "
+                "Upgrade to unlock AI-powered learning content."
+            )

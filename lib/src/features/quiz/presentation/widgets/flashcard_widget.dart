@@ -167,21 +167,24 @@ class _FlashcardWidgetState extends State<FlashcardWidget>
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.lightbulb_rounded,
-            size: 32,
-            color: AppColors.primary.withValues(alpha: 0.7),
-          ),
-          AppSpacing.gapV16,
-          Text(
-            widget.answer,
-            textAlign: TextAlign.center,
-            style: context.textTheme.bodyLarge?.copyWith(height: 1.5),
-          ),
-        ],
+      // SingleChildScrollView prevents overflow when short content is long.
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.lightbulb_rounded,
+              size: 32,
+              color: AppColors.primary.withValues(alpha: 0.7),
+            ),
+            AppSpacing.gapV16,
+            Text(
+              widget.answer,
+              textAlign: TextAlign.center,
+              style: context.textTheme.bodyLarge?.copyWith(height: 1.5),
+            ),
+          ],
+        ),
       ),
     );
   }
