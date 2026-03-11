@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 class PendingInteractions extends Table {
   IntColumn get id => integer().autoIncrement()();
+  TextColumn get userId => text().withDefault(const Constant(''))();
   TextColumn get articleId => text()();
   TextColumn get type => text()();
   DateTimeColumn get timestamp => dateTime()();

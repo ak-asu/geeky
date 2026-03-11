@@ -5,14 +5,17 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from app.models.common import QuizQuestionType
 from app.models.quiz import QuizAnswer, QuizGradeRequest
-from app.services.learning.quiz_grader import QuizGrader
+from app.services.learning.quiz_grader import QuizGrader, _exact_match
+from app.utils.math_utils import cosine_similarity as _cosine_similarity
 
 
 def _make_grader(
     quiz_attempt_repo=None,
     bkt_tracker=None,
     short_repo=None,
+    embedding_provider=None,
 ):
     quiz_attempt_repo = quiz_attempt_repo or AsyncMock(create=AsyncMock(return_value="attempt-1"))
     bkt_tracker = bkt_tracker or AsyncMock(update_bkt=AsyncMock(return_value=0.8))
@@ -21,6 +24,7 @@ def _make_grader(
         quiz_attempt_repo=quiz_attempt_repo,
         bkt_tracker=bkt_tracker,
         short_repo=short_repo,
+        embedding_provider=embedding_provider,
     )
 
 
@@ -151,3 +155,120 @@ class TestGradeAndSave:
         await grader.grade_and_save("user-1", body)
 
         bkt.update_bkt.assert_not_called()
+
+
+class TestSemanticGrading:
+    """Tests for open-ended / short-answer semantic grading path."""
+
+    @pytest.mark.asyncio
+    async def test_semantic_correct_above_threshold(self):
+        """High-similarity embeddings should be graded correct."""
+        mock_embedder = AsyncMock()
+        # Two nearly identical unit vectors → similarity ≈ 1.0
+        mock_embedder.embed_texts = AsyncMock(return_value=[[1.0, 0.0], [1.0, 0.0]])
+
+        grader = _make_grader(embedding_provider=mock_embedder)
+        body = QuizGradeRequest(
+            short_ids=[],
+            answers=[QuizAnswer(
+                questionId="q1",
+                answer="Water is H2O",
+                correctAnswer="Water consists of hydrogen and oxygen",
+                questionType=QuizQuestionType.OPEN_ENDED,
+            )],
+        )
+        result = await grader.grade_and_save("user-1", body)
+        assert result["correctCount"] == 1
+
+    @pytest.mark.asyncio
+    async def test_semantic_incorrect_below_threshold(self):
+        """Low-similarity embeddings should be graded incorrect."""
+        mock_embedder = AsyncMock()
+        # Orthogonal vectors → similarity = 0.0
+        mock_embedder.embed_texts = AsyncMock(return_value=[[1.0, 0.0], [0.0, 1.0]])
+
+        grader = _make_grader(embedding_provider=mock_embedder)
+        body = QuizGradeRequest(
+            short_ids=[],
+            answers=[QuizAnswer(
+                questionId="q1",
+                answer="completely wrong answer",
+                correctAnswer="correct reference answer",
+                questionType=QuizQuestionType.SHORT_ANSWER,
+            )],
+        )
+        result = await grader.grade_and_save("user-1", body)
+        assert result["correctCount"] == 0
+
+    @pytest.mark.asyncio
+    async def test_semantic_fallback_on_embedder_error(self):
+        """When embedding fails, falls back to exact match."""
+        mock_embedder = AsyncMock()
+        mock_embedder.embed_texts = AsyncMock(side_effect=Exception("Embedding API unavailable"))
+
+        grader = _make_grader(embedding_provider=mock_embedder)
+        body = QuizGradeRequest(
+            short_ids=[],
+            answers=[QuizAnswer(
+                questionId="q1",
+                answer="Paris",
+                correctAnswer="Paris",
+                questionType=QuizQuestionType.OPEN_ENDED,
+            )],
+        )
+        result = await grader.grade_and_save("user-1", body)
+        # Exact match fallback: "Paris" == "Paris" → correct
+        assert result["correctCount"] == 1
+
+    @pytest.mark.asyncio
+    async def test_open_ended_without_embedder_uses_exact_match(self):
+        """When no embedding_provider injected, open-ended uses exact match."""
+        grader = _make_grader(embedding_provider=None)
+        body = QuizGradeRequest(
+            short_ids=[],
+            answers=[QuizAnswer(
+                questionId="q1",
+                answer="paris",
+                correctAnswer="Paris",
+                questionType=QuizQuestionType.OPEN_ENDED,
+            )],
+        )
+        result = await grader.grade_and_save("user-1", body)
+        # Normalised exact match: "paris" == "paris" → correct
+        assert result["correctCount"] == 1
+
+    @pytest.mark.asyncio
+    async def test_mcq_never_uses_semantic(self):
+        """MCQ questions always use exact match, even with embedder wired."""
+        mock_embedder = AsyncMock()
+        mock_embedder.embed_texts = AsyncMock(return_value=[[1.0, 0.0], [0.0, 1.0]])
+
+        grader = _make_grader(embedding_provider=mock_embedder)
+        body = QuizGradeRequest(
+            short_ids=[],
+            answers=[QuizAnswer(
+                questionId="q1",
+                answer="A",
+                correctAnswer="A",
+                questionType=QuizQuestionType.MCQ,
+            )],
+        )
+        result = await grader.grade_and_save("user-1", body)
+        # Exact match → correct; embed_texts should NOT have been called
+        assert result["correctCount"] == 1
+        mock_embedder.embed_texts.assert_not_called()
+
+
+class TestHelpers:
+    def test_cosine_similarity_identical_vectors(self):
+        assert _cosine_similarity([1.0, 0.0], [1.0, 0.0]) == pytest.approx(1.0)
+
+    def test_cosine_similarity_orthogonal_vectors(self):
+        assert _cosine_similarity([1.0, 0.0], [0.0, 1.0]) == pytest.approx(0.0)
+
+    def test_cosine_similarity_zero_vector(self):
+        assert _cosine_similarity([0.0, 0.0], [1.0, 0.0]) == 0.0
+
+    def test_exact_match_normalised(self):
+        assert _exact_match("  Paris  ", "paris") is True
+        assert _exact_match("London", "Paris") is False

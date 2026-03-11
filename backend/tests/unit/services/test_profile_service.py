@@ -42,6 +42,7 @@ class _MockShort:
 def _make_repos(user=None, notes=0, shorts=0, concepts=0, reviews=0):
     user_repo = AsyncMock()
     user_repo.get = AsyncMock(return_value=user or _MockUser())
+    user_repo.create = AsyncMock()
     user_repo.update = AsyncMock()
     user_repo.delete = AsyncMock()
 
@@ -112,6 +113,46 @@ class TestGetProfile:
             await service.get_profile("nonexistent")
 
 
+class TestGetOrCreateProfile:
+    @pytest.mark.asyncio
+    async def test_returns_existing_user(self):
+        repos = _make_repos()
+        service = ProfileService(**repos)
+        profile = await service.get_or_create_profile("user1")
+        assert profile.name == "Test User"
+        repos["user_repo"].create.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_creates_new_user_when_not_found(self):
+        repos = _make_repos()
+        existing = _MockUser()
+        # First call returns None (user not found), second call returns the created user
+        repos["user_repo"].get = AsyncMock(side_effect=[None, existing])
+        service = ProfileService(**repos)
+
+        profile = await service.get_or_create_profile(
+            "new-user", name="Alice", email="alice@example.com", avatar_url="https://pic.example.com/a.jpg"
+        )
+
+        repos["user_repo"].create.assert_called_once()
+        assert profile is not None
+
+    @pytest.mark.asyncio
+    async def test_fallback_when_refetch_returns_none(self):
+        """If the re-fetch after create returns None, the newly built doc is returned."""
+        repos = _make_repos()
+        repos["user_repo"].get = AsyncMock(return_value=None)
+        service = ProfileService(**repos)
+
+        profile = await service.get_or_create_profile(
+            "new-user", name="Bob", email="bob@example.com"
+        )
+
+        repos["user_repo"].create.assert_called_once()
+        assert profile.name == "Bob"
+        assert profile.email == "bob@example.com"
+
+
 class TestUpdateProfile:
     @pytest.mark.asyncio
     async def test_updates_fields(self):
@@ -125,13 +166,35 @@ class TestUpdateProfile:
         assert result.name == "Test User"  # Mock returns same object
 
     @pytest.mark.asyncio
-    async def test_not_found_raises(self):
+    async def test_upserts_when_user_not_found(self):
+        """PATCH no longer raises 404 — it auto-creates the profile (upsert)."""
         repos = _make_repos()
-        repos["user_repo"].get = AsyncMock(return_value=None)
+        created_user = _MockUser(id="new-user", name="", email="new@example.com")
+        # First call: not found; second call (re-fetch after create): returns new user
+        # Third call (get_profile at end): returns new user
+        repos["user_repo"].get = AsyncMock(side_effect=[None, created_user, created_user])
         service = ProfileService(**repos)
 
-        with pytest.raises(UserNotFoundError):
-            await service.update_profile("nonexistent", UserProfileUpdate(name="x"))
+        result = await service.update_profile(
+            "new-user",
+            UserProfileUpdate(name="New"),
+            name="New",
+            email="new@example.com",
+        )
+
+        repos["user_repo"].create.assert_called_once()
+        repos["user_repo"].update.assert_called_once()
+        assert result is not None
+
+    @pytest.mark.asyncio
+    async def test_no_update_when_body_empty(self):
+        """Empty update body skips the Firestore update call."""
+        repos = _make_repos()
+        service = ProfileService(**repos)
+
+        await service.update_profile("user1", UserProfileUpdate())
+
+        repos["user_repo"].update.assert_not_called()
 
 
 class TestGetStats:

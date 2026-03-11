@@ -9,15 +9,17 @@ part 'sync_dao.g.dart';
 class SyncDao extends DatabaseAccessor<AppDatabase> with _$SyncDaoMixin {
   SyncDao(super.db);
 
-  Future<List<PendingInteraction>> getPendingInteractions() =>
+  Future<List<PendingInteraction>> getPendingInteractions(String userId) =>
       (select(pendingInteractions)
-            ..where((t) => t.synced.equals(false))
+            ..where((t) => t.userId.equals(userId) & t.synced.equals(false))
             ..orderBy([(t) => OrderingTerm.asc(t.timestamp)]))
           .get();
 
-  Stream<int> watchPendingCount() {
+  Stream<int> watchPendingCount(String userId) {
     final count = pendingInteractions.id.count(
-      filter: pendingInteractions.synced.equals(false),
+      filter:
+          pendingInteractions.userId.equals(userId) &
+          pendingInteractions.synced.equals(false),
     );
     final query = selectOnly(pendingInteractions)..addColumns([count]);
     return query.watchSingle().map((row) => row.read(count)!);
@@ -31,16 +33,19 @@ class SyncDao extends DatabaseAccessor<AppDatabase> with _$SyncDaoMixin {
         const PendingInteractionsCompanion(synced: Value(true)),
       );
 
-  Future<void> markAllSynced() =>
-      (update(pendingInteractions)..where((t) => t.synced.equals(false))).write(
-        const PendingInteractionsCompanion(synced: Value(true)),
-      );
+  Future<void> markAllSynced(String userId) =>
+      (update(pendingInteractions)
+            ..where((t) => t.userId.equals(userId) & t.synced.equals(false)))
+          .write(const PendingInteractionsCompanion(synced: Value(true)));
 
   Future<List<PendingInteraction>> getInteractionsForArticle(
+    String userId,
     String articleId,
   ) =>
       (select(pendingInteractions)
-            ..where((t) => t.articleId.equals(articleId))
+            ..where(
+              (t) => t.userId.equals(userId) & t.articleId.equals(articleId),
+            )
             ..orderBy([(t) => OrderingTerm.desc(t.timestamp)]))
           .get();
 }

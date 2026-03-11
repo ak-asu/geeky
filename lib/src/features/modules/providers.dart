@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/network/api_service.dart';
 import '../../core/providers/database_provider.dart';
+import '../auth/providers.dart';
 import 'data/modules_repository.dart';
 import 'domain/module_entity.dart';
 
@@ -18,7 +19,8 @@ ModulesRepository modulesRepository(Ref ref) {
 /// Watches all modules from Drift as a stream.
 @riverpod
 Stream<List<ModuleEntity>> allModules(Ref ref) {
-  return ref.watch(modulesRepositoryProvider).watchAllModules();
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
+  return ref.watch(modulesRepositoryProvider).watchAllModules(userId);
 }
 
 /// Fetches a single module by ID.

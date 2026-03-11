@@ -9,9 +9,11 @@ part 'shorts_dao.g.dart';
 class ShortsDao extends DatabaseAccessor<AppDatabase> with _$ShortsDaoMixin {
   ShortsDao(super.db);
 
-  Future<List<CachedShort>> getAllShorts() => select(cachedShorts).get();
+  Future<List<CachedShort>> getAllShorts(String userId) =>
+      (select(cachedShorts)..where((t) => t.userId.equals(userId))).get();
 
-  Stream<List<CachedShort>> watchAllShorts() => select(cachedShorts).watch();
+  Stream<List<CachedShort>> watchAllShorts(String userId) =>
+      (select(cachedShorts)..where((t) => t.userId.equals(userId))).watch();
 
   Future<CachedShort?> getShortById(String id) =>
       (select(cachedShorts)..where((t) => t.id.equals(id))).getSingleOrNull();
@@ -31,5 +33,25 @@ class ShortsDao extends DatabaseAccessor<AppDatabase> with _$ShortsDaoMixin {
   Future<void> deleteShort(String id) =>
       (delete(cachedShorts)..where((t) => t.id.equals(id))).go();
 
-  Future<void> deleteAll() => delete(cachedShorts).go();
+  Future<void> deleteAll(String userId) =>
+      (delete(cachedShorts)..where((t) => t.userId.equals(userId))).go();
+
+  /// Persists the done flag for a single short without touching any other column.
+  Future<void> markShortDone(
+    String userId,
+    String shortId, {
+    required bool isDone,
+  }) =>
+      (update(cachedShorts)
+            ..where((t) => t.userId.equals(userId))
+            ..where((t) => t.id.equals(shortId)))
+          .write(CachedShortsCompanion(isDone: Value(isDone)));
+
+  /// Streams the set of short IDs the user has marked as done.
+  Stream<Set<String>> watchDoneShortIds(String userId) =>
+      (select(cachedShorts)
+            ..where((t) => t.userId.equals(userId))
+            ..where((t) => t.isDone.equals(true)))
+          .watch()
+          .map((rows) => {for (final r in rows) r.id});
 }

@@ -34,7 +34,7 @@ class UserRepository:
         return UserDocument.model_validate(data)
 
     async def create(self, user_id: str, data: UserDocument) -> str:
-        doc_data = data.model_dump(exclude_none=True, mode="json")
+        doc_data = data.model_dump(exclude_none=True, mode="json", by_alias=True)
         doc_data["createdAt"] = datetime.now(timezone.utc)
         doc_data["updatedAt"] = datetime.now(timezone.utc)
         await asyncio.to_thread(self._collection().document(user_id).set, doc_data)

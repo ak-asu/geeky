@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 class CachedNotifications extends Table {
+  TextColumn get userId => text().withDefault(const Constant(''))();
   TextColumn get id => text()();
   TextColumn get title => text()();
   TextColumn get body => text()();
@@ -10,5 +11,5 @@ class CachedNotifications extends Table {
   TextColumn get dataJson => text().withDefault(const Constant('{}'))();
 
   @override
-  Set<Column> get primaryKey => {id};
+  Set<Column> get primaryKey => {userId, id};
 }

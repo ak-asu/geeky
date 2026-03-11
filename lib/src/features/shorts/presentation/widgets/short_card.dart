@@ -23,6 +23,7 @@ class ShortCard extends StatelessWidget {
     this.onRelated,
     this.onFeedback,
     this.onTts,
+    this.isSpeaking = false,
     this.onExploreFurther,
     this.onSource,
     this.onConceptTap,
@@ -38,6 +39,7 @@ class ShortCard extends StatelessWidget {
   final VoidCallback? onRelated;
   final VoidCallback? onFeedback;
   final VoidCallback? onTts;
+  final bool isSpeaking;
   final VoidCallback? onExploreFurther;
   final VoidCallback? onSource;
   final ValueChanged<String>? onConceptTap;
@@ -69,6 +71,7 @@ class ShortCard extends StatelessWidget {
             onRelated: onRelated,
             onFeedback: onFeedback,
             onTts: onTts,
+            isSpeaking: isSpeaking,
             onExploreFurther: onExploreFurther,
             onSource: onSource,
           ),

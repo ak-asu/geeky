@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/network/api_service.dart';
 import '../../core/providers/database_provider.dart';
+import '../auth/providers.dart';
 import '../shorts/domain/short_entity.dart';
 import '../shorts/providers.dart';
 import 'data/search_repository.dart';
@@ -77,12 +78,14 @@ Future<List<ShortEntity>> searchResults(Ref ref) async {
   final difficultyFilter = ref.watch(searchDifficultyFilterProvider);
   final readFilter = ref.watch(searchReadFilterProvider);
   final doneIds = ref.watch(shortsFeedProvider);
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
 
   if (query.isEmpty) return [];
 
   return ref
       .read(searchRepositoryProvider)
       .searchShorts(
+        userId: userId,
         query: query,
         topicFilter: topicFilter,
         difficultyFilter: difficultyFilter,
@@ -95,14 +98,16 @@ Future<List<ShortEntity>> searchResults(Ref ref) async {
 @riverpod
 Future<List<String>> searchSuggestions(Ref ref) async {
   final query = ref.watch(searchQueryProvider);
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
   if (query.isEmpty) return [];
-  return ref.read(searchRepositoryProvider).suggestTopics(query);
+  return ref.read(searchRepositoryProvider).suggestTopics(userId, query);
 }
 
 /// All available topics for filter chips.
 @riverpod
 Future<List<String>> availableTopics(Ref ref) async {
-  return ref.read(searchRepositoryProvider).getAllTopics();
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
+  return ref.read(searchRepositoryProvider).getAllTopics(userId);
 }
 
 /// Recent search queries (in-memory for now).

@@ -2,6 +2,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/network/api_service.dart';
 import '../../core/providers/database_provider.dart';
+import '../auth/providers.dart';
+import '../shorts/providers.dart';
 import 'data/note_feed_scorer.dart';
 import 'data/notes_repository.dart';
 import 'domain/note_entity.dart';
@@ -20,16 +22,21 @@ NotesRepository notesRepository(Ref ref) {
 /// Watches all notes from Drift as a stream.
 @riverpod
 Stream<List<NoteEntity>> allNotes(Ref ref) {
-  return ref.watch(notesRepositoryProvider).watchAllNotes();
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
+  return ref.watch(notesRepositoryProvider).watchAllNotes(userId);
 }
 
 /// Feed state — tracks read/skip/recent topics for scoring.
 @Riverpod(keepAlive: true)
 class NoteFeed extends _$NoteFeed {
   NotesRepository get _repo => ref.read(notesRepositoryProvider);
+  String get _userId => ref.read(currentUserProvider)?.id ?? '';
 
   @override
-  Future<NoteFeedState> build() => _repo.getFeedState();
+  Future<NoteFeedState> build() {
+    final userId = ref.watch(currentUserProvider)?.id ?? '';
+    return _repo.getFeedState(userId);
+  }
 
   Future<void> toggleRead(String noteId) async {
     final current = state.value ?? const NoteFeedState();
@@ -41,7 +48,7 @@ class NoteFeed extends _$NoteFeed {
     }
 
     final updated = current.copyWith(readNoteIds: updatedIds);
-    await _repo.saveFeedState(updated);
+    await _repo.saveFeedState(updated, _userId);
     state = AsyncData(updated);
   }
 
@@ -51,7 +58,7 @@ class NoteFeed extends _$NoteFeed {
     counts[noteId] = (counts[noteId] ?? 0) + 1;
 
     final updated = current.copyWith(skipCounts: counts);
-    await _repo.saveFeedState(updated);
+    await _repo.saveFeedState(updated, _userId);
     state = AsyncData(updated);
   }
 
@@ -66,7 +73,7 @@ class NoteFeed extends _$NoteFeed {
     }
 
     final updated = current.copyWith(bookmarkedNoteIds: bookmarked);
-    await _repo.saveFeedState(updated);
+    await _repo.saveFeedState(updated, _userId);
     state = AsyncData(updated);
   }
 
@@ -75,7 +82,7 @@ class NoteFeed extends _$NoteFeed {
     final topics = [topic, ...current.recentTopics].take(10).toList();
 
     final updated = current.copyWith(recentTopics: topics);
-    await _repo.saveFeedState(updated);
+    await _repo.saveFeedState(updated, _userId);
     state = AsyncData(updated);
   }
 }
@@ -90,4 +97,38 @@ List<NoteEntity> rankedNoteFeed(Ref ref) {
   final feedState = feedStateAsync.value ?? const NoteFeedState();
 
   return NoteFeedScorer.rank(notes, feedState);
+}
+
+/// Polls the note processing pipeline and refreshes the shorts feed on completion.
+///
+/// Kept alive so polling continues even if the originating screen is popped.
+/// Call [watchUntilComplete] after note creation — it runs in the background,
+/// polls every 5 s up to 3 minutes, then fetches fresh shorts into Drift.
+@Riverpod(keepAlive: true)
+class NoteProcessingWatcher extends _$NoteProcessingWatcher {
+  @override
+  void build() {}
+
+  Future<void> watchUntilComplete(String noteId, String userId) async {
+    const interval = Duration(seconds: 5);
+    const timeout = Duration(minutes: 3);
+    final deadline = DateTime.now().add(timeout);
+
+    while (DateTime.now().isBefore(deadline)) {
+      await Future.delayed(interval);
+      try {
+        final status = await ref
+            .read(notesRepositoryProvider)
+            .getNoteProcessingStatus(noteId);
+        if (status == 'completed' || status == 'failed') {
+          if (status == 'completed') {
+            await ref.read(shortsRepositoryProvider).getAllShorts(userId);
+          }
+          return;
+        }
+      } catch (_) {
+        // Network error — continue polling
+      }
+    }
+  }
 }

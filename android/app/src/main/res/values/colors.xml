@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Adaptive icon background — matches the white canvas of assets/playstore.png -->
+    <color name="ic_launcher_background">#FFFFFF</color>
+    <!-- Splash screen background (pre-Android 12) — white to match logo -->
+    <color name="splash_background">#FFFFFF</color>
+    <!-- Accent colour applied to notification icons — app primary teal -->
+    <color name="notification_accent">#00BFA5</color>
+</resources>

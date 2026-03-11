@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/storage_keys.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -8,14 +10,23 @@ import '../../../../core/providers/shared_preferences_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../routing/route_names.dart';
+import '../../../auth/providers.dart';
 import '../../../subscription/providers.dart';
 import '../../providers.dart';
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  bool _exporting = false;
+  bool _clearingOfflineData = false;
+
+  @override
+  Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
     final fontSize = ref.watch(fontSizeProvider);
     final prefs = ref.watch(sharedPreferencesProvider);
@@ -29,11 +40,10 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: AppSpacing.paddingAll16,
         children: [
-          // --- Appearance ---
+          // ── Appearance ────────────────────────────────────────────────
           const _SectionHeader(label: 'Appearance'),
           AppSpacing.gapV8,
 
-          // Theme mode
           _SettingsTile(
             icon: Icons.palette_rounded,
             title: 'Theme',
@@ -69,7 +79,6 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
 
-          // Font size
           _SettingsTile(
             icon: Icons.text_fields_rounded,
             title: 'Font Size',
@@ -98,7 +107,7 @@ class SettingsScreen extends ConsumerWidget {
 
           AppSpacing.gapV24,
 
-          // --- Features ---
+          // ── Features ──────────────────────────────────────────────────
           const _SectionHeader(label: 'Features'),
           AppSpacing.gapV8,
 
@@ -137,7 +146,7 @@ class SettingsScreen extends ConsumerWidget {
 
           AppSpacing.gapV24,
 
-          // --- Account ---
+          // ── Account ───────────────────────────────────────────────────
           const _SectionHeader(label: 'Account'),
           AppSpacing.gapV8,
 
@@ -167,37 +176,95 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => context.pushNamed(RouteNames.subscription),
           ),
 
-          AppSpacing.gapV24,
-
-          // --- Data Management ---
-          const _SectionHeader(label: 'Data Management'),
-          AppSpacing.gapV8,
-
           _SettingsTile(
-            icon: Icons.cleaning_services_rounded,
-            title: 'Clear Cache',
+            icon: Icons.logout_rounded,
+            title: 'Sign Out',
             trailing: Icon(
               Icons.chevron_right_rounded,
               size: 20,
               color: context.colorScheme.onSurfaceVariant,
             ),
-            onTap: () => _showClearCacheDialog(context, ref),
+            onTap: _showSignOutDialog,
+          ),
+
+          AppSpacing.gapV24,
+
+          // ── Privacy & Data ────────────────────────────────────────────
+          const _SectionHeader(label: 'Privacy & Data'),
+          AppSpacing.gapV8,
+
+          _SettingsTile(
+            icon: Icons.download_rounded,
+            title: 'Export My Data',
+            trailing: _exporting
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: context.colorScheme.onSurfaceVariant,
+                  ),
+            onTap: _exporting ? null : _handleExportData,
           ),
 
           _SettingsTile(
-            icon: Icons.restart_alt_rounded,
-            title: 'Reset All Data',
+            icon: Icons.privacy_tip_outlined,
+            title: 'Privacy Policy',
+            trailing: Icon(
+              Icons.open_in_new_rounded,
+              size: 20,
+              color: context.colorScheme.onSurfaceVariant,
+            ),
+            onTap: () => launchUrl(Uri.parse(AppConstants.privacyPolicyUrl)),
+          ),
+
+          AppSpacing.gapV24,
+
+          // ── Storage ───────────────────────────────────────────────────
+          const _SectionHeader(label: 'Storage'),
+          AppSpacing.gapV8,
+
+          _SettingsTile(
+            icon: Icons.cleaning_services_rounded,
+            title: 'Clear Offline Data',
+            trailing: _clearingOfflineData
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: context.colorScheme.onSurfaceVariant,
+                  ),
+            onTap: _clearingOfflineData ? null : _showClearOfflineDataDialog,
+          ),
+
+          AppSpacing.gapV24,
+
+          // ── Danger Zone ───────────────────────────────────────────────
+          const _SectionHeader(label: 'Danger Zone'),
+          AppSpacing.gapV8,
+
+          _SettingsTile(
+            icon: Icons.delete_forever_rounded,
+            title: 'Delete Account',
+            titleColor: AppColors.error,
             trailing: Icon(
               Icons.chevron_right_rounded,
               size: 20,
               color: AppColors.error.withValues(alpha: 0.7),
             ),
-            onTap: () => _showResetDialog(context, ref),
+            onTap: _showDeleteAccountDialog,
           ),
 
           AppSpacing.gapV24,
 
-          // --- About ---
+          // ── About ─────────────────────────────────────────────────────
           const _SectionHeader(label: 'About'),
           AppSpacing.gapV8,
 
@@ -216,13 +283,58 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showClearCacheDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
+  Future<void> _handleExportData() async {
+    setState(() => _exporting = true);
+    try {
+      await ref.read(settingsRepositoryProvider).exportData();
+      if (mounted) {
+        context.showSnackBar(
+          "Export queued. You'll receive an email with a download link.",
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        context.showSnackBar('Export failed. Please try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  void _showSignOutDialog() {
+    showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Clear Cache'),
+        title: const Text('Sign out?'),
+        content: const Text('You will be returned to the login screen.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              await ref.read(authProvider.notifier).logout();
+            },
+            child: const Text('Sign out'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showClearOfflineDataDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Clear Offline Data'),
         content: const Text(
-          'This will remove cached content. Your notes and bookmarks will be preserved.',
+          'This removes locally cached notes, shorts, modules, and images '
+          'from this device. Your data is safe on the server and will '
+          're-sync automatically when you are online.',
         ),
         actions: [
           TextButton(
@@ -230,9 +342,9 @@ class SettingsScreen extends ConsumerWidget {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(ctx).pop();
-              context.showSnackBar('Cache cleared');
+              await _handleClearOfflineData();
             },
             child: const Text('Clear'),
           ),
@@ -241,38 +353,94 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showResetDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
+  Future<void> _handleClearOfflineData() async {
+    setState(() => _clearingOfflineData = true);
+    try {
+      final userId = ref.read(currentUserProvider)?.id ?? '';
+      await ref.read(settingsRepositoryProvider).clearOfflineData(userId);
+      if (mounted) {
+        context.showSnackBar(
+          'Offline data cleared. Content will re-sync when online.',
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        context.showSnackBar('Failed to clear offline data. Please try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _clearingOfflineData = false);
+    }
+  }
+
+  void _showDeleteAccountDialog() {
+    final confirmController = TextEditingController();
+    showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Reset All Data'),
-        content: const Text(
-          'This will delete all local data including notes, bookmarks, and settings. This cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              final prefs = ref.read(sharedPreferencesProvider);
-              await prefs.clear();
-              // Re-seed mock data on next launch
-              await prefs.setBool(StorageKeys.mockDataSeeded, false);
-              if (context.mounted) {
-                context.showSnackBar('All data reset. Restart the app.');
-              }
-            },
-            child: const Text('Reset'),
-          ),
-        ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          return AlertDialog(
+            title: const Text('Delete Account'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'This will permanently delete your account and all associated '
+                  'data. This cannot be undone.',
+                ),
+                AppSpacing.gapV16,
+                const Text(
+                  'Type DELETE to confirm:',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                AppSpacing.gapV8,
+                TextField(
+                  controller: confirmController,
+                  autofocus: true,
+                  onChanged: (_) => setDialogState(() {}),
+                  decoration: const InputDecoration(
+                    hintText: 'DELETE',
+                    isDense: true,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+                onPressed: confirmController.text == 'DELETE'
+                    ? () async {
+                        Navigator.of(ctx).pop();
+                        await _handleDeleteAccount();
+                      }
+                    : null,
+                child: const Text('Delete'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
+
+  Future<void> _handleDeleteAccount() async {
+    try {
+      await ref.read(settingsRepositoryProvider).deleteAccount();
+      await ref.read(authProvider.notifier).logout();
+      // RouterNotifier detects the auth state change and redirects to /login.
+    } catch (_) {
+      if (mounted) {
+        context.showSnackBar('Failed to delete account. Please try again.');
+      }
+    }
+  }
 }
+
+// ── Private widgets ───────────────────────────────────────────────────────────
 
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({required this.label});
@@ -298,12 +466,14 @@ class _SettingsTile extends StatelessWidget {
     required this.title,
     required this.trailing,
     this.onTap,
+    this.titleColor,
   });
 
   final IconData icon;
   final String title;
   final Widget trailing;
   final VoidCallback? onTap;
+  final Color? titleColor;
 
   @override
   Widget build(BuildContext context) {
@@ -313,7 +483,12 @@ class _SettingsTile extends StatelessWidget {
         children: [
           Icon(icon, size: 22, color: context.colorScheme.onSurfaceVariant),
           AppSpacing.gapH12,
-          Expanded(child: Text(title, style: context.textTheme.bodyMedium)),
+          Expanded(
+            child: Text(
+              title,
+              style: context.textTheme.bodyMedium?.copyWith(color: titleColor),
+            ),
+          ),
           trailing,
         ],
       ),

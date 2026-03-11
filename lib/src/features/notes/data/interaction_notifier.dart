@@ -2,7 +2,9 @@ import 'package:drift/drift.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/providers/database_provider.dart';
+import '../../../features/auth/providers.dart';
 import '../../../services/local/database.dart';
+import '../domain/interaction_enums.dart';
 
 part 'interaction_notifier.g.dart';
 
@@ -22,7 +24,7 @@ class InteractionNotifier extends _$InteractionNotifier {
   }) async {
     await _insert(
       articleId: articleId,
-      type: 'view',
+      type: InteractionType.view,
       timeSpent: timeSpent,
       scrollDepth: scrollDepth,
     );
@@ -30,7 +32,7 @@ class InteractionNotifier extends _$InteractionNotifier {
 
   /// Record a "done" / mark-as-read interaction.
   Future<void> recordDone({required String articleId}) async {
-    await _insert(articleId: articleId, type: 'done');
+    await _insert(articleId: articleId, type: InteractionType.done);
   }
 
   /// Record a skip (swipe past without reading).
@@ -41,7 +43,7 @@ class InteractionNotifier extends _$InteractionNotifier {
   }) async {
     await _insert(
       articleId: articleId,
-      type: 'skip',
+      type: InteractionType.skip,
       navigationDirection: navigationDirection,
       fromArticleId: fromArticleId,
     );
@@ -49,39 +51,43 @@ class InteractionNotifier extends _$InteractionNotifier {
 
   /// Record a bookmark toggle.
   Future<void> recordBookmark({required String articleId}) async {
-    await _insert(articleId: articleId, type: 'bookmark');
+    await _insert(articleId: articleId, type: InteractionType.bookmark);
   }
 
-  /// Record explicit feedback (e.g. "too easy", "not relevant").
+  /// Record explicit feedback.
+  /// [feedbackType] is optional — omit for a generic tap signal.
+  /// Use [FeedbackType.too_easy], [FeedbackType.too_hard], or
+  /// [FeedbackType.not_relevant] for specific feedback.
   Future<void> recordFeedback({
     required String articleId,
-    required String feedbackType,
+    FeedbackType? feedbackType,
   }) async {
     await _insert(
       articleId: articleId,
-      type: 'feedback',
+      type: InteractionType.feedback,
       feedbackType: feedbackType,
     );
   }
 
   Future<void> _insert({
     required String articleId,
-    required String type,
+    required InteractionType type,
     double timeSpent = 0,
     double scrollDepth = 0,
-    String? feedbackType,
+    FeedbackType? feedbackType,
     String? navigationDirection,
     String? fromArticleId,
   }) async {
     final db = ref.read(appDatabaseProvider);
     await db.syncDao.insertInteraction(
       PendingInteractionsCompanion.insert(
+        userId: Value(ref.read(currentUserProvider)?.id ?? ''),
         articleId: articleId,
-        type: type,
+        type: type.name,
         timestamp: DateTime.now(),
         timeSpent: Value(timeSpent),
         scrollDepth: Value(scrollDepth),
-        feedbackType: Value(feedbackType),
+        feedbackType: Value(feedbackType?.name),
         navigationDirection: Value(navigationDirection),
         fromArticleId: Value(fromArticleId),
       ),

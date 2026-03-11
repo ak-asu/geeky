@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 
-from app.api.middleware.auth import CurrentUserId
+from app.api.middleware.auth import CurrentUserId, CurrentUserClaims
 from app.dependencies import get_profile_service
 from app.models.user import UserProfileUpdate
 
@@ -12,22 +12,41 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.get("/me")
 async def get_current_user(
-    user_id: CurrentUserId,
+    claims: CurrentUserClaims,
     profile_service=Depends(get_profile_service),
 ) -> dict:
-    """Get the current authenticated user's profile."""
-    profile = await profile_service.get_profile(user_id)
+    """Get the current authenticated user's profile.
+
+    Auto-creates the Firestore document on first sign-in using the identity
+    fields (name, email, avatar) carried in the Firebase ID token.
+    """
+    profile = await profile_service.get_or_create_profile(
+        claims.uid,
+        name=claims.name,
+        email=claims.email,
+        avatar_url=claims.avatar_url,
+    )
     return {"data": profile.model_dump(mode="json", by_alias=True)}
 
 
 @router.patch("/me")
 async def update_profile(
-    user_id: CurrentUserId,
+    claims: CurrentUserClaims,
     body: UserProfileUpdate,
     profile_service=Depends(get_profile_service),
 ) -> dict:
-    """Update the current user's profile fields."""
-    updated = await profile_service.update_profile(user_id, body)
+    """Update the current user's profile fields.
+
+    Auto-creates the Firestore document first if it doesn't exist (upsert),
+    so onboarding PATCH calls on first sign-in always succeed.
+    """
+    updated = await profile_service.update_profile(
+        claims.uid,
+        body,
+        name=claims.name,
+        email=claims.email,
+        avatar_url=claims.avatar_url,
+    )
     return {"data": updated.model_dump(mode="json", by_alias=True)}
 
 

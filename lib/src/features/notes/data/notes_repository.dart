@@ -1,8 +1,11 @@
+import 'package:dio/dio.dart';
+
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/api_service.dart';
 import '../../../services/local/database.dart';
 import '../../../services/local/daos/notes_dao.dart';
 import '../../../services/local/daos/note_feed_dao.dart';
+import '../domain/note_creation_response.dart';
 import '../domain/note_entity.dart';
 import '../domain/note_feed_state.dart';
 import 'note_dto.dart';
@@ -19,7 +22,7 @@ class NotesRepository {
 
   // --- Notes CRUD ---
 
-  Future<List<NoteEntity>> getAllNotes() async {
+  Future<List<NoteEntity>> getAllNotes(String userId) async {
     try {
       final notes = await _api.getList(
         ApiConstants.notes,
@@ -28,15 +31,15 @@ class NotesRepository {
       await _notesDao.insertNotes(notes.map(NoteDto.toCompanion).toList());
       return notes;
     } catch (_) {
-      final rows = await _notesDao.getAllNotes();
+      final rows = await _notesDao.getAllNotes(userId);
       return rows.map(NoteDto.fromRow).toList();
     }
   }
 
-  Stream<List<NoteEntity>> watchAllNotes() {
-    return _notesDao.watchAllNotes().map(
-      (rows) => rows.map(NoteDto.fromRow).toList(),
-    );
+  Stream<List<NoteEntity>> watchAllNotes(String userId) {
+    return _notesDao
+        .watchAllNotes(userId)
+        .map((rows) => rows.map(NoteDto.fromRow).toList());
   }
 
   Future<NoteEntity?> getNoteById(String id) async {
@@ -53,13 +56,40 @@ class NotesRepository {
     }
   }
 
-  Future<void> saveNote(NoteEntity note) async {
+  /// Creates a new note via multipart POST.
+  /// Returns the backend-assigned canonical ID, or the temp UUID if offline.
+  Future<String> saveNote(NoteEntity note, {String? filePath}) async {
     try {
-      await _api.post(ApiConstants.notes, note.toJson(), (json) => json);
+      final fields = <String, dynamic>{
+        'content': note.content ?? '',
+        'type': note.type,
+        if (note.title != null) 'title': note.title!,
+        if (note.sourceUrl != null) 'source_url': note.sourceUrl!,
+        if (note.topics.isNotEmpty) 'topics': note.topics.join(','),
+      };
+
+      final formData = filePath != null
+          ? FormData.fromMap({
+              ...fields,
+              'file': await MultipartFile.fromFile(filePath),
+            })
+          : FormData.fromMap(fields);
+
+      final response = await _api.postMultipart(
+        ApiConstants.notes,
+        formData,
+        (json) => NoteCreationResponse.fromJson(json as Map<String, dynamic>),
+      );
+
+      // Persist with backend-assigned canonical ID
+      final canonical = note.copyWith(id: response.noteId);
+      await _notesDao.insertNote(NoteDto.toCompanion(canonical));
+      return response.noteId;
     } catch (_) {
-      // Will be synced later via offline queue
+      // Offline: persist with temp UUID; sync queue will reconcile later
+      await _notesDao.insertNote(NoteDto.toCompanion(note));
+      return note.id;
     }
-    await _notesDao.insertNote(NoteDto.toCompanion(note));
   }
 
   Future<void> saveNotes(List<NoteEntity> notes) async {
@@ -75,16 +105,33 @@ class NotesRepository {
     await _notesDao.deleteNote(id);
   }
 
-  Future<int> countNotes() => _notesDao.countNotes();
+  Future<int> countNotes(String userId) => _notesDao.countNotes(userId);
+
+  /// Polls the backend for the processing status of a note's pipeline task.
+  /// Returns status string: "pending", "processing", "completed", "failed", or "unknown".
+  Future<String> getNoteProcessingStatus(String noteId) async {
+    try {
+      final status = await _api.get(
+        '${ApiConstants.notes}/$noteId/status',
+        (json) =>
+            (json as Map<String, dynamic>)['status'] as String? ?? 'unknown',
+      );
+      return status;
+    } catch (_) {
+      return 'unknown';
+    }
+  }
 
   // --- Feed State (local-only) ---
 
-  Future<NoteFeedState> getFeedState() async {
-    final row = await _feedDao.getFeedState();
+  Future<NoteFeedState> getFeedState(String userId) async {
+    final row = await _feedDao.getFeedState(userId);
     return row != null ? NoteFeedStateDto.fromRow(row) : const NoteFeedState();
   }
 
-  Future<void> saveFeedState(NoteFeedState feedState) async {
-    await _feedDao.saveFeedState(NoteFeedStateDto.toCompanion(feedState));
+  Future<void> saveFeedState(NoteFeedState feedState, String userId) async {
+    await _feedDao.saveFeedState(
+      NoteFeedStateDto.toCompanion(feedState, userId),
+    );
   }
 }

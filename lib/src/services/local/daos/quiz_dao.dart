@@ -9,22 +9,31 @@ part 'quiz_dao.g.dart';
 class QuizDao extends DatabaseAccessor<AppDatabase> with _$QuizDaoMixin {
   QuizDao(super.db);
 
-  Future<List<CachedQuizCard>> getAllCards() => select(cachedQuizCards).get();
+  Future<List<CachedQuizCard>> getAllCards(String userId) =>
+      (select(cachedQuizCards)..where((t) => t.userId.equals(userId))).get();
 
-  Future<List<CachedQuizCard>> getDueCards() =>
+  Future<List<CachedQuizCard>> getDueCards(String userId) =>
       (select(cachedQuizCards)
-            ..where((t) => t.dueDate.isSmallerOrEqualValue(DateTime.now()))
+            ..where(
+              (t) =>
+                  t.userId.equals(userId) &
+                  t.dueDate.isSmallerOrEqualValue(DateTime.now()),
+            )
             ..orderBy([(t) => OrderingTerm.asc(t.dueDate)]))
           .get();
 
-  Future<CachedQuizCard?> getCardForArticle(String articleId) => (select(
-    cachedQuizCards,
-  )..where((t) => t.articleId.equals(articleId))).getSingleOrNull();
+  Future<CachedQuizCard?> getCardForArticle(String userId, String articleId) =>
+      (select(cachedQuizCards)..where(
+            (t) => t.userId.equals(userId) & t.articleId.equals(articleId),
+          ))
+          .getSingleOrNull();
 
   Future<void> upsertCard(CachedQuizCardsCompanion entry) =>
       into(cachedQuizCards).insertOnConflictUpdate(entry);
 
-  Future<void> deleteCard(String articleId) => (delete(
-    cachedQuizCards,
-  )..where((t) => t.articleId.equals(articleId))).go();
+  Future<void> deleteCard(String userId, String articleId) =>
+      (delete(cachedQuizCards)..where(
+            (t) => t.userId.equals(userId) & t.articleId.equals(articleId),
+          ))
+          .go();
 }

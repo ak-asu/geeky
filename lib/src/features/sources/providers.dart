@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../core/network/api_service.dart';
 import '../../core/providers/database_provider.dart';
+import '../auth/providers.dart';
 import 'data/sources_repository.dart';
 import 'domain/content_source_entity.dart';
 
@@ -17,5 +18,6 @@ SourcesRepository sourcesRepository(Ref ref) {
 
 @riverpod
 Stream<List<ContentSourceEntity>> allSources(Ref ref) {
-  return ref.watch(sourcesRepositoryProvider).watchAllSources();
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
+  return ref.watch(sourcesRepositoryProvider).watchAllSources(userId);
 }

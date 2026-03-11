@@ -1,51 +1,48 @@
 """Analytics Pydantic schemas."""
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from app.models.common import GeekyBaseModel
 
 
-class Achievement(BaseModel):
+class Achievement(GeekyBaseModel):
     id: str
     name: str
     description: str
     unlocked: bool = False
     unlocked_at: str | None = Field(default=None, alias="unlockedAt")
-    model_config = {"populate_by_name": True}
 
 
-class TopicProgress(BaseModel):
+class TopicProgress(GeekyBaseModel):
     topic: str
     shorts_completed: int = Field(default=0, alias="shortsCompleted")
     total_shorts: int = Field(default=0, alias="totalShorts")
     mastery: float = 0.0
-    model_config = {"populate_by_name": True}
 
 
-class MasteryDistribution(BaseModel):
+class MasteryDistribution(GeekyBaseModel):
     new: int = 0
     learning: int = 0
     review: int = 0
     relearning: int = 0
     total: int = 0
-    model_config = {"populate_by_name": True}
 
 
-class StudyActivity(BaseModel):
+class StudyActivity(GeekyBaseModel):
     date: str
     reviews: int = 0
     time_spent_minutes: float = Field(default=0.0, alias="timeSpentMinutes")
-    model_config = {"populate_by_name": True}
 
 
-class StreakResponse(BaseModel):
+class StreakResponse(GeekyBaseModel):
     current: int = 0
     longest: int = 0
     last_active_date: str | None = Field(default=None, alias="lastActiveDate")
     weekly_activity: list[bool] = Field(default_factory=lambda: [False] * 7, alias="weeklyActivity")
-    model_config = {"populate_by_name": True}
 
 
-class DashboardResponse(BaseModel):
+class DashboardResponse(GeekyBaseModel):
     streak: StreakResponse = Field(default_factory=StreakResponse)
     topics_progress: list[TopicProgress] = Field(default_factory=list, alias="topicsProgress")
     mastery: MasteryDistribution = Field(default_factory=MasteryDistribution)
@@ -58,4 +55,3 @@ class DashboardResponse(BaseModel):
     average_session_minutes: float = Field(default=0.0, alias="averageSessionMinutes")
     learning_velocity: float = Field(default=0.0, alias="learningVelocity")
     achievements: list[Achievement] = Field(default_factory=list)
-    model_config = {"populate_by_name": True}

@@ -10,9 +10,9 @@ class NoteFeedDao extends DatabaseAccessor<AppDatabase>
     with _$NoteFeedDaoMixin {
   NoteFeedDao(super.db);
 
-  Future<NoteFeedStateEntry?> getFeedState() => (select(
+  Future<NoteFeedStateEntry?> getFeedState(String userId) => (select(
     noteFeedStateEntries,
-  )..where((t) => t.id.equals(1))).getSingleOrNull();
+  )..where((t) => t.userId.equals(userId))).getSingleOrNull();
 
   Future<void> saveFeedState(NoteFeedStateEntriesCompanion entry) =>
       into(noteFeedStateEntries).insertOnConflictUpdate(entry);

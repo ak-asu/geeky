@@ -17,6 +17,15 @@ celery_app = Celery(
     "geeky",
     broker=settings.celery_broker_url,
     backend=settings.celery_result_backend,
+    include=[
+        "app.workers.pipeline_tasks",
+        "app.workers.kg_tasks",
+        "app.workers.recommendation_tasks",
+        "app.workers.quiz_tasks",
+        "app.workers.source_tasks",
+        "app.workers.lifecycle_tasks",
+        "app.workers.scheduled_tasks",
+    ],
 )
 
 celery_app.conf.update(
@@ -52,17 +61,6 @@ celery_app.conf.update(
 
     # Result expiry
     result_expires=3600,  # 1 hour
-
-    # Task discovery
-    task_modules=[
-        "app.workers.pipeline_tasks",
-        "app.workers.kg_tasks",
-        "app.workers.recommendation_tasks",
-        "app.workers.quiz_tasks",
-        "app.workers.source_tasks",
-        "app.workers.lifecycle_tasks",
-        "app.workers.scheduled_tasks",
-    ],
 
     # Beat schedule — periodic tasks
     beat_schedule={

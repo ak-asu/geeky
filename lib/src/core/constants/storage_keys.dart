@@ -4,9 +4,11 @@ abstract final class StorageKeys {
   static const String currentUserId = 'current_user_id';
   static const String currentUserJson = 'current_user_json';
 
-  // Onboarding
+  // Intro / Feature Showcase (pre-auth, one-time)
+  static const String showcaseCompleted = 'showcase_completed';
+
+  // User Preferences / Onboarding (post-auth, new-user setup)
   static const String onboardingCompleted = 'onboarding_completed';
-  static const String selectedInterests = 'selected_interests';
 
   // Settings
   static const String themeMode = 'theme_mode';
@@ -16,9 +18,6 @@ abstract final class StorageKeys {
 
   // Subscription
   static const String subscriptionTier = 'subscription_tier';
-
-  // Mock data
-  static const String mockDataSeeded = 'mock_data_seeded';
 
   // Search
   static const String recentSearches = 'recent_searches';

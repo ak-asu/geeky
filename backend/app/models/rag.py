@@ -1,42 +1,39 @@
 """RAG Pydantic schemas."""
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from app.models.common import RAGMode
+from app.models.common import GeekyBaseModel, RAGMode
 
 
-class RAGQueryRequest(BaseModel):
+class RAGQueryRequest(GeekyBaseModel):
     question: str = Field(min_length=1, max_length=1000)
     mode: RAGMode = RAGMode.QA
     top_k: int = Field(default=10, ge=1, le=50)
     session_id: str | None = Field(default=None, alias="sessionId")
-    model_config = {"populate_by_name": True}
 
 
-class RAGCitation(BaseModel):
+class RAGCitation(GeekyBaseModel):
     short_id: str = Field(alias="shortId")
     title: str = ""
     snippet: str = ""
-    model_config = {"populate_by_name": True}
 
 
-class RAGQueryResponse(BaseModel):
+class RAGQueryResponse(GeekyBaseModel):
     answer: str
     citations: list[RAGCitation] = Field(default_factory=list)
     follow_up_questions: list[str] = Field(default_factory=list, alias="followUpQuestions")
     mind_map: dict | None = Field(default=None, alias="mindMap")
-    model_config = {"populate_by_name": True}
 
 
-class SearchRequest(BaseModel):
+class SearchRequest(GeekyBaseModel):
     query: str = Field(min_length=1, max_length=500)
     filters: SearchFilters | None = None
     limit: int = Field(default=20, ge=1, le=100)
     cursor: str | None = None
 
 
-class SearchFilters(BaseModel):
+class SearchFilters(GeekyBaseModel):
     topic: str | None = None
     difficulty_min: float | None = Field(default=None, alias="difficultyMin")
     difficulty_max: float | None = Field(default=None, alias="difficultyMax")
@@ -44,19 +41,16 @@ class SearchFilters(BaseModel):
     source_id: str | None = Field(default=None, alias="sourceId")
     module_id: str | None = Field(default=None, alias="moduleId")
     sort_by: str | None = Field(default=None, alias="sortBy")
-    model_config = {"populate_by_name": True}
 
 
-class SearchResultItem(BaseModel):
+class SearchResultItem(GeekyBaseModel):
     short_id: str = Field(alias="shortId")
     title: str = ""
     snippet: str = ""
     score: float = 0.0
     topics: list[str] = Field(default_factory=list)
-    model_config = {"populate_by_name": True}
 
 
-class SearchResponse(BaseModel):
+class SearchResponse(GeekyBaseModel):
     results: list[SearchResultItem] = Field(default_factory=list)
     total: int = 0
-    model_config = {"populate_by_name": True}

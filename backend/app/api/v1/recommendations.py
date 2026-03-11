@@ -10,7 +10,7 @@ from app.models.recommendation import ScoredShortResponse
 router = APIRouter(prefix="/recommendations", tags=["recommendations"])
 
 
-@router.get("/")
+@router.get("")
 async def get_ranked_feed(
     user_id: CurrentUserId,
     limit: int = Query(default=20, ge=1, le=100),

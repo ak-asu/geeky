@@ -15,7 +15,7 @@ class RagRepository {
 
   ShortsDao get _shortsDao => _db.shortsDao;
 
-  Future<RagResponse> query(String question) async {
+  Future<RagResponse> query(String userId, String question) async {
     // Try backend RAG first
     try {
       final response = await _api.post(
@@ -25,16 +25,16 @@ class RagRepository {
       );
       return response;
     } catch (_) {
-      // Fallback to local mock RAG
+      // Fallback to local keyword search (offline)
     }
 
-    return _localQuery(question);
+    return _localQuery(userId, question);
   }
 
   // --- Local fallback ---
 
-  Future<RagResponse> _localQuery(String question) async {
-    final rows = await _shortsDao.getAllShorts();
+  Future<RagResponse> _localQuery(String userId, String question) async {
+    final rows = await _shortsDao.getAllShorts(userId);
     final shorts = rows.map(ShortDto.fromRow).toList();
 
     final lowerQ = question.toLowerCase();

@@ -9,7 +9,8 @@ import pytest
 
 from app.models.common import RAGMode
 from app.models.rag import RAGQueryRequest
-from app.services.rag.rag_orchestrator import RAGOrchestrator, _cosine_similarity, _estimate_tokens
+from app.services.rag.rag_orchestrator import RAGOrchestrator, _estimate_tokens
+from app.utils.math_utils import cosine_similarity as _cosine_similarity
 from app.services.rag.reranker.base import RankedDocument
 
 
@@ -89,6 +90,7 @@ def mock_short_repo():
     }
     repo = AsyncMock()
     repo.get = AsyncMock(side_effect=lambda uid, sid: shorts.get(sid))
+    repo.get_many = AsyncMock(side_effect=lambda uid, ids: [shorts[sid] for sid in ids if sid in shorts])
     return repo
 
 

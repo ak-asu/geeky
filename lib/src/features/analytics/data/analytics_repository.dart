@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/services.dart';
-
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/api_service.dart';
 import '../../../services/local/database.dart';
@@ -11,7 +9,7 @@ import '../domain/learning_streak.dart';
 import '../domain/topic_progress.dart';
 
 /// Analytics repository — fetches from backend when online,
-/// falls back to local mock data when offline.
+/// falls back to local empty/computed state when offline.
 class AnalyticsRepository {
   AnalyticsRepository(this._db, this._api);
 
@@ -27,25 +25,12 @@ class AnalyticsRepository {
         (json) => LearningStreak.fromJson(json as Map<String, dynamic>),
       );
     } catch (_) {
-      // Fallback to mock
+      // Offline: return empty streak — real data comes from backend only
     }
-    return LearningStreak(
-      currentStreak: 7,
-      longestStreak: 14,
-      lastActiveDate: DateTime.now(),
-      weeklyActivity: {
-        'Mon': 3,
-        'Tue': 5,
-        'Wed': 2,
-        'Thu': 4,
-        'Fri': 6,
-        'Sat': 1,
-        'Sun': 3,
-      },
-    );
+    return const LearningStreak();
   }
 
-  Future<AnalyticsStats> getStats() async {
+  Future<AnalyticsStats> getStats(String userId) async {
     try {
       final dashboard = await _api.get(
         '${ApiConstants.analytics}/dashboard',
@@ -61,10 +46,10 @@ class AnalyticsRepository {
             (dashboard['learningVelocity'] as num?)?.toDouble() ?? 0.0,
       );
     } catch (_) {
-      // Fallback to local computation
+      // Offline: compute what we can from local cache
     }
 
-    final rows = await _shortsDao.getAllShorts();
+    final rows = await _shortsDao.getAllShorts(userId);
     final topicSet = <String>{};
     for (final row in rows) {
       final topics = (jsonDecode(row.topicsJson) as List<dynamic>)
@@ -73,14 +58,14 @@ class AnalyticsRepository {
     }
 
     return AnalyticsStats(
-      totalShortsCompleted: 23,
+      totalShortsCompleted: 0,
       totalTopicsCovered: topicSet.length,
-      totalTimeMinutes: 145,
-      learningVelocity: 3.3,
+      totalTimeMinutes: 0,
+      learningVelocity: 0.0,
     );
   }
 
-  Future<List<TopicProgress>> getTopicProgress() async {
+  Future<List<TopicProgress>> getTopicProgress(String userId) async {
     try {
       final mastery = await _api.get(
         '${ApiConstants.analytics}/mastery',
@@ -92,10 +77,10 @@ class AnalyticsRepository {
             .toList();
       }
     } catch (_) {
-      // Fallback to local computation
+      // Offline: compute topic list from local cache, mastery unknown
     }
 
-    final rows = await _shortsDao.getAllShorts();
+    final rows = await _shortsDao.getAllShorts(userId);
     final topicCounts = <String, int>{};
     for (final row in rows) {
       final topics = (jsonDecode(row.topicsJson) as List<dynamic>)
@@ -105,31 +90,14 @@ class AnalyticsRepository {
       }
     }
 
-    final mockMastery = {
-      'Machine Learning': 0.72,
-      'Neural Networks': 0.65,
-      'Deep Learning': 0.58,
-      'Natural Language Processing': 0.45,
-      'CSS': 0.80,
-      'JavaScript': 0.75,
-      'Web Development': 0.70,
-      'Data Science': 0.62,
-      'Python': 0.85,
-      'Spaced Repetition': 0.90,
-      'Mathematics': 0.55,
-      'Statistics': 0.50,
-    };
-
     return topicCounts.entries.map((e) {
-      final mastery = mockMastery[e.key] ?? 0.4;
-      final completed = (e.value * mastery).round();
       return TopicProgress(
         topic: e.key,
         totalItems: e.value,
-        completedItems: completed,
-        mastery: mastery,
+        completedItems: 0,
+        mastery: 0.0,
       );
-    }).toList()..sort((a, b) => b.mastery.compareTo(a.mastery));
+    }).toList()..sort((a, b) => b.totalItems.compareTo(a.totalItems));
   }
 
   Future<List<Achievement>> getAchievements() async {
@@ -144,31 +112,13 @@ class AnalyticsRepository {
             .toList();
       }
     } catch (_) {
-      // Fallback to local assets
+      // Offline: no achievements available without backend
     }
-
-    final raw = await rootBundle.loadString('assets/mock/achievements.json');
-    final items = jsonDecode(raw) as List<dynamic>;
-
-    return items.map((item) {
-      final map = item as Map<String, dynamic>;
-      return Achievement(
-        id: map['id'] as String,
-        title: map['title'] as String,
-        description: map['description'] as String,
-        icon: map['icon'] as String,
-        isUnlocked: map['unlocked'] as bool? ?? false,
-        unlockedAt: map['unlocked_at'] != null
-            ? DateTime.tryParse(map['unlocked_at'] as String)
-            : null,
-        category: map['category'] as String? ?? 'general',
-      );
-    }).toList();
+    return [];
   }
 
   /// Weekly engagement data for chart.
   Future<List<DailyEngagement>> getWeeklyEngagement() async {
-    // Backend dashboard includes this data; parse if available
     try {
       final dashboard = await _api.get(
         '${ApiConstants.analytics}/dashboard',
@@ -185,17 +135,15 @@ class AnalyticsRepository {
         }).toList();
       }
     } catch (_) {
-      // Fallback to mock
+      // Offline: return zeroed days for the past week
     }
 
     final now = DateTime.now();
     return List.generate(7, (i) {
-      final day = now.subtract(Duration(days: 6 - i));
-      final values = [12, 18, 8, 22, 15, 5, 10];
       return DailyEngagement(
-        date: day,
-        minutesSpent: values[i],
-        shortsCompleted: (values[i] / 4).round(),
+        date: now.subtract(Duration(days: 6 - i)),
+        minutesSpent: 0,
+        shortsCompleted: 0,
       );
     });
   }

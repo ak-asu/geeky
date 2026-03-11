@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from app.models.common import NotificationType
+from app.models.notification import FcmNotificationData
 from app.services.notification.notification_service import NotificationService
 
 
@@ -84,14 +85,17 @@ class TestCreateAndPush:
     @pytest.mark.asyncio
     async def test_creates_and_pushes(self):
         service, repo, sender = _make_service()
+        fcm_data = FcmNotificationData(
+            type=NotificationType.NEW_CONTENT, route="/shorts/abc123"
+        )
         notif = await service.create_and_push(
-            "user1", "Title", "Body", "new_content", {"key": "value"}
+            "user1", "Title", "Body", "new_content", fcm_data
         )
 
         assert notif.id == "new-notif-id"
         repo.create.assert_called_once()
         sender.send.assert_called_once_with(
-            "user1", "Title", "Body", data={"key": "value"}
+            "user1", "Title", "Body", data=fcm_data
         )
 
     @pytest.mark.asyncio

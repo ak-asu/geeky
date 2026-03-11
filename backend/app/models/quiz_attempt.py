@@ -7,8 +7,6 @@ from app.models.common import QuizQuestionType, TimestampMixin
 
 
 class QuizAttemptAnswer(TimestampMixin):
-    model_config = {"populate_by_name": True}
-
     question_id: str = Field(default="", alias="questionId")
     question_type: QuizQuestionType = Field(default=QuizQuestionType.MCQ, alias="questionType")
     user_answer: str = Field(default="", alias="userAnswer")
@@ -19,8 +17,6 @@ class QuizAttemptAnswer(TimestampMixin):
 
 class QuizAttemptDocument(TimestampMixin):
     """Records a single quiz attempt (AL-04)."""
-
-    model_config = {"populate_by_name": True}
 
     id: str = ""
     short_ids: list[str] = Field(default_factory=list, alias="shortIds")

@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
 class UserPreferencesEntries extends Table {
-  IntColumn get id => integer().withDefault(const Constant(1))();
+  TextColumn get userId => text()();
   TextColumn get themeMode => text().withDefault(const Constant('system'))();
   TextColumn get fontSize => text().withDefault(const Constant('medium'))();
   BoolColumn get ttsEnabled => boolean().withDefault(const Constant(true))();
@@ -13,5 +13,5 @@ class UserPreferencesEntries extends Table {
       boolean().withDefault(const Constant(false))();
 
   @override
-  Set<Column> get primaryKey => {id};
+  Set<Column> get primaryKey => {userId};
 }

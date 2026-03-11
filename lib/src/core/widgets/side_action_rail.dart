@@ -161,6 +161,7 @@ class _RailButton extends StatelessWidget {
         children: [
           IconButton(
             icon: Icon(icon, color: color, size: 24),
+            tooltip: action.label,
             onPressed: () {
               HapticFeedback.lightImpact();
               onTap();
@@ -212,6 +213,7 @@ class _ChevronButton extends StatelessWidget {
             size: 20,
           ),
         ),
+        tooltip: expanded ? 'Collapse actions' : 'More actions',
         onPressed: () {
           HapticFeedback.lightImpact();
           onTap();

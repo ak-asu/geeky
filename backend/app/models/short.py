@@ -1,14 +1,12 @@
 """Short Pydantic schemas."""
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import Field, field_validator
 
-from app.models.common import TimestampMixin
+from app.models.common import GeekyBaseModel, TimestampMixin
 
 
-class ShortEngagement(BaseModel):
-    model_config = {"populate_by_name": True}
-
+class ShortEngagement(GeekyBaseModel):
     views: int = 0
     completions: int = 0
     skips: int = 0
@@ -18,21 +16,14 @@ class ShortEngagement(BaseModel):
     score: float = 0.0
 
 
-class Citation(BaseModel):
-    note_id: str = Field(alias="noteId")
-    chunk_id: str = Field(alias="chunkId")
-    model_config = {"populate_by_name": True}
-
-
-class ConflictFlag(BaseModel):
+class ConflictFlag(GeekyBaseModel):
     claim: str
     sources: list[str] = Field(default_factory=list)
 
 
 class ShortDocument(TimestampMixin):
-    model_config = {"populate_by_name": True}
-
     id: str = ""
+    user_id: str = Field(default="", alias="userId")
     title: str = ""
     content: str = ""
     summary: str = ""
@@ -40,7 +31,7 @@ class ShortDocument(TimestampMixin):
     tags: list[str] = Field(default_factory=list)
     prerequisites: list[str] = Field(default_factory=list)
     related: list[str] = Field(default_factory=list)
-    citations: list[Citation] = Field(default_factory=list)
+    citations: list[str] = Field(default_factory=list)
     difficulty: float = 0.5
     level: int = 1
     prompts: list[str] = Field(default_factory=list)
@@ -51,4 +42,18 @@ class ShortDocument(TimestampMixin):
     version: int = 1
     conflict_flags: list[ConflictFlag] = Field(default_factory=list, alias="conflictFlags")
 
-
+    @field_validator("citations", mode="before")
+    @classmethod
+    def _coerce_citations(cls, v: object) -> list[str]:
+        """Handle legacy Firestore format where citations were stored as dicts."""
+        if not isinstance(v, list):
+            return []
+        result = []
+        for item in v:
+            if isinstance(item, str):
+                result.append(item)
+            elif isinstance(item, dict):
+                chunk_id = item.get("chunkId") or item.get("noteId") or ""
+                if chunk_id:
+                    result.append(chunk_id)
+        return result

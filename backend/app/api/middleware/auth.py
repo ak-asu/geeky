@@ -6,39 +6,33 @@ Injects the authenticated user_id into the request state.
 
 from __future__ import annotations
 
+import asyncio
 import logging
+from dataclasses import dataclass
 from typing import Annotated
 
-from fastapi import Depends, Request
+from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from app.exceptions import AuthenticationError
+from app.exceptions import AuthenticationError, ExternalServiceError
 
 logger = logging.getLogger(__name__)
 
 _bearer_scheme = HTTPBearer(auto_error=False)
 
 
-async def _get_firebase_app():
-    """Lazy import and return the Firebase app instance."""
-    from app.integrations.firebase_client import get_firebase_app
+@dataclass
+class TokenClaims:
+    """Decoded Firebase token claims with user identity fields."""
 
-    return get_firebase_app()
+    uid: str
+    name: str
+    email: str
+    avatar_url: str
 
 
-async def verify_firebase_token(
-    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
-) -> str:
-    """Verify Firebase ID token and return the user's UID.
-
-    This is used as a FastAPI dependency on protected routes.
-
-    Returns:
-        The authenticated user's Firebase UID.
-
-    Raises:
-        AuthenticationError: If the token is missing, invalid, or expired.
-    """
+async def _decode_token(credentials: HTTPAuthorizationCredentials | None) -> dict:
+    """Shared token verification logic. Returns the raw decoded claims dict."""
     if credentials is None:
         raise AuthenticationError("Missing authorization header")
 
@@ -47,17 +41,85 @@ async def verify_firebase_token(
     try:
         from firebase_admin import auth  # noqa: PLC0415
 
-        decoded_token = auth.verify_id_token(token)
-        uid: str = decoded_token["uid"]
-        return uid
+        # verify_id_token is synchronous and may fetch Google's public keys on
+        # first call — run in a thread to avoid blocking the event loop.
+        decoded_token: dict = await asyncio.to_thread(auth.verify_id_token, token)
+        return decoded_token
     except ImportError:
-        # Firebase not initialized — dev/test mode fallback
         logger.warning("firebase_admin not available, using dev mode auth")
         raise AuthenticationError("Firebase not configured")
     except Exception as exc:
-        logger.warning("Token verification failed: %s", exc)
-        raise AuthenticationError("Invalid or expired token")
+        # Distinguish token-level rejections from infrastructure failures so
+        # callers receive the correct HTTP status (401 vs 503) and so that
+        # programming errors (AttributeError, etc.) are not silently masked.
+        try:
+            from firebase_admin import auth as _fb_auth  # noqa: PLC0415
+
+            _token_errors = (
+                _fb_auth.InvalidIdTokenError,
+                _fb_auth.ExpiredIdTokenError,
+                _fb_auth.RevokedIdTokenError,
+                _fb_auth.UserDisabledError,
+                _fb_auth.CertificateFetchError,
+            )
+        except ImportError:
+            _token_errors = ()  # type: ignore[assignment]
+
+        if isinstance(exc, _token_errors):
+            logger.warning("Token verification rejected: %s: %s", type(exc).__name__, exc)
+            raise AuthenticationError("Invalid or expired token") from exc
+
+        # Anything else (network error, timeout, unexpected exception) is an
+        # infrastructure failure — log as ERROR and surface as 503, not 401.
+        logger.error(
+            "Firebase auth infrastructure error: %s: %s",
+            type(exc).__name__,
+            exc,
+            exc_info=True,
+        )
+        raise ExternalServiceError("Firebase", str(exc)) from exc
 
 
-# Type alias for dependency injection in route handlers
+async def verify_firebase_token(
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
+) -> str:
+    """Verify Firebase ID token and return the user's UID.
+
+    Used as a FastAPI dependency on all protected routes.
+
+    Returns:
+        The authenticated user's Firebase UID.
+
+    Raises:
+        AuthenticationError: If the token is missing, invalid, or expired.
+    """
+    decoded = await _decode_token(credentials)
+    return decoded["uid"]
+
+
+async def verify_firebase_claims(
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
+) -> TokenClaims:
+    """Verify Firebase ID token and return full identity claims.
+
+    Used on routes that need to auto-create a user profile (upsert on first
+    sign-in), since the token carries the user's name, email, and avatar URL.
+
+    Returns:
+        TokenClaims with uid, name, email, and avatar_url.
+
+    Raises:
+        AuthenticationError: If the token is missing, invalid, or expired.
+    """
+    decoded = await _decode_token(credentials)
+    return TokenClaims(
+        uid=decoded["uid"],
+        name=decoded.get("name", ""),
+        email=decoded.get("email", ""),
+        avatar_url=decoded.get("picture", ""),
+    )
+
+
+# Type aliases for dependency injection in route handlers
 CurrentUserId = Annotated[str, Depends(verify_firebase_token)]
+CurrentUserClaims = Annotated[TokenClaims, Depends(verify_firebase_claims)]

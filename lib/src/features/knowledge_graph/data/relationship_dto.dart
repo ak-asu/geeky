@@ -15,9 +15,13 @@ abstract final class RelationshipDto {
     );
   }
 
-  static CachedRelationshipsCompanion toCompanion(RelationshipEntity entity) {
+  static CachedRelationshipsCompanion toCompanion(
+    RelationshipEntity entity,
+    String userId,
+  ) {
     return CachedRelationshipsCompanion(
       id: Value(entity.id),
+      userId: Value(userId),
       sourceId: Value(entity.sourceId),
       targetId: Value(entity.targetId),
       type: Value(entity.type),

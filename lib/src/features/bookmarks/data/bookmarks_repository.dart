@@ -13,14 +13,14 @@ class BookmarksRepository {
   final ApiService _api;
 
   /// Watches all bookmarks as entities, ordered by most recent first.
-  Stream<List<BookmarkEntity>> watchAllBookmarks() {
-    return _db.bookmarksDao.watchAllBookmarks().map(
-      (rows) => rows.map(BookmarkDto.fromRow).toList(),
-    );
+  Stream<List<BookmarkEntity>> watchAllBookmarks(String userId) {
+    return _db.bookmarksDao
+        .watchAllBookmarks(userId)
+        .map((rows) => rows.map(BookmarkDto.fromRow).toList());
   }
 
   /// Gets all bookmarks as entities.
-  Future<List<BookmarkEntity>> getAllBookmarks() async {
+  Future<List<BookmarkEntity>> getAllBookmarks(String userId) async {
     try {
       final bookmarks = await _api.getList(
         ApiConstants.bookmarks,
@@ -28,7 +28,7 @@ class BookmarksRepository {
       );
       return bookmarks;
     } catch (_) {
-      final rows = await _db.bookmarksDao.getAllBookmarks();
+      final rows = await _db.bookmarksDao.getAllBookmarks(userId);
       return rows.map(BookmarkDto.fromRow).toList();
     }
   }
@@ -54,12 +54,12 @@ class BookmarksRepository {
   }
 
   /// Removes a bookmark by short ID.
-  Future<void> removeBookmark(String shortId) async {
+  Future<void> removeBookmark(String userId, String shortId) async {
     try {
       await _api.delete('${ApiConstants.bookmarks}/$shortId');
     } catch (_) {
       // Will be synced later
     }
-    await _db.bookmarksDao.removeBookmark(shortId);
+    await _db.bookmarksDao.removeBookmark(userId, shortId);
   }
 }

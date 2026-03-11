@@ -1,26 +1,24 @@
 """Source Pydantic schemas."""
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from app.models.common import SourceStatus, SourceType, TimestampMixin
+from app.models.common import GeekyBaseModel, SourceStatus, SourceType, TimestampMixin
 
 
-class SourceCreate(BaseModel):
+class SourceCreate(GeekyBaseModel):
     type: SourceType
     name: str = Field(min_length=1, max_length=300)
     url: str = Field(min_length=1, max_length=2048)
     fetch_frequency: int = Field(default=60, alias="fetchFrequency", ge=1, le=10080, description="Minutes between polls")
     default_topics: list[str] = Field(default_factory=list, alias="defaultTopics", max_length=50)
     content_filters: dict = Field(default_factory=dict, alias="contentFilters")
-    model_config = {"populate_by_name": True}
 
 
-class SourceStats(BaseModel):
+class SourceStats(GeekyBaseModel):
     total_fetched: int = Field(default=0, alias="totalFetched")
     last_fetch_time: str | None = Field(default=None, alias="lastFetchTime")
     success_rate: float = Field(default=1.0, alias="successRate")
-    model_config = {"populate_by_name": True}
 
 
 class SourceDocument(TimestampMixin):

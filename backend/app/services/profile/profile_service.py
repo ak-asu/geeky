@@ -55,19 +55,59 @@ class ProfileService:
 
     async def get_profile(self, user_id: str) -> UserDocument:
         """Get user profile by ID."""
-        user = await self._user_repo.get(user_id, user_id)
+        user = await self._user_repo.get(user_id)
         if not user:
             raise UserNotFoundError(user_id)
         return user
 
-    async def update_profile(
-        self, user_id: str, update: UserProfileUpdate
+    async def get_or_create_profile(
+        self,
+        user_id: str,
+        *,
+        name: str = "",
+        email: str = "",
+        avatar_url: str = "",
     ) -> UserDocument:
-        """Update user profile fields (partial update)."""
-        # Verify user exists
-        user = await self._user_repo.get(user_id, user_id)
-        if not user:
-            raise UserNotFoundError(user_id)
+        """Get user profile, creating it from token claims if it doesn't exist.
+
+        Called on GET /users/me and PATCH /users/me so the first sign-in
+        (Google OAuth or email/password) auto-provisions the Firestore document
+        without requiring a separate registration endpoint.
+        """
+        user = await self._user_repo.get(user_id)
+        if user:
+            return user
+
+        logger.info("Auto-creating profile for new user %s", user_id)
+        new_user = UserDocument(
+            id=user_id,
+            name=name,
+            email=email,
+            avatar_url=avatar_url or None,
+        )
+        await self._user_repo.create(user_id, new_user)
+        # Re-fetch to get server-set timestamps
+        created = await self._user_repo.get(user_id)
+        return created or new_user
+
+    async def update_profile(
+        self,
+        user_id: str,
+        update: UserProfileUpdate,
+        *,
+        name: str = "",
+        email: str = "",
+        avatar_url: str = "",
+    ) -> UserDocument:
+        """Update user profile fields (partial update).
+
+        Auto-creates the profile from token claims if it doesn't exist yet,
+        so a PATCH from onboarding never fails with 404 on first sign-in.
+        """
+        # Upsert: ensure the document exists before patching
+        await self.get_or_create_profile(
+            user_id, name=name, email=email, avatar_url=avatar_url
+        )
 
         # Build update dict from non-None fields
         update_data = update.model_dump(
@@ -75,14 +115,14 @@ class ProfileService:
         )
 
         if update_data:
-            await self._user_repo.update(user_id, user_id, update_data)
+            await self._user_repo.update(user_id, update_data)
 
         # Return updated profile
         return await self.get_profile(user_id)
 
     async def get_stats(self, user_id: str) -> dict:
         """Get lightweight learning statistics summary."""
-        user = await self._user_repo.get(user_id, user_id)
+        user = await self._user_repo.get(user_id)
         if not user:
             raise UserNotFoundError(user_id)
 
@@ -107,7 +147,7 @@ class ProfileService:
 
         Returns a dict with all user data organized by collection.
         """
-        user = await self._user_repo.get(user_id, user_id)
+        user = await self._user_repo.get(user_id)
         if not user:
             raise UserNotFoundError(user_id)
 
@@ -135,7 +175,7 @@ class ProfileService:
 
         Deletes all subcollections for the user.
         """
-        user = await self._user_repo.get(user_id, user_id)
+        user = await self._user_repo.get(user_id)
         if not user:
             raise UserNotFoundError(user_id)
 
@@ -163,7 +203,7 @@ class ProfileService:
                 logger.error("Failed to delete %s for user %s: %s", collection_name, user_id, exc)
 
         # Finally delete the user document
-        await self._user_repo.delete(user_id, user_id)
+        await self._user_repo.delete(user_id)
         logger.info("Account deletion completed for user %s", user_id)
 
 

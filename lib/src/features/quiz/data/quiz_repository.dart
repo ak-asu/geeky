@@ -2,11 +2,8 @@ import '../../../core/constants/api_constants.dart';
 import '../../../core/network/api_service.dart';
 import '../../../services/local/database.dart';
 import '../../../services/local/daos/quiz_dao.dart';
-import '../../../services/local/daos/shorts_dao.dart';
 import '../domain/quiz_card_entity.dart';
 import '../domain/question_entity.dart';
-import '../../shorts/domain/short_entity.dart';
-import '../../shorts/data/short_dto.dart';
 import 'quiz_card_dto.dart';
 import 'fsrs_scheduler.dart';
 
@@ -17,16 +14,15 @@ class QuizRepository {
   final ApiService _api;
 
   QuizDao get _quizDao => _db.quizDao;
-  ShortsDao get _shortsDao => _db.shortsDao;
 
   // --- Quiz Cards (FSRS state) ---
 
-  Future<List<QuizCardEntity>> getAllCards() async {
-    final rows = await _quizDao.getAllCards();
+  Future<List<QuizCardEntity>> getAllCards(String userId) async {
+    final rows = await _quizDao.getAllCards(userId);
     return rows.map(QuizCardDto.fromRow).toList();
   }
 
-  Future<List<QuizCardEntity>> getDueCards() async {
+  Future<List<QuizCardEntity>> getDueCards(String userId) async {
     try {
       // Try backend FSRS-scheduled due cards
       final result = await _api.get(
@@ -40,30 +36,37 @@ class QuizRepository {
             .toList();
         // Cache locally
         for (final card in cards) {
-          await _quizDao.upsertCard(QuizCardDto.toCompanion(card));
+          await _quizDao.upsertCard(QuizCardDto.toCompanion(card, userId));
         }
         return cards;
       }
     } catch (_) {
       // Fallback to local FSRS
     }
-    final rows = await _quizDao.getDueCards();
+    final rows = await _quizDao.getDueCards(userId);
     return rows.map(QuizCardDto.fromRow).toList();
   }
 
-  Future<QuizCardEntity?> getCardForArticle(String articleId) async {
-    final row = await _quizDao.getCardForArticle(articleId);
+  Future<QuizCardEntity?> getCardForArticle(
+    String userId,
+    String articleId,
+  ) async {
+    final row = await _quizDao.getCardForArticle(userId, articleId);
     return row != null ? QuizCardDto.fromRow(row) : null;
   }
 
-  Future<void> saveCard(QuizCardEntity card) async {
-    await _quizDao.upsertCard(QuizCardDto.toCompanion(card));
+  Future<void> saveCard(String userId, QuizCardEntity card) async {
+    await _quizDao.upsertCard(QuizCardDto.toCompanion(card, userId));
   }
 
   /// Apply a grade to a card using simplified FSRS scheduling.
-  Future<QuizCardEntity> gradeCard(QuizCardEntity card, FSRSGrade grade) async {
+  Future<QuizCardEntity> gradeCard(
+    String userId,
+    QuizCardEntity card,
+    FSRSGrade grade,
+  ) async {
     final updated = FSRSScheduler.schedule(card, grade);
-    await saveCard(updated);
+    await saveCard(userId, updated);
 
     // Submit review to backend
     try {
@@ -79,7 +82,8 @@ class QuizRepository {
 
   // --- Generate questions from shorts ---
 
-  /// Generates questions from a short — tries backend first, falls back to local mock.
+  /// Generates questions from a short via the backend AI pipeline.
+  /// Returns an empty list if the backend is unavailable.
   Future<List<QuestionEntity>> generateQuestionsForShort(String shortId) async {
     try {
       final result = await _api.post('${ApiConstants.quiz}/generate', {
@@ -92,42 +96,8 @@ class QuizRepository {
             .toList();
       }
     } catch (_) {
-      // Fallback to local mock
+      // Backend unavailable — no questions generated offline
     }
-
-    final row = await _shortsDao.getShortById(shortId);
-    if (row == null) return [];
-
-    final short = ShortDto.fromRow(row);
-    return _mockQuestionsFromShort(short);
-  }
-
-  List<QuestionEntity> _mockQuestionsFromShort(ShortEntity short) {
-    final now = DateTime.now();
-    return [
-      QuestionEntity(
-        id: '${short.id}-q1',
-        articleId: short.id,
-        questionText: 'What is the main concept discussed in "${short.title}"?',
-        type: QuestionType.freeResponse,
-        correctAnswer: short.summary.isNotEmpty ? short.summary : short.title,
-        explanation: short.summary,
-        topic: short.topics.isNotEmpty ? short.topics.first : null,
-        difficulty: short.difficulty,
-        createdAt: now,
-      ),
-      if (short.prompts.isNotEmpty)
-        QuestionEntity(
-          id: '${short.id}-q2',
-          articleId: short.id,
-          questionText: short.prompts.first,
-          type: QuestionType.freeResponse,
-          correctAnswer: 'See the article "${short.title}" for details.',
-          explanation: short.summary,
-          topic: short.topics.isNotEmpty ? short.topics.first : null,
-          difficulty: short.difficulty,
-          createdAt: now,
-        ),
-    ];
+    return [];
   }
 }

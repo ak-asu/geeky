@@ -1,18 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/storage_keys.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/providers/shared_preferences_provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/geeky_empty_state.dart';
 import '../../../../core/widgets/geeky_shimmer.dart';
 import '../../../../core/widgets/horizontal_card_feed.dart';
+import '../../../../routing/route_names.dart';
+import '../../../auth/providers.dart';
 import '../../../bookmarks/providers.dart';
 import '../../../notes/data/interaction_notifier.dart';
 import '../../../quiz/domain/quiz_card_entity.dart';
 import '../../../quiz/providers.dart';
+import '../../../subscription/providers.dart';
+import '../../../tts/tts_controller.dart';
+import '../../../tts/tts_state.dart';
 import '../../domain/short_entity.dart';
 import '../../providers.dart';
+import '../widgets/related_shorts_sheet.dart';
 import '../widgets/short_card.dart';
 import '../widgets/short_source_sheet.dart';
 
@@ -73,7 +82,11 @@ class ShortsFeedScreen extends ConsumerWidget {
           );
         }
 
-        return _ShortsFeedBody(shorts: shorts, initialIndex: initialIndex);
+        return _ShortsFeedBody(
+          shorts: shorts,
+          allShorts: allShorts,
+          initialIndex: initialIndex,
+        );
       },
     );
   }
@@ -90,28 +103,103 @@ class ShortsFeedScreen extends ConsumerWidget {
   }
 }
 
-class _ShortsFeedBody extends ConsumerWidget {
-  const _ShortsFeedBody({required this.shorts, this.initialIndex = 0});
+class _ShortsFeedBody extends ConsumerStatefulWidget {
+  const _ShortsFeedBody({
+    required this.shorts,
+    required this.allShorts,
+    this.initialIndex = 0,
+  });
 
   final List<ShortEntity> shorts;
+
+  /// Full unfiltered list — needed for related-shorts lookups.
+  final List<ShortEntity> allShorts;
+
   final int initialIndex;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ShortsFeedBody> createState() => _ShortsFeedBodyState();
+}
+
+class _ShortsFeedBodyState extends ConsumerState<_ShortsFeedBody> {
+  int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+  }
+
+  void _onPageChanged(int index) {
+    // Stop TTS whenever the user swipes to a different short.
+    ref.read(ttsControllerProvider.notifier).stop();
+    setState(() => _currentIndex = index);
+  }
+
+  void _handleTts(ShortEntity short) {
+    final isPremium = ref.read(isPremiumProvider);
+    final prefs = ref.read(sharedPreferencesProvider);
+    final ttsEnabled = prefs.getBool(StorageKeys.ttsEnabled) ?? false;
+
+    if (!isPremium || !ttsEnabled) {
+      context.showSnackBar(
+        isPremium
+            ? 'Enable Text-to-Speech in Settings to use this feature.'
+            : 'Text-to-Speech is a Premium feature.',
+      );
+      return;
+    }
+
+    ref.read(ttsControllerProvider.notifier).toggle(short.content);
+  }
+
+  void _handleDiveDeeper(BuildContext context, ShortEntity short) {
+    if (short.related.isEmpty) {
+      context.showSnackBar('No deeper content available for this short.');
+      return;
+    }
+    // Navigate to the first related short in a filtered feed.
+    context.pushNamed(
+      RouteNames.shortsFeed,
+      extra: ShortsFeedParams(filterShortIds: [short.related.first]),
+    );
+  }
+
+  void _handleRelated(BuildContext context, ShortEntity short) {
+    if (short.related.isEmpty) {
+      context.showSnackBar('No related shorts found.');
+      return;
+    }
+    RelatedShortsSheet.show(
+      context,
+      relatedIds: short.related,
+      allShorts: widget.allShorts,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final doneSet = ref.watch(shortsFeedProvider);
     final bookmarkSet = ref.watch(bookmarkToggleProvider);
+    final userId = ref.watch(currentUserProvider)?.id ?? '';
+    final ttsState = ref.watch(ttsControllerProvider);
 
     return HorizontalCardFeed<ShortEntity>(
-      items: shorts,
-      initialPage: initialIndex,
+      items: widget.shorts,
+      initialPage: widget.initialIndex,
+      onPageChanged: _onPageChanged,
       cardBuilder: (context, short, index) {
         final isDone = doneSet.contains(short.id);
         final isBookmarked = bookmarkSet.contains(short.id);
+        // Only mark the current card as speaking (not every card in the list).
+        final isSpeaking =
+            index == _currentIndex && ttsState == TtsState.speaking;
 
         return ShortCard(
           short: short,
           isDone: isDone,
           isBookmarked: isBookmarked,
+          isSpeaking: isSpeaking,
           onDone: () {
             final wasDone = doneSet.contains(short.id);
             ref.read(shortsFeedProvider.notifier).toggleDone(short.id);
@@ -123,9 +211,10 @@ class _ShortsFeedBody extends ConsumerWidget {
             // until the backend pipeline generates cards server-side).
             if (!wasDone) {
               final quizRepo = ref.read(quizRepositoryProvider);
-              quizRepo.getCardForArticle(short.id).then((existing) {
+              quizRepo.getCardForArticle(userId, short.id).then((existing) {
                 if (existing == null) {
                   quizRepo.saveCard(
+                    userId,
                     QuizCardEntity(
                       articleId: short.id,
                       dueDate: DateTime.now(),
@@ -142,22 +231,20 @@ class _ShortsFeedBody extends ConsumerWidget {
                 .recordBookmark(articleId: short.id);
           },
           onShare: () {
-            // Placeholder — share_plus integration later
+            // share_plus integration — wired when share_plus is invoked
           },
-          onDiveDeeper: () {
-            // Placeholder — navigate to related deeper short
-          },
-          onRelated: () {
-            // Placeholder — show related shorts
-          },
+          onDiveDeeper: short.related.isNotEmpty
+              ? () => _handleDiveDeeper(context, short)
+              : null,
+          onRelated: short.related.isNotEmpty
+              ? () => _handleRelated(context, short)
+              : null,
           onFeedback: () {
             ref
                 .read(interactionProvider.notifier)
-                .recordFeedback(articleId: short.id, feedbackType: 'general');
+                .recordFeedback(articleId: short.id);
           },
-          onTts: () {
-            // Placeholder — flutter_tts integration later
-          },
+          onTts: () => _handleTts(short),
           onExploreFurther: short.prompts.isNotEmpty
               ? () => _showExploreSheet(context, short)
               : null,
@@ -175,7 +262,7 @@ class _ShortsFeedBody extends ConsumerWidget {
           top: Radius.circular(AppSpacing.radiusXl),
         ),
       ),
-      builder: (context) {
+      builder: (ctx) {
         return SafeArea(
           child: Padding(
             padding: AppSpacing.paddingAll16,
@@ -238,8 +325,8 @@ class _ShortsFeedBody extends ConsumerWidget {
                       ),
                     ),
                     onTap: () {
-                      Navigator.of(context).pop();
-                      // Placeholder — navigate to RAG query with prompt
+                      Navigator.of(ctx).pop();
+                      context.pushNamed(RouteNames.ragQuery, extra: prompt);
                     },
                   ),
                 ),

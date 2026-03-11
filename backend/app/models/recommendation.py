@@ -1,10 +1,12 @@
 """Recommendation Pydantic schemas."""
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from app.models.common import GeekyBaseModel
 
 
-class ScoredShortResponse(BaseModel):
+class ScoredShortResponse(GeekyBaseModel):
     """API response model for a single ranked feed item."""
 
     short_id: str = Field(alias="shortId")
@@ -13,5 +15,3 @@ class ScoredShortResponse(BaseModel):
     capability_score: float = Field(alias="capabilityScore")
     novelty_score: float = Field(alias="noveltyScore")
     explanation: str
-
-    model_config = {"populate_by_name": True}

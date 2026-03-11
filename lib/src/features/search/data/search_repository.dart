@@ -19,6 +19,7 @@ class SearchRepository {
 
   /// Searches shorts — tries backend hybrid search first, falls back to local.
   Future<List<ShortEntity>> searchShorts({
+    required String userId,
     required String query,
     String? topicFilter,
     String? difficultyFilter,
@@ -32,11 +33,7 @@ class SearchRepository {
       final result = await _api.get(
         ApiConstants.search,
         (json) => json,
-        queryParams: {
-          'q': query,
-          if (topicFilter != null) 'topic': topicFilter,
-          'limit': 20,
-        },
+        queryParams: {'q': query, 'topic': ?topicFilter, 'limit': 20},
       );
       if (result is Map<String, dynamic> && result['results'] is List) {
         final shorts = (result['results'] as List)
@@ -49,6 +46,7 @@ class SearchRepository {
     }
 
     return _localSearch(
+      userId: userId,
       query: query,
       topicFilter: topicFilter,
       difficultyFilter: difficultyFilter,
@@ -58,11 +56,11 @@ class SearchRepository {
   }
 
   /// Returns topic suggestions matching the query prefix.
-  Future<List<String>> suggestTopics(String query) async {
+  Future<List<String>> suggestTopics(String userId, String query) async {
     if (query.trim().isEmpty) return [];
 
     final lowerQuery = query.toLowerCase();
-    final rows = await _shortsDao.getAllShorts();
+    final rows = await _shortsDao.getAllShorts(userId);
     final topicSet = <String>{};
 
     for (final row in rows) {
@@ -79,8 +77,8 @@ class SearchRepository {
   }
 
   /// Returns all unique topics from the shorts collection.
-  Future<List<String>> getAllTopics() async {
-    final rows = await _shortsDao.getAllShorts();
+  Future<List<String>> getAllTopics(String userId) async {
+    final rows = await _shortsDao.getAllShorts(userId);
     final topicSet = <String>{};
 
     for (final row in rows) {
@@ -95,6 +93,7 @@ class SearchRepository {
   // --- Local fallback search ---
 
   Future<List<ShortEntity>> _localSearch({
+    required String userId,
     required String query,
     String? topicFilter,
     String? difficultyFilter,
@@ -102,7 +101,7 @@ class SearchRepository {
     Set<String> doneIds = const {},
   }) async {
     final lowerQuery = query.toLowerCase();
-    final rows = await _shortsDao.getAllShorts();
+    final rows = await _shortsDao.getAllShorts(userId);
     final shorts = rows.map(ShortDto.fromRow).toList();
 
     final scored = <_ScoredShort>[];

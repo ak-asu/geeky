@@ -7,6 +7,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/widgets/geeky_empty_state.dart';
 import '../../../../core/widgets/geeky_shimmer.dart';
+import '../../../shorts/domain/short_entity.dart';
+import '../../../shorts/providers.dart';
 import '../../data/fsrs_scheduler.dart';
 import '../../domain/quiz_card_entity.dart';
 import '../../providers.dart';
@@ -26,6 +28,11 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
   @override
   Widget build(BuildContext context) {
     final dueCardsAsync = ref.watch(dueQuizCardsProvider);
+    // Build a lookup map from short ID → ShortEntity for displaying real content.
+    final shortsMap = <String, ShortEntity>{
+      for (final s in ref.watch(allShortsProvider).value ?? <ShortEntity>[])
+        s.id: s,
+    };
 
     return Scaffold(
       appBar: AppBar(title: const Text('Quiz')),
@@ -49,7 +56,6 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
           // Start session if not started
           final session = ref.watch(quizSessionProvider);
           if (session.cards.isEmpty) {
-            // Initialize the session
             WidgetsBinding.instance.addPostFrameCallback((_) {
               ref.read(quizSessionProvider.notifier).startSession(dueCards);
             });
@@ -61,7 +67,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
           }
 
           final currentCard = session.currentCard!;
-          return _buildQuizBody(context, currentCard, session);
+          return _buildQuizBody(context, currentCard, session, shortsMap);
         },
       ),
     );
@@ -71,7 +77,9 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
     BuildContext context,
     QuizCardEntity card,
     QuizSessionState session,
+    Map<String, ShortEntity> shortsMap,
   ) {
+    final short = shortsMap[card.articleId];
     return Padding(
       padding: AppSpacing.paddingAll16,
       child: Column(
@@ -85,11 +93,8 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
             child: FlashcardWidget(
               key: ValueKey(card.articleId),
               question: 'What do you remember about this topic?',
-              answer:
-                  'Article: ${card.articleId}\n\nStability: ${card.stability.toStringAsFixed(1)}\nDifficulty: ${card.difficulty.toStringAsFixed(2)}\nReps: ${card.reps}',
-              topic: card.articleId
-                  .replaceAll('-', ' ')
-                  .replaceAll('short ', ''),
+              topic: short?.title ?? 'Review',
+              answer: short?.content ?? 'Open the short to review the content.',
               onFlipped: () {
                 setState(() => _revealed = true);
               },
@@ -136,13 +141,22 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
           ],
         ),
         AppSpacing.gapV8,
-        ClipRRect(
-          borderRadius: BorderRadius.circular(3),
-          child: LinearProgressIndicator(
-            value: progress,
-            minHeight: 6,
-            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+        Semantics(
+          label: 'Quiz progress',
+          value:
+              '${session.answeredCards} of ${session.totalCards} cards, '
+              '${(progress * 100).round()} percent complete',
+          excludeSemantics: true,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 6,
+              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                AppColors.primary,
+              ),
+            ),
           ),
         ),
       ],
@@ -161,10 +175,13 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.celebration_rounded,
-              size: 64,
-              color: AppColors.primary.withValues(alpha: 0.7),
+            Semantics(
+              excludeSemantics: true,
+              child: Icon(
+                Icons.celebration_rounded,
+                size: 64,
+                color: AppColors.primary.withValues(alpha: 0.7),
+              ),
             ),
             AppSpacing.gapV16,
             Text(

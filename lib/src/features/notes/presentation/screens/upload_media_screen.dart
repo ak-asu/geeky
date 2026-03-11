@@ -1,17 +1,24 @@
+import 'dart:io' as io;
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../auth/providers.dart';
 import '../../domain/note_entity.dart';
 import '../../providers.dart';
 
 class UploadMediaScreen extends ConsumerStatefulWidget {
-  const UploadMediaScreen({super.key});
+  const UploadMediaScreen({super.key, this.initialFilePath});
+
+  /// Pre-selects a file — used when the screen is opened via a share intent.
+  final String? initialFilePath;
 
   @override
   ConsumerState<UploadMediaScreen> createState() => _UploadMediaScreenState();
@@ -37,6 +44,25 @@ class _UploadMediaScreenState extends ConsumerState<UploadMediaScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.initialFilePath != null) {
+      _initFromSharedFile(widget.initialFilePath!);
+    }
+  }
+
+  Future<void> _initFromSharedFile(String path) async {
+    final file = io.File(path);
+    if (!await file.exists()) return;
+    final stat = await file.stat();
+    final name = path.split('/').last;
+    if (!mounted) return;
+    setState(() {
+      _selectedFile = PlatformFile(path: path, name: name, size: stat.size);
+    });
+  }
+
+  @override
   void dispose() {
     _titleController.dispose();
     super.dispose();
@@ -53,6 +79,26 @@ class _UploadMediaScreenState extends ConsumerState<UploadMediaScreen> {
     }
   }
 
+  Future<void> _pickFromCamera() async {
+    final image = await ImagePicker().pickImage(
+      source: ImageSource.camera,
+      imageQuality: 90,
+    );
+    if (image == null) return;
+
+    final file = io.File(image.path);
+    final stat = await file.stat();
+    final name = image.path.split('/').last;
+    if (!mounted) return;
+    setState(() {
+      _selectedFile = PlatformFile(
+        path: image.path,
+        name: name,
+        size: stat.size,
+      );
+    });
+  }
+
   Future<void> _save() async {
     if (_selectedFile == null) {
       context.showSnackBar('Please select a file first');
@@ -67,7 +113,7 @@ class _UploadMediaScreenState extends ConsumerState<UploadMediaScreen> {
 
     final note = NoteEntity(
       id: _uuid.v4(),
-      userId: 'mock-user',
+      userId: ref.read(currentUserProvider)?.id ?? '',
       type: type,
       title: _titleController.text.trim().isNotEmpty
           ? _titleController.text.trim()
@@ -77,7 +123,7 @@ class _UploadMediaScreenState extends ConsumerState<UploadMediaScreen> {
       updatedAt: now,
     );
 
-    await ref.read(notesRepositoryProvider).saveNote(note);
+    await ref.read(notesRepositoryProvider).saveNote(note, filePath: file.path);
 
     if (mounted) {
       context.showSnackBar('File uploaded as note');
@@ -150,44 +196,25 @@ class _UploadMediaScreenState extends ConsumerState<UploadMediaScreen> {
   }
 
   Widget _buildPickerArea(BuildContext context) {
-    return GestureDetector(
-      onTap: _pickFile,
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: context.colorScheme.outline.withValues(alpha: 0.3),
-            width: 2,
-            strokeAlign: BorderSide.strokeAlignInside,
-          ),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Files source
+        _SourceTile(
+          icon: Icons.cloud_upload_rounded,
+          label: 'Choose from Files',
+          subtitle: 'PDF, TXT, Images, Audio, Video',
+          onTap: _pickFile,
         ),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.cloud_upload_rounded,
-                size: 48,
-                color: AppColors.primary.withValues(alpha: 0.6),
-              ),
-              AppSpacing.gapV16,
-              Text(
-                'Tap to select a file',
-                style: context.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              AppSpacing.gapV8,
-              Text(
-                'PDF, TXT, Images, Audio, Video',
-                style: context.textTheme.bodySmall?.copyWith(
-                  color: context.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
+        AppSpacing.gapV16,
+        // Camera source
+        _SourceTile(
+          icon: Icons.camera_alt_rounded,
+          label: 'Take a Photo',
+          subtitle: 'Capture whiteboard or document',
+          onTap: _pickFromCamera,
         ),
-      ),
+      ],
     );
   }
 
@@ -237,5 +264,74 @@ class _UploadMediaScreenState extends ConsumerState<UploadMediaScreen> {
       'mp4' => Icons.videocam_rounded,
       _ => Icons.insert_drive_file_rounded,
     };
+  }
+}
+
+class _SourceTile extends StatelessWidget {
+  const _SourceTile({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.s20),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: context.colorScheme.outline.withValues(alpha: 0.25),
+            width: 1.5,
+          ),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              ),
+              child: Icon(icon, color: AppColors.primary, size: 24),
+            ),
+            AppSpacing.gapH16,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: context.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: context.textTheme.bodySmall?.copyWith(
+                      color: context.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: context.colorScheme.onSurfaceVariant,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

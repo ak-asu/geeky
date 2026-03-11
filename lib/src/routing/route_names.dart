@@ -47,7 +47,6 @@ abstract final class RouteNames {
 
   // Settings
   static const String settings = 'settings';
-  static const String dataManagement = 'data-management';
 
   // Sources
   static const String sourcesList = 'sources-list';
@@ -66,4 +65,12 @@ abstract final class RouteNames {
   // Store
   static const String store = 'store';
   static const String storeModuleDetail = 'store-module-detail';
+
+  // Voice memo
+  static const String voiceMemo = 'voice-memo';
+
+  // Deep-link path-param routes (custom URI scheme / App Links)
+  static const String shortDeepLink = 'short-deep-link';
+  static const String moduleDeepLink = 'module-deep-link';
+  static const String quizDeepLink = 'quiz-deep-link';
 }

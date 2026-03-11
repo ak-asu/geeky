@@ -24,6 +24,11 @@ class NotesListScreen extends ConsumerWidget {
         title: const Text('Notes'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.mic_rounded),
+            tooltip: 'Voice memo',
+            onPressed: () => context.pushNamed(RouteNames.voiceMemo),
+          ),
+          IconButton(
             icon: const Icon(Icons.upload_file_rounded),
             tooltip: 'Upload media',
             onPressed: () => context.pushNamed(RouteNames.uploadMedia),
@@ -82,27 +87,43 @@ class NotesListScreen extends ConsumerWidget {
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref, NoteEntity note) {
+    var isDeleting = false;
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete note?'),
-        content: Text(
-          'This will permanently delete "${note.title ?? 'Untitled note'}".',
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) => AlertDialog(
+          title: const Text('Delete note?'),
+          content: isDeleting
+              ? const SizedBox(
+                  height: 64,
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              : Text(
+                  'This will permanently delete "${note.title ?? 'Untitled note'}".',
+                ),
+          actions: isDeleting
+              ? null
+              : [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: const Text('Cancel'),
+                  ),
+                  FilledButton(
+                    onPressed: () async {
+                      setState(() => isDeleting = true);
+                      await ref
+                          .read(notesRepositoryProvider)
+                          .deleteNote(note.id);
+                      if (ctx.mounted) Navigator.of(ctx).pop();
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.error,
+                    ),
+                    child: const Text('Delete'),
+                  ),
+                ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              ref.read(notesRepositoryProvider).deleteNote(note.id);
-            },
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Delete'),
-          ),
-        ],
       ),
     );
   }

@@ -52,7 +52,7 @@ class DedupConfig:
 
     near_threshold: float = 0.9  # Jaccard threshold for MinHash
     semantic_threshold: float = 0.85  # Cosine threshold for semantic dedup
-    bloom_capacity: int = 100_000
+    bloom_capacity: int = 100_000  # Reserved: initial capacity for fixed BloomFilter if ScalableBloomFilter is replaced
     bloom_error_rate: float = 0.001
     minhash_num_perm: int = 128
 
@@ -76,7 +76,16 @@ class Deduplicator:
         self._config = config or DedupConfig()
         self._exact_seen: set[str] = set()
         self._minhash_index: dict = {}
-        self._bloom: set[str] = set()
+        try:
+            from pybloom_live import ScalableBloomFilter  # noqa: PLC0415
+
+            self._bloom = ScalableBloomFilter(
+                mode=ScalableBloomFilter.SMALL_SET_GROWTH,
+                error_rate=self._config.bloom_error_rate,
+            )
+        except ImportError:
+            logger.warning("pybloom-live not available, falling back to plain set for bloom filter")
+            self._bloom: set[str] = set()  # type: ignore[assignment]
 
     async def deduplicate(
         self,

@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from app.models.notification import NotificationDocument
+from app.models.notification import FcmNotificationData, NotificationDocument
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ class NotificationService:
         title: str,
         body: str,
         notification_type: str = "new_content",
-        data: dict | None = None,
+        data: FcmNotificationData | None = None,
     ) -> NotificationDocument:
         """Create an in-app notification and push via FCM.
 
@@ -68,7 +68,7 @@ class NotificationService:
             title=title,
             body=body,
             type=NotificationType(notification_type),
-            data=data or {},
+            data=data,
         )
 
         doc_id = await self._notification_repo.create(user_id, notif)

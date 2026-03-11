@@ -20,7 +20,7 @@ router = APIRouter(prefix="/kg", tags=["knowledge-graph"])
 # --- Summary ---
 
 
-@router.get("/")
+@router.get("")
 async def get_kg_summary(
     user_id: CurrentUserId,
     query_service=Depends(get_graph_query_service),

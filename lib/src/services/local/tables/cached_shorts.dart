@@ -22,6 +22,10 @@ class CachedShorts extends Table {
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get cachedAt => dateTime()();
   IntColumn get version => integer().withDefault(const Constant(1))();
+  // Local-only done flag — userId-scoped, preserved across API re-syncs
+  // (absent from ShortDto.toCompanion → not overwritten on insertOnConflictUpdate).
+  // Drives FSRS card creation and learning-path planning.
+  BoolColumn get isDone => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
