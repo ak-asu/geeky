@@ -68,11 +68,21 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
-  MigrationStrategy get migration =>
-      MigrationStrategy(onCreate: (m) => m.createAll());
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      // v1 → v2: add locationEnabled column to user_preferences_entries
+      if (from < 2) {
+        await m.addColumn(
+          userPreferencesEntries,
+          userPreferencesEntries.locationEnabled,
+        );
+      }
+    },
+  );
 
   /// Deletes all cached content for [userId].
   ///

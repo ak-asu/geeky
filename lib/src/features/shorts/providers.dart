@@ -3,6 +3,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../core/network/api_service.dart';
 import '../../core/providers/database_provider.dart';
 import '../auth/providers.dart';
+import '../location/providers.dart';
+import 'data/short_feed_scorer.dart';
 import 'data/shorts_repository.dart';
 import 'domain/short_entity.dart';
 
@@ -88,4 +90,52 @@ class ShortsFeed extends _$ShortsFeed {
   }
 
   bool isDone(String shortId) => state.contains(shortId);
+}
+
+// ── Session-level topic diversity tracker ────────────────────────────────────
+
+/// In-memory set of topic strings seen during the current session.
+///
+/// Used by [rankedShortsProvider] to penalise repetitive topic clusters.
+/// keepAlive: persists across navigation but resets on cold start — a fresh
+/// session always starts with a clean slate, which is the desired behaviour.
+@Riverpod(keepAlive: true)
+class ShortsSession extends _$ShortsSession {
+  @override
+  Set<String> build() => {};
+
+  /// Records topics from a short that just became visible to the user.
+  void recordTopics(List<String> topics) {
+    if (topics.isEmpty) return;
+    state = {...state, ...topics};
+  }
+
+  /// Clears all session topic history (e.g. on sign-out).
+  void reset() => state = {};
+}
+
+// ── Ranked shorts (main feed only) ───────────────────────────────────────────
+
+/// Adaptively ranked shorts list for the main (unfiltered) feed.
+///
+/// Applies [ShortFeedScorer] with:
+///  - done IDs from Drift (via [doneShortIdsProvider])
+///  - session topic diversity set (via [shortsSessionProvider])
+///  - optional location context (via [locationContextNotifierProvider])
+///
+/// Module feeds ([ShortsFeedParams.filterShortIds] set) bypass this provider
+/// and use [allShortsProvider] directly to preserve their curated order.
+@riverpod
+List<ShortEntity> rankedShorts(Ref ref) {
+  final shorts = ref.watch(allShortsProvider).value ?? [];
+  final doneIds = ref.watch(doneShortIdsProvider).value ?? {};
+  final session = ref.watch(shortsSessionProvider);
+  final location = ref.watch(locationContextProvider).value;
+
+  return ShortFeedScorer.rank(
+    shorts,
+    doneIds,
+    recentSessionTopics: session,
+    locationContext: location,
+  );
 }

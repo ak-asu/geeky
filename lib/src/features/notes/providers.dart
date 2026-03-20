@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../core/network/api_service.dart';
 import '../../core/providers/database_provider.dart';
 import '../auth/providers.dart';
+import '../location/providers.dart';
 import '../shorts/providers.dart';
 import 'data/note_feed_scorer.dart';
 import 'data/notes_repository.dart';
@@ -88,15 +89,21 @@ class NoteFeed extends _$NoteFeed {
 }
 
 /// Ranked notes for the feed — scored and sorted.
+///
+/// Watches location context so the feed reactively re-ranks when the user's
+/// region resolves (or changes). Location is always optional — null means
+/// the location factor (factor 9) is simply skipped.
 @riverpod
 List<NoteEntity> rankedNoteFeed(Ref ref) {
   final notesAsync = ref.watch(allNotesProvider);
   final feedStateAsync = ref.watch(noteFeedProvider);
+  final locationAsync = ref.watch(locationContextProvider);
 
   final notes = notesAsync.value ?? [];
   final feedState = feedStateAsync.value ?? const NoteFeedState();
+  final location = locationAsync.value; // null while loading, denied, or off
 
-  return NoteFeedScorer.rank(notes, feedState);
+  return NoteFeedScorer.rank(notes, feedState, locationContext: location);
 }
 
 /// Polls the note processing pipeline and refreshes the shorts feed on completion.

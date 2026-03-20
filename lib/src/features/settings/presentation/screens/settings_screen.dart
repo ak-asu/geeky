@@ -11,6 +11,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../routing/route_names.dart';
 import '../../../auth/providers.dart';
+import '../../../location/providers.dart';
 import '../../../subscription/providers.dart';
 import '../../providers.dart';
 
@@ -33,6 +34,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final ttsEnabled = prefs.getBool(StorageKeys.ttsEnabled) ?? false;
     final notificationsEnabled =
         prefs.getBool(StorageKeys.notificationsEnabled) ?? true;
+    final locationEnabled = ref.watch(locationEnabledProvider);
     final isPremium = ref.watch(isPremiumProvider);
 
     return Scaffold(
@@ -141,6 +143,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               activeTrackColor: AppColors.primary,
               onChanged: (value) =>
                   prefs.setBool(StorageKeys.notificationsEnabled, value),
+            ),
+          ),
+
+          _SettingsTile(
+            icon: Icons.location_on_rounded,
+            title: 'Location Personalization',
+            trailing: Switch.adaptive(
+              value: locationEnabled,
+              activeTrackColor: AppColors.primary,
+              onChanged: (value) async {
+                await ref.read(locationEnabledProvider.notifier).set(value);
+                if (value) {
+                  // Trigger immediate resolution when the user enables it.
+                  ref
+                      .read(locationContextProvider.notifier)
+                      .refresh()
+                      .ignore();
+                }
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 34),
+            child: Text(
+              'Surfaces content relevant to your region',
+              style: context.textTheme.bodySmall?.copyWith(
+                color: context.colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
 

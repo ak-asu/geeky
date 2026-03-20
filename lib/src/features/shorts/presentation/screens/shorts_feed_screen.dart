@@ -59,6 +59,7 @@ class ShortsFeedScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final shortsAsync = ref.watch(allShortsProvider);
+    final isModuleFeed = filterShortIds != null;
 
     return shortsAsync.when(
       loading: () => GeekyShimmer.feedCard(context),
@@ -68,10 +69,14 @@ class ShortsFeedScreen extends ConsumerWidget {
         subtitle: error.toString(),
       ),
       data: (allShorts) {
-        // Apply filter: keep order from filterShortIds
-        final shorts = filterShortIds != null
-            ? _filterAndOrder(allShorts, filterShortIds!)
-            : allShorts;
+        // Module feeds preserve their curated order from filterShortIds.
+        // The main feed uses the adaptively ranked list.
+        final List<ShortEntity> shorts;
+        if (isModuleFeed) {
+          shorts = _filterAndOrder(allShorts, filterShortIds!);
+        } else {
+          shorts = ref.watch(rankedShortsProvider);
+        }
 
         if (shorts.isEmpty) {
           return const GeekyEmptyState(
@@ -86,6 +91,7 @@ class ShortsFeedScreen extends ConsumerWidget {
           shorts: shorts,
           allShorts: allShorts,
           initialIndex: initialIndex,
+          trackDiversity: !isModuleFeed,
         );
       },
     );
@@ -108,6 +114,7 @@ class _ShortsFeedBody extends ConsumerStatefulWidget {
     required this.shorts,
     required this.allShorts,
     this.initialIndex = 0,
+    this.trackDiversity = false,
   });
 
   final List<ShortEntity> shorts;
@@ -116,6 +123,11 @@ class _ShortsFeedBody extends ConsumerStatefulWidget {
   final List<ShortEntity> allShorts;
 
   final int initialIndex;
+
+  /// When true, records topics in [ShortsSession] on each page change so
+  /// [rankedShortsProvider] can apply the session diversity penalty.
+  /// False for module feeds where curated order must be preserved.
+  final bool trackDiversity;
 
   @override
   ConsumerState<_ShortsFeedBody> createState() => _ShortsFeedBodyState();
@@ -134,6 +146,14 @@ class _ShortsFeedBodyState extends ConsumerState<_ShortsFeedBody> {
     // Stop TTS whenever the user swipes to a different short.
     ref.read(ttsControllerProvider.notifier).stop();
     setState(() => _currentIndex = index);
+
+    // Record topics for diversity scoring on the main (ranked) feed.
+    if (widget.trackDiversity && index < widget.shorts.length) {
+      final topics = widget.shorts[index].topics;
+      if (topics.isNotEmpty) {
+        ref.read(shortsSessionProvider.notifier).recordTopics(topics);
+      }
+    }
   }
 
   void _handleTts(ShortEntity short) {

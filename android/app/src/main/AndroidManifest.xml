@@ -6,6 +6,9 @@
     <uses-permission android:name="android.permission.CAMERA"/>
     <!-- Voice memo recording -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <!-- Location — region-aware content personalization (foreground only) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
     <application
         android:label="Geeky"
