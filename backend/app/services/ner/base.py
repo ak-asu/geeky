@@ -11,6 +11,7 @@ class EntityType(str, Enum):
     TECHNOLOGY = "technology"
     THEORY = "theory"
     METHOD = "method"
+    LOCATION = "location"
     OTHER = "other"
 
 class EdgeType(str, Enum):
@@ -43,6 +44,7 @@ class Relation:
 class NERExtractor(Protocol):
     async def extract_entities(self, text: str) -> list[Entity]: ...
     async def extract_relations(self, text: str, entities: list[Entity]) -> list[Relation]: ...
+    async def extract_location_entities(self, text: str) -> list[str]: ...
 
 class EdgeClassifier(Protocol):
     async def classify(self, source_name: str, target_name: str, context: str | None = None) -> EdgeType: ...

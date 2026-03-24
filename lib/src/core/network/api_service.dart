@@ -85,6 +85,11 @@ class ApiService {
     return fromJson(_unwrap(response.data));
   }
 
+  /// PATCH without parsing a typed response.
+  Future<void> patchVoid(String path, dynamic body) async {
+    await _dio.patch(path, data: body);
+  }
+
   /// DELETE a resource.
   Future<void> delete(String path) async {
     await _dio.delete(path);

@@ -603,6 +603,11 @@ def get_sync_service() -> SyncService:
 # Recommendation Services
 # ============================================================
 
+def get_location_scorer():
+    """Get the geographic relevance scorer (stateless, no I/O)."""
+    from app.services.recommendation.location_scorer import LocationScorer  # noqa: PLC0415
+
+    return LocationScorer()
 
 def get_recommendation_scorer() -> MultiFactorScorer:
     """Get the multi-factor recommendation scorer."""
@@ -614,6 +619,7 @@ def get_recommendation_scorer() -> MultiFactorScorer:
         review_state_repo=get_review_state_repository(),
         short_repo=get_short_repository(),
         settings=get_settings(),
+        location_scorer=get_location_scorer(),
     )
 
 

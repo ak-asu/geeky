@@ -41,6 +41,8 @@ class ShortDocument(TimestampMixin):
     chunk_ids: list[str] = Field(default_factory=list, alias="chunkIds")
     version: int = 1
     conflict_flags: list[ConflictFlag] = Field(default_factory=list, alias="conflictFlags")
+    # Location entities extracted by NER (GPE/LOC labels, e.g. ["Arizona", "Phoenix", "US"])
+    location_entities: list[str] = Field(default_factory=list, alias="locationEntities")
 
     @field_validator("citations", mode="before")
     @classmethod

@@ -46,6 +46,9 @@ class UserDocument(TimestampMixin):
     # RAG quota tracking (enforced by SubscriptionService)
     rag_queries_today: int = Field(default=0, alias="ragQueriesToday")
     rag_queries_date: str = Field(default="", alias="ragQueriesDate")
+    # Location preferences (city/state level only, opt-in)
+    home_region: str | None = Field(default=None, alias="homeRegion", max_length=200)
+    location_enabled: bool = Field(default=False, alias="locationEnabled")
 
 
 class UserProfileUpdate(GeekyBaseModel):
@@ -55,3 +58,6 @@ class UserProfileUpdate(GeekyBaseModel):
     learning_mode: str | None = Field(default=None, alias="learningMode", max_length=50)
     depth_preference: str | None = Field(default=None, alias="depthPreference", max_length=50)
     onboarding_completed: bool | None = Field(default=None, alias="onboardingCompleted")
+    home_region: str | None = Field(default=None, alias="homeRegion", max_length=200)
+    location_enabled: bool | None = Field(default=None, alias="locationEnabled")
+    model_config = {"populate_by_name": True}
