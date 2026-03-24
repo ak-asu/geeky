@@ -26,6 +26,8 @@ services:
       context: .
       dockerfile: Dockerfile.worker
     env_file: .env
+    volumes:
+      - ./app:/app/app
     depends_on:
       - chromadb
       - redis

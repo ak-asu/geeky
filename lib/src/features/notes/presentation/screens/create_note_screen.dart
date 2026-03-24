@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,7 +10,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../auth/providers.dart';
+import '../../../subscription/providers.dart';
 import '../../domain/note_entity.dart';
+import '../../domain/note_type.dart';
 import '../../providers.dart';
 
 class CreateNoteScreen extends ConsumerStatefulWidget {
@@ -59,7 +63,7 @@ class _CreateNoteScreenState extends ConsumerState<CreateNoteScreen> {
     final note = NoteEntity(
       id: _uuid.v4(),
       userId: ref.read(currentUserProvider)?.id ?? '',
-      type: 'text',
+      type: NoteType.text.name,
       title: _titleController.text.trim().isNotEmpty
           ? _titleController.text.trim()
           : null,
@@ -69,10 +73,21 @@ class _CreateNoteScreenState extends ConsumerState<CreateNoteScreen> {
       updatedAt: now,
     );
 
-    await ref.read(notesRepositoryProvider).saveNote(note);
+    final noteId = await ref.read(notesRepositoryProvider).saveNote(note);
+    final userId = ref.read(currentUserProvider)?.id ?? '';
+
+    // Background: polls pipeline status every 5 s and syncs shorts when done.
+    unawaited(
+      ref
+          .read(noteProcessingWatcherProvider.notifier)
+          .watchUntilComplete(noteId, userId),
+    );
 
     if (mounted) {
-      context.showSnackBar('Note saved');
+      final isPremium = ref.read(isPremiumProvider);
+      context.showSnackBar(
+        isPremium ? 'Note saved — shorts will appear shortly' : 'Note saved.',
+      );
       context.pop();
     }
   }

@@ -9,14 +9,14 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Query
 
 from app.api.middleware.auth import CurrentUserId
-from app.dependencies import get_short_repository
+from app.dependencies import get_short_repository, get_subscription_service
 from app.exceptions import ShortNotFoundError
 from app.models.common import PaginatedResponse, PaginationMeta
 
 router = APIRouter(prefix="/shorts", tags=["shorts"])
 
 
-@router.get("/")
+@router.get("")
 async def list_shorts(
     user_id: CurrentUserId,
     limit: int = 50,
@@ -25,8 +25,10 @@ async def list_shorts(
     min_difficulty: float | None = Query(default=None, ge=0.0, le=1.0),
     max_difficulty: float | None = Query(default=None, ge=0.0, le=1.0),
     short_repo=Depends(get_short_repository),
+    sub_svc=Depends(get_subscription_service),
 ) -> dict:
     """List shorts with pagination, filterable by topic and difficulty."""
+    await sub_svc.check_processing_quota(user_id)
     if topic:
         items = await short_repo.get_by_topic(user_id, topic, limit=limit)
         return PaginatedResponse(
@@ -59,8 +61,10 @@ async def get_short(
     short_id: str,
     user_id: CurrentUserId,
     short_repo=Depends(get_short_repository),
+    sub_svc=Depends(get_subscription_service),
 ) -> dict:
     """Get a single short by ID with engagement stats and citations."""
+    await sub_svc.check_processing_quota(user_id)
     short = await short_repo.get(user_id, short_id)
     if short is None:
         raise ShortNotFoundError(short_id)

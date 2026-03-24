@@ -45,11 +45,12 @@ class _PasswordResetSheetState extends ConsumerState<PasswordResetSheet> {
       await ref
           .read(authRepositoryProvider)
           .sendPasswordReset(_emailController.text.trim());
-      if (mounted)
+      if (mounted) {
         setState(() {
           _sent = true;
           _loading = false;
         });
+      }
     } catch (_) {
       if (mounted) {
         setState(() => _loading = false);

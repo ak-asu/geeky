@@ -1,12 +1,18 @@
 """Note Pydantic schemas."""
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from app.models.common import NoteType, TimestampMixin
+from app.models.common import GeekyBaseModel, NoteType, TimestampMixin
 
 
-class NoteCreate(BaseModel):
+class NoteCreate(GeekyBaseModel):
+    """Request body for creating a note.
+
+    Inherits camelCase alias generation — Flutter can send either
+    ``sourceUrl`` (camelCase) or ``source_url`` (snake_case).
+    """
+
     type: NoteType = NoteType.TEXT
     title: str | None = Field(default=None, max_length=500)
     content: str = Field(min_length=1, max_length=100_000)
@@ -14,14 +20,19 @@ class NoteCreate(BaseModel):
     topics: list[str] = Field(default_factory=list, max_length=50)
 
 
-class NoteUpdate(BaseModel):
+class NoteUpdate(GeekyBaseModel):
     title: str | None = Field(default=None, max_length=500)
     content: str | None = Field(default=None, min_length=1, max_length=100_000)
     topics: list[str] | None = Field(default=None, max_length=50)
 
 
 class NoteDocument(TimestampMixin):
-    model_config = {"populate_by_name": True}
+    """Firestore document model for a note.
+
+    All snake_case field names have auto-generated camelCase aliases via the
+    inherited GeekyBaseModel config.  Explicit ``Field(alias=...)`` entries
+    below are kept for self-documentation but are functionally redundant.
+    """
 
     id: str = ""
     type: NoteType = NoteType.TEXT
@@ -40,5 +51,5 @@ class NoteDocument(TimestampMixin):
     word_count: int = Field(default=0, alias="wordCount")
 
 
-class NoteResponse(BaseModel):
+class NoteResponse(GeekyBaseModel):
     data: NoteDocument

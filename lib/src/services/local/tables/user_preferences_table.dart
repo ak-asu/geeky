@@ -12,6 +12,10 @@ class UserPreferencesEntries extends Table {
   BoolColumn get onboardingCompleted =>
       boolean().withDefault(const Constant(false))();
 
+  // v2: location personalization toggle (opt-out model — default true)
+  BoolColumn get locationEnabled =>
+      boolean().withDefault(const Constant(true))();
+
   @override
   Set<Column> get primaryKey => {userId};
 }

@@ -10,15 +10,19 @@ part 'kg_dao.g.dart';
 class KgDao extends DatabaseAccessor<AppDatabase> with _$KgDaoMixin {
   KgDao(super.db);
 
-  // --- Concepts ---
+  // ── Concepts ──────────────────────────────────────────────────────────────
 
-  Future<List<CachedConcept>> getAllConcepts() => select(cachedConcepts).get();
+  Future<List<CachedConcept>> getAllConcepts(String userId) =>
+      (select(cachedConcepts)..where((t) => t.userId.equals(userId))).get();
 
-  Stream<List<CachedConcept>> watchAllConcepts() =>
-      select(cachedConcepts).watch();
+  Stream<List<CachedConcept>> watchAllConcepts(String userId) =>
+      (select(cachedConcepts)..where((t) => t.userId.equals(userId))).watch();
 
-  Future<CachedConcept?> getConceptById(String id) =>
-      (select(cachedConcepts)..where((t) => t.id.equals(id))).getSingleOrNull();
+  Future<CachedConcept?> getConceptById(String userId, String id) =>
+      (select(cachedConcepts)
+            ..where((t) => t.userId.equals(userId))
+            ..where((t) => t.id.equals(id)))
+          .getSingleOrNull();
 
   Future<void> insertConcept(CachedConceptsCompanion entry) =>
       into(cachedConcepts).insertOnConflictUpdate(entry);
@@ -29,13 +33,17 @@ class KgDao extends DatabaseAccessor<AppDatabase> with _$KgDaoMixin {
     });
   }
 
-  // --- Relationships ---
+  // ── Relationships ─────────────────────────────────────────────────────────
 
-  Future<List<CachedRelationship>> getAllRelationships() =>
-      select(cachedRelationships).get();
+  Future<List<CachedRelationship>> getAllRelationships(String userId) =>
+      (select(
+        cachedRelationships,
+      )..where((t) => t.userId.equals(userId))).get();
 
-  Stream<List<CachedRelationship>> watchAllRelationships() =>
-      select(cachedRelationships).watch();
+  Stream<List<CachedRelationship>> watchAllRelationships(String userId) =>
+      (select(
+        cachedRelationships,
+      )..where((t) => t.userId.equals(userId))).watch();
 
   Future<void> insertRelationship(CachedRelationshipsCompanion entry) =>
       into(cachedRelationships).insertOnConflictUpdate(entry);

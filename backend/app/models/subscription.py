@@ -1,10 +1,12 @@
 """Subscription Pydantic schemas and entitlement definitions."""
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from app.models.common import GeekyBaseModel
 
 
-class SubscriptionEntitlements(BaseModel):
+class SubscriptionEntitlements(GeekyBaseModel):
     """Defines the capabilities and limits for a subscription tier."""
 
     max_notes: int = Field(alias="maxNotes", description="-1 means unlimited")
@@ -12,8 +14,10 @@ class SubscriptionEntitlements(BaseModel):
     rag_queries_per_day: int = Field(alias="ragQueriesPerDay", description="-1 means unlimited")
     advanced_analytics: bool = Field(alias="advancedAnalytics")
     priority_processing: bool = Field(alias="priorityProcessing")
-
-    model_config = {"populate_by_name": True}
+    can_process_notes: bool = Field(
+        alias="canProcessNotes",
+        description="Whether the AI pipeline (embedding + Shorts generation) runs for user notes",
+    )
 
 
 # Single source of truth for subscription tier entitlements.
@@ -25,6 +29,7 @@ ENTITLEMENTS: dict[str, SubscriptionEntitlements] = {
         ragQueriesPerDay=10,
         advancedAnalytics=False,
         priorityProcessing=False,
+        canProcessNotes=False,  # Free users cannot run the AI pipeline
     ),
     "premium": SubscriptionEntitlements(
         maxNotes=-1,
@@ -32,5 +37,6 @@ ENTITLEMENTS: dict[str, SubscriptionEntitlements] = {
         ragQueriesPerDay=-1,
         advancedAnalytics=True,
         priorityProcessing=True,
+        canProcessNotes=True,
     ),
 }

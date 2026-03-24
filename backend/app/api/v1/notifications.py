@@ -9,7 +9,7 @@ from app.dependencies import get_notification_service
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
 
-@router.get("/")
+@router.get("")
 async def list_notifications(
     user_id: CurrentUserId,
     limit: int = Query(default=50, ge=1, le=100),

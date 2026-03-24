@@ -3,14 +3,12 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from app.models.common import FeedbackType, InteractionType, TimestampMixin
+from app.models.common import GeekyBaseModel, FeedbackType, InteractionType, TimestampMixin
 
 
 class InteractionDocument(TimestampMixin):
-    model_config = {"populate_by_name": True}
-
     id: str = ""
     article_id: str = Field(default="", alias="articleId")
     type: InteractionType = InteractionType.VIEW
@@ -24,11 +22,11 @@ class InteractionDocument(TimestampMixin):
     session_id: str | None = Field(default=None, alias="sessionId")
 
 
-class InteractionBatchRequest(BaseModel):
+class InteractionBatchRequest(GeekyBaseModel):
     interactions: list[InteractionCreate] = Field(max_length=100)
 
 
-class InteractionCreate(BaseModel):
+class InteractionCreate(GeekyBaseModel):
     article_id: str = Field(alias="articleId", min_length=1)
     type: InteractionType
     timestamp: datetime
@@ -39,9 +37,8 @@ class InteractionCreate(BaseModel):
     from_article_id: str | None = Field(default=None, alias="fromArticleId")
     device: str | None = Field(default=None, max_length=200)
     session_id: str | None = Field(default=None, alias="sessionId")
-    model_config = {"populate_by_name": True}
 
 
-class InteractionBatchResponse(BaseModel):
+class InteractionBatchResponse(GeekyBaseModel):
     synced: int = 0
     failed: int = 0

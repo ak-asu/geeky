@@ -81,17 +81,9 @@ async def _run_cascade_delete(user_id: str, note_id: str) -> dict:
             await short_repo.delete(user_id, short.id)
             shorts_deleted += 1
         else:
-            # Surviving — remove citations to deleted chunks
+            # Surviving — remove chunk references; citations (note IDs) are note-level so kept as-is
             remaining_chunk_ids = [cid for cid in short.chunk_ids if cid not in chunk_ids]
-            remaining_citations = [
-                c.model_dump(by_alias=True)
-                for c in short.citations
-                if c.chunk_id not in chunk_ids
-            ]
-            await short_repo.update(user_id, short.id, {
-                "chunkIds": remaining_chunk_ids,
-                "citations": remaining_citations,
-            })
+            await short_repo.update(user_id, short.id, {"chunkIds": remaining_chunk_ids})
 
     # Delete chunk documents from Firestore
     chunks_deleted = await chunk_repo.delete_by_note(user_id, note_id)

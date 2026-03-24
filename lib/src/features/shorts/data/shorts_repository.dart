@@ -66,6 +66,21 @@ class ShortsRepository {
     await _shortsDao.deleteShort(id);
   }
 
+  // --- Done state ---
+
+  /// Persists the done flag for a short in Drift.
+  /// The flag is absent from [ShortDto.toCompanion], so it is never
+  /// overwritten when the API re-syncs the short via [insertOnConflictUpdate].
+  Future<void> markShortDone(
+    String userId,
+    String shortId, {
+    required bool isDone,
+  }) => _shortsDao.markShortDone(userId, shortId, isDone: isDone);
+
+  /// Streams the set of short IDs the user has marked as done from Drift.
+  Stream<Set<String>> watchDoneShortIds(String userId) =>
+      _shortsDao.watchDoneShortIds(userId);
+
   // --- Bookmarks ---
 
   Future<bool> isBookmarked(String userId, String shortId) {

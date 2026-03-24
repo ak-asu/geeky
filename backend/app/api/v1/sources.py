@@ -11,7 +11,7 @@ from app.models.source import SourceCreate
 router = APIRouter(prefix="/sources", tags=["sources"])
 
 
-@router.post("/")
+@router.post("")
 async def add_source(
     _rate_limit: CheckRateLimit,
     data: SourceCreate,
@@ -25,7 +25,7 @@ async def add_source(
     return {"data": source.model_dump(mode="json", by_alias=True)}
 
 
-@router.get("/")
+@router.get("")
 async def list_sources(
     user_id: CurrentUserId,
     service=Depends(get_source_service),

@@ -6,22 +6,27 @@ import 'route_names.dart';
 /// Checks if the current route requires premium and the user is free tier.
 /// Returns redirect path if blocked, null if allowed.
 String? checkPremiumAccess(Ref ref, String matchedLocation) {
-  if (!premiumRoutes.contains(matchedLocation)) return null;
+  final isPremiumRoute =
+      premiumRoutes.contains(matchedLocation) ||
+      premiumPathPrefixes.any((p) => matchedLocation.startsWith(p));
 
+  if (!isPremiumRoute) return null;
+
+  // Read subscription state exactly once — isPremiumProvider is synchronous
+  // (reads from in-memory Riverpod state) so there is no race condition.
   final isPremium = ref.read(isPremiumProvider);
-  if (!isPremium) return '/${RouteNames.subscription}';
-
-  return null;
+  return isPremium ? null : '/${RouteNames.subscription}';
 }
 
-/// Set of route paths that require premium access.
-///
-/// Note: shortsFeed is NOT gated — free users can view shorts from
-/// free store modules. Premium gates features (KG, RAG, analytics),
-/// not content access.
+/// Exact route paths that require premium access.
 const premiumRoutes = {
+  '/${RouteNames.shortsFeed}',
   '/${RouteNames.knowledgeGraph}',
   '/${RouteNames.ragQuery}',
   '/${RouteNames.analytics}',
   '/${RouteNames.quiz}',
 };
+
+/// Path prefixes for premium deep-link routes (path-param routes cannot be
+/// matched by exact string; use startsWith instead).
+const premiumPathPrefixes = {'/shorts/'};

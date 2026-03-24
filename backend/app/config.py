@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     # --- Gemini AI ---
     gemini_api_key: str = Field(default="", description="Google Gemini API key")
     gemini_model: str = Field(default="gemini-2.5-flash", description="Gemini model for generation")
-    gemini_embedding_model: str = Field(default="models/embedding-001", description="Gemini embedding model")
+    gemini_embedding_model: str = Field(default="gemini-embedding-001", description="Gemini embedding model")
     gemini_embedding_dimensions: int = Field(default=768, description="Embedding vector dimensions")
 
     # --- ChromaDB ---
@@ -115,6 +115,10 @@ class Settings(BaseSettings):
     )
 
     # --- Timeouts ---
+    redis_socket_timeout_seconds: float = Field(
+        default=2.0,
+        description="Redis socket connection and per-operation timeout for rate limiting (seconds)",
+    )
     gemini_timeout_seconds: float = Field(default=30.0, description="Gemini LLM generation timeout")
     embedding_timeout_seconds: float = Field(default=15.0, description="Embedding API timeout")
     chromadb_timeout_seconds: float = Field(default=10.0, description="ChromaDB query/add timeout")
@@ -123,6 +127,34 @@ class Settings(BaseSettings):
 
     # --- File Upload ---
     max_upload_size_mb: int = Field(default=10, description="Maximum file upload size in megabytes")
+
+    # ------------------------------------------------------------------ #
+    # Validators                                                           #
+    # ------------------------------------------------------------------ #
+
+    @model_validator(mode="after")
+    def _validate_cors_in_production(self) -> "Settings":
+        """Fail fast if localhost origins slip into a production deployment.
+
+        If ALLOWED_ORIGINS is not set in a production environment the default
+        localhost values would remain, allowing any local process (e.g. malware
+        running on the same machine) to make authenticated cross-origin requests.
+
+        Operators MUST set ALLOWED_ORIGINS to the actual production domain(s)
+        before deployment.
+        """
+        if self.environment == "production":
+            _local_patterns = ("localhost", "127.0.0.1", "0.0.0.0", "10.0.2.2")  # noqa: S104
+            bad = [
+                o for o in self.allowed_origins
+                if any(pat in o for pat in _local_patterns)
+            ]
+            if bad:
+                raise ValueError(
+                    f"Production deployment has localhost/loopback in ALLOWED_ORIGINS: {bad}. "
+                    "Set the ALLOWED_ORIGINS environment variable to your production domain(s)."
+                )
+        return self
 
 
 @lru_cache

@@ -3,6 +3,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../core/network/api_service.dart';
 import '../../core/providers/database_provider.dart';
 import '../auth/providers.dart';
+import '../location/providers.dart';
+import 'data/short_feed_scorer.dart';
 import 'data/shorts_repository.dart';
 import 'domain/short_entity.dart';
 
@@ -16,11 +18,19 @@ ShortsRepository shortsRepository(Ref ref) {
   );
 }
 
-/// Watches all shorts from Drift as a stream.
-@riverpod
+/// Watches all shorts from Drift as a live stream.
+///
+/// Kept alive so the stream persists across navigation and mode toggles.
+/// Triggers an API fetch on first build to hydrate Drift; the Drift stream
+/// reacts to the resulting writes automatically.
+@Riverpod(keepAlive: true)
 Stream<List<ShortEntity>> allShorts(Ref ref) {
   final userId = ref.watch(currentUserProvider)?.id ?? '';
-  return ref.watch(shortsRepositoryProvider).watchAllShorts(userId);
+  final repo = ref.watch(shortsRepositoryProvider);
+  if (userId.isNotEmpty) {
+    repo.getAllShorts(userId).ignore();
+  }
+  return repo.watchAllShorts(userId);
 }
 
 /// Watches bookmarked short IDs.
@@ -30,13 +40,38 @@ Stream<List<String>> bookmarkedShortIds(Ref ref) {
   return ref.watch(shortsRepositoryProvider).watchBookmarkedIds(userId);
 }
 
-/// Manages shorts feed state: done set.
+/// Streams the set of done short IDs for the current user from Drift.
+///
+/// Kept alive so the stream persists across navigation. The set is populated
+/// by [ShortsFeed.toggleDone] and survives API re-syncs because the done flag
+/// is absent from [ShortDto.toCompanion] (i.e. never overwritten on upsert).
+@Riverpod(keepAlive: true)
+Stream<Set<String>> doneShortIds(Ref ref) {
+  final userId = ref.watch(currentUserProvider)?.id ?? '';
+  if (userId.isEmpty) return const Stream.empty();
+  return ref.watch(shortsRepositoryProvider).watchDoneShortIds(userId);
+}
+
+/// Manages shorts feed done state.
+///
+/// State is Drift-backed via [doneShortIdsProvider]:
+/// - userId-scoped (survives multi-user sign-in/sign-out on the same device)
+/// - persists across app restarts
+/// - persists across API re-syncs (isDone is absent from the API companion)
+/// - feeds FSRS card creation and learning-path planning
+///
+/// [toggleDone] applies an optimistic in-memory update for instant UI
+/// feedback, then writes to Drift. The Drift stream re-emits and the
+/// [build] method re-runs, confirming the final state from the DB.
 @Riverpod(keepAlive: true)
 class ShortsFeed extends _$ShortsFeed {
   @override
-  Set<String> build() => {};
+  Set<String> build() {
+    return ref.watch(doneShortIdsProvider).value ?? {};
+  }
 
   void toggleDone(String shortId) {
+    // Optimistic update — instant UI response before the Drift write completes.
     final updated = {...state};
     if (updated.contains(shortId)) {
       updated.remove(shortId);
@@ -44,7 +79,63 @@ class ShortsFeed extends _$ShortsFeed {
       updated.add(shortId);
     }
     state = updated;
+
+    // Persist to Drift. The stream re-emits and build() re-runs to confirm.
+    final userId = ref.read(currentUserProvider)?.id ?? '';
+    if (userId.isEmpty) return;
+    ref
+        .read(shortsRepositoryProvider)
+        .markShortDone(userId, shortId, isDone: updated.contains(shortId))
+        .ignore();
   }
 
   bool isDone(String shortId) => state.contains(shortId);
+}
+
+// ── Session-level topic diversity tracker ────────────────────────────────────
+
+/// In-memory set of topic strings seen during the current session.
+///
+/// Used by [rankedShortsProvider] to penalise repetitive topic clusters.
+/// keepAlive: persists across navigation but resets on cold start — a fresh
+/// session always starts with a clean slate, which is the desired behaviour.
+@Riverpod(keepAlive: true)
+class ShortsSession extends _$ShortsSession {
+  @override
+  Set<String> build() => {};
+
+  /// Records topics from a short that just became visible to the user.
+  void recordTopics(List<String> topics) {
+    if (topics.isEmpty) return;
+    state = {...state, ...topics};
+  }
+
+  /// Clears all session topic history (e.g. on sign-out).
+  void reset() => state = {};
+}
+
+// ── Ranked shorts (main feed only) ───────────────────────────────────────────
+
+/// Adaptively ranked shorts list for the main (unfiltered) feed.
+///
+/// Applies [ShortFeedScorer] with:
+///  - done IDs from Drift (via [doneShortIdsProvider])
+///  - session topic diversity set (via [shortsSessionProvider])
+///  - optional location context (via [locationContextNotifierProvider])
+///
+/// Module feeds ([ShortsFeedParams.filterShortIds] set) bypass this provider
+/// and use [allShortsProvider] directly to preserve their curated order.
+@riverpod
+List<ShortEntity> rankedShorts(Ref ref) {
+  final shorts = ref.watch(allShortsProvider).value ?? [];
+  final doneIds = ref.watch(doneShortIdsProvider).value ?? {};
+  final session = ref.watch(shortsSessionProvider);
+  final location = ref.watch(locationContextProvider).value;
+
+  return ShortFeedScorer.rank(
+    shorts,
+    doneIds,
+    recentSessionTopics: session,
+    locationContext: location,
+  );
 }

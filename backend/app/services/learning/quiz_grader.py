@@ -11,7 +11,6 @@ Grading strategy per question type:
 from __future__ import annotations
 
 import logging
-import math
 import uuid
 from typing import Any
 
@@ -19,21 +18,13 @@ from app.exceptions import ConceptNotFoundError
 from app.models.common import QuizQuestionType
 from app.models.quiz import QuizAnswer, QuizGradeRequest
 from app.models.quiz_attempt import QuizAttemptAnswer, QuizAttemptDocument
+from app.utils.math_utils import cosine_similarity
 
 logger = logging.getLogger(__name__)
 
 # Question types that warrant semantic (embedding-based) grading
 _SEMANTIC_TYPES = {QuizQuestionType.OPEN_ENDED, QuizQuestionType.SHORT_ANSWER}
 
-
-def _cosine_similarity(a: list[float], b: list[float]) -> float:
-    """Compute cosine similarity between two embedding vectors."""
-    dot = sum(x * y for x, y in zip(a, b))
-    mag_a = math.sqrt(sum(x * x for x in a))
-    mag_b = math.sqrt(sum(x * x for x in b))
-    if mag_a == 0.0 or mag_b == 0.0:
-        return 0.0
-    return dot / (mag_a * mag_b)
 
 
 class QuizGrader:
@@ -142,7 +133,7 @@ class QuizGrader:
         try:
             threshold = get_settings().quiz_semantic_threshold
             embeddings = await self._embedding_provider.embed_texts([answer, correct_answer])
-            similarity = _cosine_similarity(embeddings[0], embeddings[1])
+            similarity = cosine_similarity(embeddings[0], embeddings[1])
             logger.debug(
                 "Semantic quiz grade: similarity=%.3f threshold=%.3f correct=%s",
                 similarity, threshold, similarity >= threshold,

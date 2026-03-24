@@ -58,9 +58,27 @@ async def _run_pipeline(user_id: str, note_id: str, task_id: str) -> dict:
         get_note_repository,
         get_processing_task_repository,
         get_short_repository,
+        get_subscription_service,
         get_vector_store,
     )
+    from app.exceptions import PremiumRequiredError  # noqa: PLC0415
+    from app.models.common import ProcessingStatus  # noqa: PLC0415
     from app.services.pipeline.orchestrator import PipelineOrchestrator  # noqa: PLC0415
+
+    # Guard: reject the pipeline immediately for free-tier users.
+    # Free users can create and store notes but the AI pipeline
+    # (embedding + Shorts generation) is a Premium-only feature.
+    sub_svc = get_subscription_service()
+    try:
+        await sub_svc.check_processing_quota(user_id)
+    except PremiumRequiredError as exc:
+        logger.info(
+            "Pipeline skipped for free-tier user %s (note=%s): %s",
+            user_id, note_id, exc,
+        )
+        task_repo = get_processing_task_repository()
+        await task_repo.update_status(task_id, ProcessingStatus.FAILED.value, str(exc))
+        return {"chunks_created": 0, "shorts_created": 0}
 
     orchestrator = PipelineOrchestrator(
         document_parser=get_document_parser(),

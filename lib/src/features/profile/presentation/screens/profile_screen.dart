@@ -11,6 +11,8 @@ import '../../../../core/widgets/geeky_shimmer.dart';
 import '../../../../routing/route_names.dart';
 import '../../../analytics/data/analytics_repository.dart';
 import '../../../analytics/providers.dart';
+import '../../../auth/providers.dart';
+import '../../../subscription/providers.dart';
 import '../../providers.dart';
 import '../widgets/expertise_radar_chart.dart';
 
@@ -23,6 +25,7 @@ class ProfileScreen extends ConsumerWidget {
     final expertiseAsync = ref.watch(profileExpertiseProvider);
     final statsAsync = ref.watch(profileStatsProvider);
     final streakAsync = ref.watch(learningStreakProvider);
+    final isPremium = ref.watch(isPremiumProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -38,7 +41,7 @@ class ProfileScreen extends ConsumerWidget {
       body: ListView(
         padding: AppSpacing.paddingAll16,
         children: [
-          // Avatar + name + email
+          // ── Avatar + name + email + plan badge ────────────────────────
           Center(
             child: Column(
               children: [
@@ -72,13 +75,49 @@ class ProfileScreen extends ConsumerWidget {
                     color: context.colorScheme.onSurfaceVariant,
                   ),
                 ),
+                AppSpacing.gapV12,
+                // Subscription plan badge — tappable shortcut to subscription screen
+                GestureDetector(
+                  onTap: () => context.pushNamed(RouteNames.subscription),
+                  child: Chip(
+                    avatar: Icon(
+                      isPremium
+                          ? Icons.workspace_premium_rounded
+                          : Icons.lock_open_rounded,
+                      size: 14,
+                      color: isPremium
+                          ? AppColors.primary
+                          : context.colorScheme.onSurfaceVariant,
+                    ),
+                    label: Text(
+                      isPremium ? 'Premium' : 'Free Plan',
+                      style: context.textTheme.labelSmall?.copyWith(
+                        color: isPremium
+                            ? AppColors.primary
+                            : context.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    backgroundColor: isPremium
+                        ? AppColors.primary.withValues(alpha: 0.08)
+                        : context.colorScheme.surfaceContainerHighest,
+                    side: BorderSide(
+                      color: isPremium
+                          ? AppColors.primary.withValues(alpha: 0.3)
+                          : context.colorScheme.outlineVariant,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.s4,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
 
           AppSpacing.gapV24,
 
-          // Quick stats row
+          // ── Quick stats row ───────────────────────────────────────────
           streakAsync.when(
             data: (streak) => _QuickStatsRow(
               streakDays: streak.currentStreak,
@@ -99,38 +138,66 @@ class ProfileScreen extends ConsumerWidget {
 
           AppSpacing.gapV24,
 
-          // Interests
-          if (user != null && user.interests.isNotEmpty) ...[
-            Text(
-              'Interests',
-              style: context.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          // ── Interests ─────────────────────────────────────────────────
+          if (user != null) ...[
+            Row(
+              children: [
+                Text(
+                  'Interests',
+                  style: context.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: () => context.push(
+                    '/${RouteNames.interestSelection}',
+                    extra: true,
+                  ),
+                  icon: const Icon(Icons.edit_rounded, size: 14),
+                  label: const Text('Edit'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    textStyle: context.textTheme.labelMedium,
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+              ],
             ),
             AppSpacing.gapV8,
-            Wrap(
-              spacing: AppSpacing.s8,
-              runSpacing: AppSpacing.s8,
-              children: user.interests.map((interest) {
-                return Chip(
-                  label: Text(
-                    interest,
-                    style: context.textTheme.labelMedium?.copyWith(
-                      color: AppColors.primary,
+            if (user.interests.isEmpty)
+              Text(
+                'No interests added yet. Tap Edit to personalise your feed.',
+                style: context.textTheme.bodySmall?.copyWith(
+                  color: context.colorScheme.onSurfaceVariant,
+                ),
+              )
+            else
+              Wrap(
+                spacing: AppSpacing.s8,
+                runSpacing: AppSpacing.s8,
+                children: user.interests.map((interest) {
+                  return Chip(
+                    label: Text(
+                      interest,
+                      style: context.textTheme.labelMedium?.copyWith(
+                        color: AppColors.primary,
+                      ),
                     ),
-                  ),
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.08),
-                  side: BorderSide.none,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.s4,
-                  ),
-                );
-              }).toList(),
-            ),
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.08),
+                    side: BorderSide.none,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.s4,
+                    ),
+                  );
+                }).toList(),
+              ),
             AppSpacing.gapV24,
           ],
 
-          // Goals
+          // ── Learning Goals ────────────────────────────────────────────
           if (user != null && user.goals.isNotEmpty) ...[
             Text(
               'Learning Goals',
@@ -160,7 +227,7 @@ class ProfileScreen extends ConsumerWidget {
             AppSpacing.gapV24,
           ],
 
-          // Expertise radar chart
+          // ── Expertise radar chart ─────────────────────────────────────
           expertiseAsync.when(
             data: (topics) => ExpertiseRadarChart(topics: topics),
             loading: () => GeekyShimmer(
@@ -177,11 +244,45 @@ class ProfileScreen extends ConsumerWidget {
           ),
 
           AppSpacing.gapV32,
+
+          // ── Sign Out ──────────────────────────────────────────────────
+          // Placed at the bottom following the Apple ID / account page pattern.
+          const Divider(),
+          AppSpacing.gapV8,
+          _SignOutTile(onTap: () => _showSignOutDialog(context, ref)),
+          AppSpacing.gapV16,
+        ],
+      ),
+    );
+  }
+
+  void _showSignOutDialog(BuildContext context, WidgetRef ref) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sign out?'),
+        content: const Text('You will be returned to the login screen.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              await ref.read(authProvider.notifier).logout();
+              // RouterNotifier detects the auth state change and redirects
+              // to /login automatically — no manual navigation needed.
+            },
+            child: const Text('Sign out'),
+          ),
         ],
       ),
     );
   }
 }
+
+// ── Private widgets ───────────────────────────────────────────────────────────
 
 class _AvatarFallback extends StatelessWidget {
   const _AvatarFallback({required this.name});
@@ -195,6 +296,39 @@ class _AvatarFallback extends StatelessWidget {
       style: context.textTheme.headlineMedium?.copyWith(
         color: AppColors.primary,
         fontWeight: FontWeight.w700,
+      ),
+    );
+  }
+}
+
+class _SignOutTile extends StatelessWidget {
+  const _SignOutTile({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
+        child: Row(
+          children: [
+            Icon(
+              Icons.logout_rounded,
+              size: 22,
+              color: context.colorScheme.onSurfaceVariant,
+            ),
+            AppSpacing.gapH12,
+            Text(
+              'Sign Out',
+              style: context.textTheme.bodyMedium?.copyWith(
+                color: context.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

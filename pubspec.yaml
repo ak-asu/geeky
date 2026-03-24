@@ -32,6 +32,7 @@ dependencies:
   # Network
   dio: ^5.9.1
   connectivity_plus: ^7.0.0
+  flutter_cache_manager: ^3.4.1
 
   # UI
   flex_color_scheme: ^8.4.0
@@ -43,12 +44,19 @@ dependencies:
   graphview: ^1.5.1
   google_fonts: ^8.0.1
 
+  # Internationalisation
+  intl: ^0.20.2
+
   # Utility
   shared_preferences: ^2.5.4
   uuid: ^4.5.2
   path_provider: ^2.1.5
   path: ^1.9.1
   url_launcher: ^6.3.2
+
+  # Location
+  geolocator: ^13.0.2
+  geocoding: ^3.0.0
 
   # Features
   file_picker: ^10.3.10

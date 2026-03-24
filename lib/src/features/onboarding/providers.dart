@@ -31,16 +31,3 @@ class OnboardingState extends _$OnboardingState {
     state = false;
   }
 }
-
-@Riverpod(keepAlive: true)
-class SelectedInterests extends _$SelectedInterests {
-  OnboardingRepository get _repo => ref.read(onboardingRepositoryProvider);
-
-  @override
-  List<String> build() => _repo.selectedInterests;
-
-  Future<void> save(List<String> interests) async {
-    await _repo.saveInterests(interests);
-    state = interests;
-  }
-}

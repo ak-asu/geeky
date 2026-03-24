@@ -14,7 +14,8 @@
       "Bash(find:*)",
       "Bash(flutter pub run build_runner build:*)",
       "Bash(grep:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(python3:*)"
     ]
   }
 }

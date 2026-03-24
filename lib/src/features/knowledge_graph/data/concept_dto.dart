@@ -20,9 +20,13 @@ abstract final class ConceptDto {
     );
   }
 
-  static CachedConceptsCompanion toCompanion(ConceptEntity entity) {
+  static CachedConceptsCompanion toCompanion(
+    ConceptEntity entity,
+    String userId,
+  ) {
     return CachedConceptsCompanion(
       id: Value(entity.id),
+      userId: Value(userId),
       name: Value(entity.name),
       description: Value(entity.description),
       level: Value(entity.level),

@@ -1,37 +1,32 @@
 """User Pydantic schemas."""
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from app.models.common import SubscriptionTier, TimestampMixin
+from app.models.common import GeekyBaseModel, SubscriptionTier, TimestampMixin
 
 
-class ReadingPatterns(BaseModel):
+class ReadingPatterns(GeekyBaseModel):
     avg_session_duration: float = Field(default=0.0, alias="avgSessionDuration")
     sessions_per_week: float = Field(default=0.0, alias="sessionsPerWeek")
     completion_rate: float = Field(default=0.0, alias="completionRate")
     return_rate: float = Field(default=0.0, alias="returnRate")
-    model_config = {"populate_by_name": True}
 
 
-class StreakInfo(BaseModel):
+class StreakInfo(GeekyBaseModel):
     current: int = 0
     longest: int = 0
     last_active_date: str | None = Field(default=None, alias="lastActiveDate")
     weekly_activity: list[bool] = Field(default_factory=lambda: [False]*7, alias="weeklyActivity")
-    model_config = {"populate_by_name": True}
 
 
-class DomainExpertise(BaseModel):
+class DomainExpertise(GeekyBaseModel):
     level: float = 0.0
     confidence: float = 0.0
     last_updated: str | None = Field(default=None, alias="lastUpdated")
-    model_config = {"populate_by_name": True}
 
 
 class UserDocument(TimestampMixin):
-    model_config = {"populate_by_name": True}
-
     id: str = ""
     name: str = ""
     email: str = ""
@@ -56,7 +51,7 @@ class UserDocument(TimestampMixin):
     location_enabled: bool = Field(default=False, alias="locationEnabled")
 
 
-class UserProfileUpdate(BaseModel):
+class UserProfileUpdate(GeekyBaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=200)
     interests: list[str] | None = Field(default=None, max_length=50)
     goals: list[str] | None = Field(default=None, max_length=20)

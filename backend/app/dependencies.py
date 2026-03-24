@@ -15,9 +15,60 @@ Usage in routes:
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from app.config import Settings, get_settings
+
+if TYPE_CHECKING:
+    # Protocol types — imported only for type-checking (no runtime overhead,
+    # no circular-import risk).  All annotations are strings via
+    # `from __future__ import annotations`.
+    from app.repositories.analytics_repo import AnalyticsRepository
+    from app.repositories.bookmark_repo import BookmarkRepository
+    from app.repositories.chunk_repo import ChunkRepository
+    from app.repositories.concept_repo import ConceptRepository
+    from app.repositories.interaction_repo import InteractionRepository
+    from app.repositories.module_repo import ModuleRepository
+    from app.repositories.note_repo import NoteRepository
+    from app.repositories.notification_repo import NotificationRepository
+    from app.repositories.processing_task_repo import ProcessingTaskRepository
+    from app.repositories.quiz_attempt_repo import QuizAttemptRepository
+    from app.repositories.quiz_repo import QuizRepository
+    from app.repositories.relationship_repo import RelationshipRepository
+    from app.repositories.review_state_repo import ReviewStateRepository
+    from app.repositories.short_repo import ShortRepository
+    from app.repositories.source_repo import SourceRepository
+    from app.repositories.user_repo import UserRepository
+    from app.services.analytics.aggregator import AnalyticsAggregator
+    from app.services.bookmark.bookmark_service import BookmarkService
+    from app.services.feature_flags.base import FeatureFlagProvider
+    from app.services.knowledge_graph.graph_builder import GraphBuilder
+    from app.services.knowledge_graph.query_service import GraphQueryService
+    from app.services.learning.bkt_tracker import BKTTracker
+    from app.services.learning.flashcard_generator import FlashcardGenerator
+    from app.services.learning.quiz_generator import QuizGenerator
+    from app.services.learning.quiz_grader import QuizGrader
+    from app.services.learning.review_manager import ReviewManager
+    from app.services.llm.base import LLMProvider
+    from app.services.module.module_service import ModuleService
+    from app.services.ner.base import EdgeClassifier, NERExtractor
+    from app.services.notification.base import NotificationSender
+    from app.services.notification.notification_service import NotificationService
+    from app.services.pipeline.embedder.base import EmbeddingProvider
+    from app.services.pipeline.extractor.base import DocumentParser
+    from app.services.profile.profile_service import ProfileService
+    from app.services.quiz.scheduler.base import SpacedRepetitionScheduler
+    from app.services.rag.rag_orchestrator import RAGOrchestrator
+    from app.services.rag.reranker.base import Reranker
+    from app.services.recommendation.feed_ranker import FeedRanker
+    from app.services.recommendation.multi_factor_scorer import MultiFactorScorer
+    from app.services.sanitization.base import TextSanitizer
+    from app.services.search.base import SparseSearchEngine
+    from app.services.search.hybrid_search import HybridSearchService
+    from app.services.source.source_service import SourceService
+    from app.services.subscription.subscription_service import SubscriptionService
+    from app.services.sync.sync_service import SyncService
+    from app.services.vector_store.base import VectorStore
 
 
 # ============================================================
@@ -26,7 +77,7 @@ from app.config import Settings, get_settings
 
 
 @lru_cache
-def get_feature_flags():
+def get_feature_flags() -> FeatureFlagProvider:
     """Get the feature flag provider (singleton). Firestore-backed with 5-min TTL.
 
     Cached with @lru_cache so the same FirestoreFeatureFlags instance is reused
@@ -43,7 +94,7 @@ def get_feature_flags():
 
 
 @lru_cache
-def get_text_sanitizer():
+def get_text_sanitizer() -> TextSanitizer:
     """Get the text sanitizer. Currently: Bleach."""
     from app.services.sanitization.bleach_sanitizer import BleachSanitizer  # noqa: PLC0415
 
@@ -69,7 +120,7 @@ def get_firestore_db() -> Any:
 
 
 @lru_cache
-def get_llm_provider():
+def get_llm_provider() -> LLMProvider:
     """Get the LLM provider. Currently: Gemini 2.5 Flash."""
     from app.services.llm.gemini_llm import GeminiLLM  # noqa: PLC0415
 
@@ -87,8 +138,8 @@ def get_llm_provider():
 
 
 @lru_cache
-def get_embedding_provider():
-    """Get the embedding provider. Currently: Gemini embedding-001."""
+def get_embedding_provider() -> EmbeddingProvider:
+    """Get the embedding provider. Currently: gemini-embedding-001."""
     from app.services.pipeline.embedder.gemini_embedder import GeminiEmbedder  # noqa: PLC0415
 
     settings = get_settings()
@@ -106,7 +157,7 @@ def get_embedding_provider():
 
 
 @lru_cache
-def get_vector_store():
+def get_vector_store() -> VectorStore:
     """Get the vector store. Currently: ChromaDB."""
     from app.services.vector_store.chromadb_store import ChromaDBStore  # noqa: PLC0415
 
@@ -125,7 +176,7 @@ def get_vector_store():
 
 
 @lru_cache
-def get_document_parser():
+def get_document_parser() -> DocumentParser:
     """Get the document parser. Currently: Docling + Gemini Vision fallback."""
     from app.services.pipeline.extractor.docling_parser import DoclingParser  # noqa: PLC0415
 
@@ -138,7 +189,7 @@ def get_document_parser():
 
 
 @lru_cache
-def get_ner_extractor():
+def get_ner_extractor() -> NERExtractor:
     """Get the NER extractor. Currently: spaCy."""
     from app.services.ner.spacy_extractor import SpacyNERExtractor  # noqa: PLC0415
 
@@ -151,7 +202,7 @@ def get_ner_extractor():
 
 
 @lru_cache
-def get_edge_classifier():
+def get_edge_classifier() -> EdgeClassifier:
     """Get the edge classifier. Currently: LLM-based classification."""
     from app.services.ner.spacy_extractor import LLMEdgeClassifier  # noqa: PLC0415
 
@@ -164,7 +215,7 @@ def get_edge_classifier():
 
 
 @lru_cache
-def get_reranker():
+def get_reranker() -> Reranker:
     """Get the reranker. Currently: ms-marco-MiniLM-L6-v2."""
     from app.services.rag.reranker.cross_encoder import CrossEncoderReranker  # noqa: PLC0415
 
@@ -177,7 +228,7 @@ def get_reranker():
 
 
 @lru_cache
-def get_sparse_search_engine():
+def get_sparse_search_engine() -> SparseSearchEngine:
     """Get the sparse search engine. Currently: BM25S."""
     from app.services.search.bm25s_engine import BM25SSearchEngine  # noqa: PLC0415
 
@@ -190,7 +241,7 @@ def get_sparse_search_engine():
 
 
 @lru_cache
-def get_spaced_repetition_scheduler():
+def get_spaced_repetition_scheduler() -> SpacedRepetitionScheduler:
     """Get the spaced repetition scheduler. Currently: py-fsrs."""
     from app.services.quiz.scheduler.fsrs_scheduler import FSRSScheduler  # noqa: PLC0415
 
@@ -203,7 +254,7 @@ def get_spaced_repetition_scheduler():
 # ============================================================
 
 
-def get_notification_sender():
+def get_notification_sender() -> NotificationSender:
     """Get the notification sender. Currently: Firebase Cloud Messaging."""
     from app.services.notification.fcm_sender import FCMNotificationSender  # noqa: PLC0415
 
@@ -215,7 +266,7 @@ def get_notification_sender():
 # ============================================================
 
 
-def get_note_repository():
+def get_note_repository() -> NoteRepository:
     """Get the note repository."""
     from app.models.note import NoteDocument  # noqa: PLC0415
     from app.repositories.note_repo import NoteRepository  # noqa: PLC0415
@@ -223,105 +274,105 @@ def get_note_repository():
     return NoteRepository(db=get_firestore_db())
 
 
-def get_short_repository():
+def get_short_repository() -> ShortRepository:
     """Get the short repository."""
     from app.repositories.short_repo import ShortRepository  # noqa: PLC0415
 
     return ShortRepository(db=get_firestore_db())
 
 
-def get_chunk_repository():
+def get_chunk_repository() -> ChunkRepository:
     """Get the chunk repository."""
     from app.repositories.chunk_repo import ChunkRepository  # noqa: PLC0415
 
     return ChunkRepository(db=get_firestore_db())
 
 
-def get_module_repository():
+def get_module_repository() -> ModuleRepository:
     """Get the module repository."""
     from app.repositories.module_repo import ModuleRepository  # noqa: PLC0415
 
     return ModuleRepository(db=get_firestore_db())
 
 
-def get_concept_repository():
+def get_concept_repository() -> ConceptRepository:
     """Get the concept repository."""
     from app.repositories.concept_repo import ConceptRepository  # noqa: PLC0415
 
     return ConceptRepository(db=get_firestore_db())
 
 
-def get_relationship_repository():
+def get_relationship_repository() -> RelationshipRepository:
     """Get the relationship repository."""
     from app.repositories.relationship_repo import RelationshipRepository  # noqa: PLC0415
 
     return RelationshipRepository(db=get_firestore_db())
 
 
-def get_user_repository():
+def get_user_repository() -> UserRepository:
     """Get the user repository."""
     from app.repositories.user_repo import UserRepository  # noqa: PLC0415
 
     return UserRepository(db=get_firestore_db())
 
 
-def get_interaction_repository():
+def get_interaction_repository() -> InteractionRepository:
     """Get the interaction repository."""
     from app.repositories.interaction_repo import InteractionRepository  # noqa: PLC0415
 
     return InteractionRepository(db=get_firestore_db())
 
 
-def get_quiz_repository():
+def get_quiz_repository() -> QuizRepository:
     """Get the quiz repository."""
     from app.repositories.quiz_repo import QuizRepository  # noqa: PLC0415
 
     return QuizRepository(db=get_firestore_db())
 
 
-def get_bookmark_repository():
+def get_bookmark_repository() -> BookmarkRepository:
     """Get the bookmark repository."""
     from app.repositories.bookmark_repo import BookmarkRepository  # noqa: PLC0415
 
     return BookmarkRepository(db=get_firestore_db())
 
 
-def get_source_repository():
+def get_source_repository() -> SourceRepository:
     """Get the source repository."""
     from app.repositories.source_repo import SourceRepository  # noqa: PLC0415
 
     return SourceRepository(db=get_firestore_db())
 
 
-def get_notification_repository():
+def get_notification_repository() -> NotificationRepository:
     """Get the notification repository."""
     from app.repositories.notification_repo import NotificationRepository  # noqa: PLC0415
 
     return NotificationRepository(db=get_firestore_db())
 
 
-def get_processing_task_repository():
+def get_processing_task_repository() -> ProcessingTaskRepository:
     """Get the processing task repository."""
     from app.repositories.processing_task_repo import ProcessingTaskRepository  # noqa: PLC0415
 
     return ProcessingTaskRepository(db=get_firestore_db())
 
 
-def get_analytics_repository():
+def get_analytics_repository() -> AnalyticsRepository:
     """Get the analytics repository."""
     from app.repositories.analytics_repo import AnalyticsRepository  # noqa: PLC0415
 
     return AnalyticsRepository(db=get_firestore_db())
 
 
-def get_review_state_repository():
+def get_review_state_repository() -> ReviewStateRepository:
     """Get the review state repository."""
     from app.repositories.review_state_repo import ReviewStateRepository  # noqa: PLC0415
 
     return ReviewStateRepository(db=get_firestore_db())
 
 
-def get_quiz_attempt_repository():
+def get_quiz_attempt_repository() -> QuizAttemptRepository:
     """Get the quiz attempt repository."""
     from app.repositories.quiz_attempt_repo import QuizAttemptRepository  # noqa: PLC0415
 
@@ -333,7 +384,7 @@ def get_quiz_attempt_repository():
 # ============================================================
 
 
-def get_graph_builder():
+def get_graph_builder() -> GraphBuilder:
     """Get the KG graph builder service."""
     from app.services.knowledge_graph.graph_builder import GraphBuilder  # noqa: PLC0415
 
@@ -347,7 +398,7 @@ def get_graph_builder():
     )
 
 
-def get_graph_query_service():
+def get_graph_query_service() -> GraphQueryService:
     """Get the KG query service."""
     from app.services.knowledge_graph.query_service import GraphQueryService  # noqa: PLC0415
 
@@ -363,7 +414,7 @@ def get_graph_query_service():
 # ============================================================
 
 
-def get_review_manager():
+def get_review_manager() -> ReviewManager:
     """Get the review session manager."""
     from app.services.learning.review_manager import ReviewManager  # noqa: PLC0415
 
@@ -376,7 +427,7 @@ def get_review_manager():
     )
 
 
-def get_quiz_generator():
+def get_quiz_generator() -> QuizGenerator:
     """Get the quiz generator."""
     from app.services.learning.quiz_generator import QuizGenerator  # noqa: PLC0415
 
@@ -387,7 +438,7 @@ def get_quiz_generator():
     )
 
 
-def get_flashcard_generator():
+def get_flashcard_generator() -> FlashcardGenerator:
     """Get the flashcard generator."""
     from app.services.learning.flashcard_generator import FlashcardGenerator  # noqa: PLC0415
 
@@ -402,7 +453,7 @@ def get_flashcard_generator():
 # ============================================================
 
 
-def get_hybrid_search_service():
+def get_hybrid_search_service() -> HybridSearchService:
     """Get the hybrid search service (sparse + dense)."""
     from app.services.search.hybrid_search import HybridSearchService  # noqa: PLC0415
 
@@ -420,7 +471,7 @@ def get_hybrid_search_service():
 # ============================================================
 
 
-def get_rag_orchestrator():
+def get_rag_orchestrator() -> RAGOrchestrator:
     """Get the RAG orchestrator."""
     from app.services.rag.rag_orchestrator import RAGOrchestrator  # noqa: PLC0415
 
@@ -439,7 +490,7 @@ def get_rag_orchestrator():
 # ============================================================
 
 
-def get_analytics_aggregator():
+def get_analytics_aggregator() -> AnalyticsAggregator:
     """Get the analytics aggregator."""
     from app.services.analytics.aggregator import AnalyticsAggregator  # noqa: PLC0415
 
@@ -459,7 +510,7 @@ def get_analytics_aggregator():
 # ============================================================
 
 
-def get_profile_service():
+def get_profile_service() -> ProfileService:
     """Get the profile service."""
     from app.services.profile.profile_service import ProfileService  # noqa: PLC0415
 
@@ -481,7 +532,7 @@ def get_profile_service():
 # ============================================================
 
 
-def get_bookmark_service():
+def get_bookmark_service() -> BookmarkService:
     """Get the bookmark service."""
     from app.services.bookmark.bookmark_service import BookmarkService  # noqa: PLC0415
 
@@ -496,7 +547,7 @@ def get_bookmark_service():
 # ============================================================
 
 
-def get_source_service():
+def get_source_service() -> SourceService:
     """Get the source service."""
     from app.services.source.source_service import SourceService  # noqa: PLC0415
 
@@ -508,7 +559,7 @@ def get_source_service():
 # ============================================================
 
 
-def get_module_service():
+def get_module_service() -> ModuleService:
     """Get the module service."""
     from app.services.module.module_service import ModuleService  # noqa: PLC0415
 
@@ -523,7 +574,7 @@ def get_module_service():
 # ============================================================
 
 
-def get_notification_service():
+def get_notification_service() -> NotificationService:
     """Get the notification service."""
     from app.services.notification.notification_service import NotificationService  # noqa: PLC0415
 
@@ -538,7 +589,7 @@ def get_notification_service():
 # ============================================================
 
 
-def get_sync_service():
+def get_sync_service() -> SyncService:
     """Get the sync service."""
     from app.services.sync.sync_service import SyncService  # noqa: PLC0415
 
@@ -552,15 +603,13 @@ def get_sync_service():
 # Recommendation Services
 # ============================================================
 
-
 def get_location_scorer():
     """Get the geographic relevance scorer (stateless, no I/O)."""
     from app.services.recommendation.location_scorer import LocationScorer  # noqa: PLC0415
 
     return LocationScorer()
 
-
-def get_recommendation_scorer():
+def get_recommendation_scorer() -> MultiFactorScorer:
     """Get the multi-factor recommendation scorer."""
     from app.services.recommendation.multi_factor_scorer import MultiFactorScorer  # noqa: PLC0415
 
@@ -574,7 +623,7 @@ def get_recommendation_scorer():
     )
 
 
-def get_feed_ranker():
+def get_feed_ranker() -> FeedRanker:
     """Get the feed ranker."""
     from app.services.recommendation.feed_ranker import FeedRanker  # noqa: PLC0415
 
@@ -591,7 +640,7 @@ def get_feed_ranker():
 # ============================================================
 
 
-def get_bkt_tracker():
+def get_bkt_tracker() -> BKTTracker:
     """Get the BKT mastery tracker."""
     from app.services.learning.bkt_tracker import BKTTracker  # noqa: PLC0415
 
@@ -603,7 +652,7 @@ def get_bkt_tracker():
 # ============================================================
 
 
-def get_quiz_grader():
+def get_quiz_grader() -> QuizGrader:
     """Get the quiz grader (grades answers, persists attempts, updates BKT mastery)."""
     from app.services.learning.quiz_grader import QuizGrader  # noqa: PLC0415
 
@@ -620,7 +669,7 @@ def get_quiz_grader():
 # ============================================================
 
 
-def get_subscription_service():
+def get_subscription_service() -> SubscriptionService:
     """Get the subscription service (quota enforcement)."""
     from app.services.subscription.subscription_service import SubscriptionService  # noqa: PLC0415
 

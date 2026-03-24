@@ -11,8 +11,6 @@ from app.models.common import TimestampMixin
 class ReviewStateDocument(TimestampMixin):
     """Per-short FSRS review state tracking (AL-01, AL-05)."""
 
-    model_config = {"populate_by_name": True}
-
     id: str = ""
     short_id: str = Field(default="", alias="shortId")
     stability: float = 0.0

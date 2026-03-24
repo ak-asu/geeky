@@ -11,7 +11,7 @@ from app.models.rag import SearchRequest
 router = APIRouter(prefix="/search", tags=["search"])
 
 
-@router.post("/")
+@router.post("")
 async def hybrid_search(
     _rate_limit: CheckRateLimit,
     user_id: CurrentUserId,
@@ -38,7 +38,7 @@ async def hybrid_search(
     }
 
 
-@router.get("/")
+@router.get("")
 async def search_get(
     _rate_limit: CheckRateLimit,
     user_id: CurrentUserId,

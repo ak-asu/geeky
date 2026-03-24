@@ -12,6 +12,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../routing/route_names.dart';
 import '../../../auth/providers.dart';
+import '../../../location/providers.dart';
 import '../../../subscription/providers.dart';
 import '../../providers.dart';
 
@@ -25,6 +26,7 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _exporting = false;
   bool _detectingLocation = false;
+  bool _clearingOfflineData = false;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +36,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final ttsEnabled = prefs.getBool(StorageKeys.ttsEnabled) ?? false;
     final notificationsEnabled =
         prefs.getBool(StorageKeys.notificationsEnabled) ?? true;
+    final locationEnabled = ref.watch(locationEnabledProvider);
     final isPremium = ref.watch(isPremiumProvider);
     final locationPref = ref.watch(locationPreferenceProvider);
 
@@ -42,11 +45,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: ListView(
         padding: AppSpacing.paddingAll16,
         children: [
-          // --- Appearance ---
+          // ── Appearance ────────────────────────────────────────────────
           const _SectionHeader(label: 'Appearance'),
           AppSpacing.gapV8,
 
-          // Theme mode
           _SettingsTile(
             icon: Icons.palette_rounded,
             title: 'Theme',
@@ -82,7 +84,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
 
-          // Font size
           _SettingsTile(
             icon: Icons.text_fields_rounded,
             title: 'Font Size',
@@ -111,7 +112,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
           AppSpacing.gapV24,
 
-          // --- Features ---
+          // ── Features ──────────────────────────────────────────────────
           const _SectionHeader(label: 'Features'),
           AppSpacing.gapV8,
 
@@ -145,6 +146,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               activeTrackColor: AppColors.primary,
               onChanged: (value) =>
                   prefs.setBool(StorageKeys.notificationsEnabled, value),
+            ),
+          ),
+
+          _SettingsTile(
+            icon: Icons.location_on_rounded,
+            title: 'Location Personalization',
+            trailing: Switch.adaptive(
+              value: locationEnabled,
+              activeTrackColor: AppColors.primary,
+              onChanged: (value) async {
+                await ref.read(locationEnabledProvider.notifier).set(value);
+                if (value) {
+                  // Trigger immediate resolution when the user enables it.
+                  ref
+                      .read(locationContextProvider.notifier)
+                      .refresh()
+                      .ignore();
+                }
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 34),
+            child: Text(
+              'Surfaces content relevant to your region',
+              style: context.textTheme.bodySmall?.copyWith(
+                color: context.colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
 
@@ -252,10 +281,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onTap: () => context.pushNamed(RouteNames.subscription),
           ),
 
+          _SettingsTile(
+            icon: Icons.logout_rounded,
+            title: 'Sign Out',
+            trailing: Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: context.colorScheme.onSurfaceVariant,
+            ),
+            onTap: _showSignOutDialog,
+          ),
+
           AppSpacing.gapV24,
 
-          // --- Privacy ---
-          const _SectionHeader(label: 'Privacy'),
+          // ── Privacy & Data ────────────────────────────────────────────
+          const _SectionHeader(label: 'Privacy & Data'),
           AppSpacing.gapV8,
 
           _SettingsTile(
@@ -286,6 +326,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onTap: () => launchUrl(Uri.parse(AppConstants.privacyPolicyUrl)),
           ),
 
+          AppSpacing.gapV24,
+
+          // ── Storage ───────────────────────────────────────────────────
+          const _SectionHeader(label: 'Storage'),
+          AppSpacing.gapV8,
+
+          _SettingsTile(
+            icon: Icons.cleaning_services_rounded,
+            title: 'Clear Offline Data',
+            trailing: _clearingOfflineData
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: context.colorScheme.onSurfaceVariant,
+                  ),
+            onTap: _clearingOfflineData ? null : _showClearOfflineDataDialog,
+          ),
+
+          AppSpacing.gapV24,
+
+          // ── Danger Zone ───────────────────────────────────────────────
+          const _SectionHeader(label: 'Danger Zone'),
+          AppSpacing.gapV8,
+
           _SettingsTile(
             icon: Icons.delete_forever_rounded,
             title: 'Delete Account',
@@ -300,35 +369,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
           AppSpacing.gapV24,
 
-          // --- Data Management ---
-          const _SectionHeader(label: 'Data Management'),
-          AppSpacing.gapV8,
-
-          _SettingsTile(
-            icon: Icons.cleaning_services_rounded,
-            title: 'Clear Cache',
-            trailing: Icon(
-              Icons.chevron_right_rounded,
-              size: 20,
-              color: context.colorScheme.onSurfaceVariant,
-            ),
-            onTap: _showClearCacheDialog,
-          ),
-
-          _SettingsTile(
-            icon: Icons.restart_alt_rounded,
-            title: 'Reset All Data',
-            trailing: Icon(
-              Icons.chevron_right_rounded,
-              size: 20,
-              color: AppColors.error.withValues(alpha: 0.7),
-            ),
-            onTap: _showResetDialog,
-          ),
-
-          AppSpacing.gapV24,
-
-          // --- About ---
+          // ── About ─────────────────────────────────────────────────────
           const _SectionHeader(label: 'About'),
           AppSpacing.gapV8,
 
@@ -428,13 +469,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
     );
   }
+  // ── Handlers ──────────────────────────────────────────────────────────────
 
   Future<void> _handleExportData() async {
     setState(() => _exporting = true);
     try {
       await ref.read(settingsRepositoryProvider).exportData();
       if (mounted) {
-        context.showSnackBar('Your data export is ready.');
+        context.showSnackBar(
+          "Export queued. You'll receive an email with a download link.",
+        );
       }
     } catch (_) {
       if (mounted) {
@@ -442,6 +486,75 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
     } finally {
       if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  void _showSignOutDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sign out?'),
+        content: const Text('You will be returned to the login screen.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              await ref.read(authProvider.notifier).logout();
+            },
+            child: const Text('Sign out'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showClearOfflineDataDialog() {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Clear Offline Data'),
+        content: const Text(
+          'This removes locally cached notes, shorts, modules, and images '
+          'from this device. Your data is safe on the server and will '
+          're-sync automatically when you are online.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              await _handleClearOfflineData();
+            },
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleClearOfflineData() async {
+    setState(() => _clearingOfflineData = true);
+    try {
+      final userId = ref.read(currentUserProvider)?.id ?? '';
+      await ref.read(settingsRepositoryProvider).clearOfflineData(userId);
+      if (mounted) {
+        context.showSnackBar(
+          'Offline data cleared. Content will re-sync when online.',
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        context.showSnackBar('Failed to clear offline data. Please try again.');
+      }
+    } finally {
+      if (mounted) setState(() => _clearingOfflineData = false);
     }
   }
 
@@ -458,7 +571,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'This will permanently delete your account and all associated data. This cannot be undone.',
+                  'This will permanently delete your account and all associated '
+                  'data. This cannot be undone.',
                 ),
                 AppSpacing.gapV16,
                 const Text(
@@ -503,69 +617,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     try {
       await ref.read(settingsRepositoryProvider).deleteAccount();
       await ref.read(authProvider.notifier).logout();
-      if (mounted) context.go('/');
+      // RouterNotifier detects the auth state change and redirects to /login.
     } catch (_) {
       if (mounted) {
         context.showSnackBar('Failed to delete account. Please try again.');
       }
     }
   }
-
-  void _showClearCacheDialog() {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Clear Cache'),
-        content: const Text(
-          'This will remove cached content. Your notes and bookmarks will be preserved.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              context.showSnackBar('Cache cleared');
-            },
-            child: const Text('Clear'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showResetDialog() {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Reset All Data'),
-        content: const Text(
-          'This will delete all local data including notes, bookmarks, and settings. This cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              final prefs = ref.read(sharedPreferencesProvider);
-              await prefs.clear();
-              if (mounted) {
-                context.showSnackBar('All data reset. Restart the app.');
-              }
-            },
-            child: const Text('Reset'),
-          ),
-        ],
-      ),
-    );
-  }
 }
+
+// ── Private widgets ───────────────────────────────────────────────────────────
 
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({required this.label});

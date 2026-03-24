@@ -33,7 +33,7 @@ async def remove_bookmark(
     return {"data": {"removed": removed}}
 
 
-@router.get("/")
+@router.get("")
 async def list_bookmarks(
     user_id: CurrentUserId,
     limit: int = Query(default=50, ge=1, le=100),
