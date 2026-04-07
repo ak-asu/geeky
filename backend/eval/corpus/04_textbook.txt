@@ -1,0 +1,161 @@
+Introduction to Machine Learning: Concepts, Algorithms, and Applications
+
+## Chapter Overview
+
+Machine learning is a branch of artificial intelligence that enables computer systems to learn from data and improve their performance on tasks without being explicitly programmed for each case. Rather than following hand-written rules, a machine learning system identifies patterns in training data and uses those patterns to make decisions or predictions on new, unseen examples. This chapter introduces the core concepts, major algorithmic families, training methodology, evaluation practices, and practical considerations for building machine learning systems.
+
+## 1. What Is Machine Learning?
+
+### 1.1 Definitions and Scope
+
+Arthur Samuel coined the term "machine learning" in 1959, defining it as a field of study that gives computers the ability to learn without being explicitly programmed. Tom Mitchell provided a more precise definition in 1997: a computer program is said to learn from experience E with respect to task T and performance measure P if its performance on T as measured by P improves with experience E.
+
+This definition captures the key elements. There is a task: classifying emails as spam, predicting house prices, recognizing spoken words. There is experience: labeled training examples, historical records, interaction logs. And there is a performance measure: accuracy, mean squared error, reward. The algorithm searches the space of possible functions for one that performs well on the task.
+
+### 1.2 Machine Learning vs. Traditional Programming
+
+Traditional programming requires a developer to write explicit rules covering every case the system will encounter. This works for problems with clear, stable logic — arithmetic, sorting, parsing. It fails for problems where the rules are either unknown, too complex to enumerate, or change over time. Writing rules that identify a human face from pixel values, or that translate fluent English into fluent Chinese, is not feasible. But machine learning systems trained on sufficient labeled data can perform these tasks at human parity or above.
+
+The central advantage of machine learning is its ability to generalize: a model trained on labeled examples can produce useful outputs on examples it has never seen before, provided the training and test distributions are similar.
+
+### 1.3 Types of Learning
+
+Machine learning is broadly divided into three paradigms based on the nature of the training signal.
+
+**Supervised learning** uses input-output pairs. Each training example includes features and the correct label. The algorithm learns a mapping from inputs to outputs. Classification (discrete labels) and regression (continuous values) are the two main subtasks.
+
+**Unsupervised learning** uses unlabeled data. The algorithm discovers structure — clusters, latent factors, generative models — without explicit feedback. Clustering, dimensionality reduction, and density estimation fall into this category.
+
+**Reinforcement learning** involves an agent that learns by interacting with an environment. The agent takes actions, observes outcomes and rewards, and adjusts its policy to maximize cumulative reward over time. Reinforcement learning has achieved landmark results in board games (AlphaGo defeating world champion Lee Sedol in 2016), video games (OpenAI Five winning at Dota 2), and robotic control.
+
+## 2. Supervised Learning Algorithms
+
+### 2.1 Linear Models
+
+Linear regression models the output as a linear function of input features plus Gaussian noise: $y = w^T x + b + \epsilon$. Parameters are estimated by minimizing the mean squared error (MSE) on training data. The normal equations provide a closed-form solution: $w = (X^T X)^{-1} X^T y$. For large datasets or ill-conditioned feature matrices, iterative gradient descent is preferred. Ridge regression adds an L2 penalty term $\lambda \|w\|^2$ to the MSE, shrinking weights toward zero and reducing overfitting; this is equivalent to placing a Gaussian prior on the weights.
+
+Logistic regression extends linear models to binary classification by passing the linear output through a sigmoid function: $P(y=1|x) = 1/(1+e^{-(w^T x + b)})$. Parameters are estimated by maximizing the log-likelihood of the training labels. Despite its name, logistic regression is a classification algorithm. It produces calibrated probability estimates, is interpretable through its weights, and serves as the standard baseline for binary classification tasks.
+
+### 2.2 Decision Trees
+
+A decision tree partitions the feature space through a binary tree of threshold tests. At each internal node, a single feature is compared against a threshold; examples go left if below and right if above. Leaf nodes contain predictions: the majority class for classification or the mean value for regression.
+
+Trees are built by recursively choosing the split that most reduces impurity. Gini impurity measures the probability that a randomly chosen example is misclassified: $G = \sum_k p_k(1-p_k)$. Information gain measures the reduction in entropy. Both criteria favor splits that produce pure child nodes. Trees are interpretable: every prediction follows a human-readable path from root to leaf. Their weakness is high variance — small changes in training data can produce structurally different trees.
+
+### 2.3 Ensemble Methods: Random Forests
+
+Random forests combine hundreds or thousands of decision trees, each trained on a bootstrap sample of the training data and using a random subset of features at each split. Final predictions are determined by majority vote (classification) or mean (regression) across all trees. Averaging over many high-variance, low-bias trees dramatically reduces overall variance while increasing bias only slightly. The random feature selection at each split decorrelates the trees, enhancing the variance-reduction benefit.
+
+Random forests are among the most reliable general-purpose algorithms available. They are robust to outliers and irrelevant features, require minimal hyperparameter tuning (the most important hyperparameter is the number of trees, which exhibits diminishing returns beyond a few hundred), and provide intrinsic estimates of feature importance based on how much each feature reduces impurity across all splits.
+
+### 2.4 Gradient Boosting
+
+Gradient boosting builds an ensemble sequentially. Each new model is trained to predict the negative gradient of the loss with respect to the current ensemble's predictions — that is, it learns to correct the residual errors of the ensemble so far. The final prediction is the weighted sum of all models' predictions, with a learning rate controlling the contribution of each new model.
+
+Popular implementations include XGBoost (2016), which introduced second-order gradient approximations and regularization; LightGBM, which uses histogram-based splitting for much faster training; and CatBoost, which handles categorical features natively. Gradient boosting frequently achieves top performance on tabular data competitions and is the preferred algorithm when prediction accuracy is paramount and training time is not a binding constraint.
+
+### 2.5 Support Vector Machines
+
+Support vector machines find the hyperplane that maximizes the margin between two classes. The margin is twice the perpendicular distance from the hyperplane to the nearest training examples from either class, which are called support vectors. Maximizing the margin is equivalent to minimizing $\|w\|^2$ subject to correct classification, a convex quadratic optimization problem with a unique global solution.
+
+For non-linearly separable data, the soft-margin SVM introduces slack variables that allow some training examples to be misclassified, with a penalty $C$ controlling the trade-off between margin size and training error. The kernel trick allows SVMs to operate in very high-dimensional feature spaces implicitly: the algorithm only needs inner products between feature vectors, and the kernel function $K(x_i, x_j)$ computes these inner products in the transformed space without explicitly computing the transformation. The RBF kernel $K(x, x') = \exp(-\gamma \|x - x'\|^2)$ is the most widely used kernel for SVMs.
+
+## 3. Neural Networks and Deep Learning
+
+### 3.1 The Feedforward Network
+
+A feedforward neural network consists of an input layer, one or more hidden layers, and an output layer. Each neuron computes a weighted sum of its inputs, adds a bias, and applies an activation function: $a = f(w^T x + b)$. Early networks used sigmoid or tanh activations. Modern networks almost universally use the rectified linear unit (ReLU): $f(z) = \max(0, z)$. ReLU is computationally cheap, avoids the vanishing gradient problem that affects sigmoid for deep networks, and produces sparse activations.
+
+Universal approximation theorems establish that feedforward networks with at least one hidden layer can approximate any continuous function to arbitrary accuracy, given enough neurons. In practice, deeper networks with fewer neurons per layer generalize better on complex tasks than wide, shallow networks.
+
+### 3.2 Training via Backpropagation
+
+Training a neural network requires minimizing a loss function over the model parameters. For classification, cross-entropy loss is standard; for regression, mean squared error. The gradient of the loss with respect to each parameter is needed to apply gradient descent updates.
+
+Backpropagation computes these gradients efficiently using the chain rule of calculus. In a single backward pass through the network, it propagates the gradient of the loss from the output layer back to the input layer, computing each layer's contribution. The total computation is proportional to the number of parameters, not the number of training examples, making backpropagation practical for networks with millions of parameters.
+
+Modern optimizers improve on vanilla gradient descent. Adam (Adaptive Moment Estimation), introduced by Kingma and Ba in 2014, maintains per-parameter running averages of the gradient and the squared gradient, adapting the effective learning rate for each parameter individually. Adam is the default optimizer for most deep learning applications due to its robustness across different architectures and hyperparameter settings.
+
+### 3.3 Regularization Techniques
+
+Neural networks with many parameters can memorize training data, achieving near-zero training loss while generalizing poorly. Several regularization techniques reduce this overfitting.
+
+Dropout, introduced by Srivastava et al. (2014), randomly sets a fraction of activations to zero during each training forward pass. This prevents neurons from co-adapting and forces the network to learn redundant representations. At test time, all neurons are active but their outputs are scaled by the retention probability. Dropout is particularly effective for fully connected layers and reduces overfitting substantially at minimal computational cost.
+
+Batch normalization, introduced by Ioffe and Szegedy (2015), normalizes activations within each mini-batch to zero mean and unit variance, then applies a learned scale and shift. Batch normalization accelerates training by allowing higher learning rates, reduces sensitivity to initialization, and provides mild regularization. It has become a standard component of most modern network architectures.
+
+Data augmentation applies random transformations to training examples — rotations, flips, crops, color jitter for images; synonym replacement and back-translation for text — creating additional training variety from the existing dataset. Augmentation is particularly important when labeled data is limited.
+
+### 3.4 Convolutional Neural Networks
+
+Convolutional Neural Networks (CNNs) process grid-structured data such as images by applying learned filter banks called convolutional layers. Each filter slides across the input computing local dot products, producing feature maps that detect specific spatial patterns. Pooling layers reduce the spatial dimensions of feature maps by taking the maximum or mean value within local windows, building in a degree of translation invariance.
+
+Stacked convolutional and pooling layers learn a hierarchy of representations: early layers detect edges and color gradients, middle layers detect textures and local patterns, deep layers detect object parts, and the final layers detect whole objects. The key efficiency of CNNs is parameter sharing: the same filter weights apply at every spatial position, reducing the number of parameters by orders of magnitude compared to fully connected layers.
+
+AlexNet (Krizhevsky, Sutskever, Hinton, 2012) demonstrated that deep CNNs trained on GPUs could achieve dramatically lower error rates on the ImageNet Large Scale Visual Recognition Challenge than any previous method. AlexNet reduced the top-5 error rate from 26.2% to 15.3%, a gap that had taken years to close incrementally. This result is widely considered the starting point of the modern deep learning era.
+
+Subsequent architectures improved on AlexNet progressively: VGGNet (2014) showed deeper networks with small 3×3 filters outperform shallower networks with larger filters; ResNet (2015) introduced skip connections that allow gradient flow across dozens of layers, enabling networks with over 100 layers; EfficientNet (2019) introduced neural architecture search to find optimal depth, width, and resolution scaling.
+
+### 3.5 Recurrent Neural Networks and LSTMs
+
+Recurrent Neural Networks (RNNs) process sequences by maintaining a hidden state that is updated at each time step: $h_t = f(W_h h_{t-1} + W_x x_t + b)$. The hidden state carries information from previous steps, allowing the network to condition predictions on arbitrary-length history.
+
+Standard RNNs suffer from the vanishing gradient problem: gradients of the loss with respect to parameters at early time steps decay exponentially through the many sequential matrix multiplications, making it difficult to learn dependencies that span many steps. Long Short-Term Memory networks (LSTMs), introduced by Hochreiter and Schmidhuber in 1997, resolve this with a cell state protected by three learnable gates: an input gate that controls what new information to add, a forget gate that decides what to discard, and an output gate that controls what to expose to the next layer. These gates allow the network to preserve important information across hundreds of steps.
+
+LSTMs were the dominant architecture for natural language processing from approximately 2013 to 2017, achieving state-of-the-art results on machine translation (Sutskever et al., 2014), speech recognition, and sentiment analysis.
+
+### 3.6 Transformers and Large Language Models
+
+The Transformer architecture (Vaswani et al., 2017) replaced recurrence with self-attention. The self-attention mechanism allows every position in a sequence to directly attend to every other position, weighted by learned compatibility scores. The weight between positions $i$ and $j$ is: $\alpha_{ij} = \text{softmax}(q_i \cdot k_j / \sqrt{d_k})$, where $q_i$ and $k_j$ are learned query and key vectors. Multiple attention heads operating in parallel capture different types of positional relationships.
+
+Transformers have three major advantages over RNNs: fully parallel computation (no sequential dependency), direct modeling of long-range dependencies (path length between any two positions is O(1) rather than O(n)), and scalability to very large model sizes. These properties enabled training on unprecedentedly large corpora with unprecedentedly large models.
+
+Large language models (LLMs) based on Transformer decoders — the GPT series from OpenAI, Gemini from Google, Claude from Anthropic — are trained to predict the next token in a sequence given all previous tokens. Pre-training on hundreds of billions of tokens exposes models to vast world knowledge and diverse linguistic patterns. Fine-tuning with human feedback (RLHF) aligns behavior with human preferences. The resulting models exhibit few-shot learning (solving new tasks with a few examples in the prompt), reasoning capabilities, and instruction-following behavior that were not explicitly trained.
+
+## 4. Unsupervised and Self-Supervised Learning
+
+### 4.1 Clustering
+
+K-means partitions n data points into k clusters by alternating between assignment (each point assigned to the nearest centroid) and update (each centroid recomputed as the mean of its assigned points). The algorithm converges to a local minimum of the within-cluster sum of squared distances. K-means requires specifying k in advance, is sensitive to initialization (addressed with the k-means++ initialization), and assumes approximately spherical clusters of similar size.
+
+DBSCAN discovers clusters as dense connected regions without requiring k to be specified. It classifies each point as a core point (at least MinPts neighbors within radius eps), a border point (within eps of a core point but not itself a core point), or noise. DBSCAN is robust to outliers and discovers clusters of arbitrary shape, but its performance degrades when clusters have widely varying densities.
+
+Hierarchical clustering builds a tree (dendrogram) of nested clusters by iteratively merging the two most similar clusters (agglomerative) or splitting the single cluster containing all points (divisive). The dendrogram can be cut at any level to produce any number of flat clusters. Ward's linkage, which minimizes the increase in total within-cluster variance at each merge, generally produces compact, well-separated clusters.
+
+### 4.2 Dimensionality Reduction
+
+Principal Component Analysis (PCA) finds the linear subspace of maximum variance by computing the eigenvectors of the sample covariance matrix. Projecting data onto the top k eigenvectors (principal components) produces the k-dimensional representation that minimizes reconstruction error. PCA is fast, interpretable, and widely used for visualization, noise reduction, and as a preprocessing step.
+
+t-SNE (van der Maaten and Hinton, 2008) is a nonlinear technique for visualization. It models pairwise similarities between points in high-dimensional space as probabilities and minimizes the KL divergence between those probabilities and probabilities in a 2D embedding. t-SNE produces visualizations in which globally similar clusters are positioned near each other and local neighborhood structure is well-preserved. It is widely used in bioinformatics (single-cell RNA sequencing), image representation analysis, and NLP (visualizing word embeddings).
+
+Self-supervised learning generates supervisory signal from the data itself, without human labeling. Contrastive learning methods (SimCLR, MoCo, CLIP) train an encoder so that different augmentations of the same image produce similar representations while representations of different images are pushed apart. Masked prediction methods (BERT, MAE) remove portions of the input and train the model to reconstruct the missing pieces. Self-supervised representations trained on large unlabeled corpora often match or exceed the quality of supervised representations trained on labeled data.
+
+## 5. Model Evaluation and Selection
+
+### 5.1 The Bias-Variance Tradeoff
+
+Expected prediction error on a new example decomposes into bias squared, variance, and irreducible noise. Bias is the systematic error due to wrong model assumptions (e.g., fitting a line to nonlinear data). Variance is the error due to sensitivity to fluctuations in the training set. A simple model (e.g., linear regression on a complex problem) has high bias and low variance; a complex model (e.g., a deep network on a small dataset) has low bias but high variance. Regularization and ensemble methods aim to find the model complexity that minimizes total expected error.
+
+### 5.2 Cross-Validation
+
+K-fold cross-validation divides data into k equal folds. In k iterations, each fold serves once as the validation set while the remaining k-1 folds are used for training. Validation scores across all folds are averaged to estimate generalization performance. Values of k = 5 or k = 10 are standard choices, balancing computational cost with estimation stability. Stratified cross-validation maintains the class distribution in each fold, important for imbalanced datasets.
+
+Nested cross-validation separates model selection (hyperparameter tuning) from model assessment: an inner loop cross-validates to select hyperparameters and an outer loop evaluates the selected model on held-out data. Without nesting, using the same data for selection and final assessment produces optimistically biased performance estimates.
+
+### 5.3 Evaluation Metrics
+
+Accuracy is intuitive but misleading when classes are imbalanced. A classifier that always predicts the majority class can achieve 99% accuracy on a dataset where 99% of examples are negative. Precision (fraction of positive predictions that are truly positive) and recall (fraction of true positives that are predicted positive) characterize the tradeoff between false positives and false negatives. The F1 score is the harmonic mean of precision and recall. Area under the ROC curve (AUC-ROC) summarizes performance across all classification thresholds and is invariant to class distribution.
+
+For regression, mean absolute error (MAE) and root mean squared error (RMSE) are standard. RMSE penalizes large errors more heavily due to the squaring, which is appropriate when large errors are disproportionately costly.
+
+## 6. Ethical Considerations
+
+Machine learning systems trained on historical data inherit and can amplify the biases present in that data. Hiring algorithms, recidivism prediction tools, and loan approval models have all been found to exhibit discriminatory behavior toward protected groups. Auditing models for disparate impact, applying fairness constraints during training, and documenting known limitations are becoming standard practice.
+
+Explainability is critical in high-stakes applications. A model that predicts cancer from imaging scans or recommends parole decisions must provide reasons that clinicians and judges can evaluate. LIME (Local Interpretable Model-Agnostic Explanations) approximates a complex model locally with an interpretable surrogate. SHAP (SHapley Additive exPlanations) assigns each feature a contribution value based on game-theoretic Shapley values, providing a consistent and theoretically grounded attribution method.
+
+Data privacy is a concern when models are trained on sensitive personal information. Differential privacy adds carefully calibrated random noise to gradient updates during training, providing a formal guarantee that the trained model does not memorize individual training examples beyond a specified bound. Federated learning trains models across many devices without centralizing raw data, with only model updates transmitted to a central server.
+
+## Summary
+
+Machine learning provides a powerful toolkit for extracting predictive and descriptive patterns from data. Supervised methods — linear models, trees, ensembles, SVMs, and neural networks — cover the majority of practical prediction tasks. Unsupervised methods discover structure without labels. The Transformer architecture and large language models represent the current frontier of the field, exhibiting capabilities that were unimaginable a decade ago. Deploying machine learning responsibly requires careful attention to generalization, fairness, interpretability, and data privacy, all of which are active research areas with significant practical consequence.

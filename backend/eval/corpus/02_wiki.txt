@@ -1,0 +1,73 @@
+Spaced Repetition: History, Science, and Modern Applications
+
+## Overview
+
+Spaced repetition is a learning technique that involves reviewing information at carefully timed intervals. Rather than studying the same material repeatedly in a single sitting, a learner using spaced repetition revisits each piece of information just as they are on the verge of forgetting it. The key insight is that each successful recall strengthens the memory trace and resets the forgetting clock, pushing back the next review point. Practiced consistently, this approach allows a learner to maintain thousands of items in long-term memory while spending a surprisingly small amount of daily time on review.
+
+The technique sits at the intersection of cognitive psychology, neuroscience, and computer science. Its foundations lie in Hermann Ebbinghaus's forgetting curve research from the 1880s, and its computational implementation was pioneered by Polish scientist Piotr Wozniak in the late 1980s. Today, spaced repetition powers some of the most widely used learning tools in the world, including Anki, Duolingo, and multiple medical education platforms.
+
+## Historical Background
+
+### Ebbinghaus and the Forgetting Curve
+
+Hermann Ebbinghaus was the first researcher to apply rigorous experimental methods to the study of memory. Working in self-imposed isolation, he used himself as the sole experimental subject, memorizing lists of nonsense syllables and testing his own recall at precisely measured time intervals. His 1885 monograph, Über das Gedächtnis (On Memory), contained two foundational results.
+
+The first was the forgetting curve, showing that memory retention decays exponentially over time in the absence of review. The forgetting is fastest immediately after learning and gradually slows. The second was the spacing effect: Ebbinghaus found that distributing study sessions across time produced far stronger long-term retention than concentrating the same total study time into a single session, even when the total study time was held constant.
+
+### Cecil Alec Mace and Optimal Review Timing
+
+British psychologist Cecil Alec Mace expanded on the spacing effect in the 1930s, proposing in his 1932 book Psychology of Study that students should schedule reviews at increasing time intervals. Mace argued that the most efficient review moment is the point at which forgetting is just beginning — not earlier, when material is still well-remembered and review effort is wasted, and not later, when too much information has already decayed. This principle of reviewing at the moment of near-forgetting is the conceptual heart of modern spaced repetition.
+
+### Sebastian Leitner and the Card Box System
+
+In 1972, German journalist Sebastian Leitner introduced a practical paper-based system called the Leitner box. A learner maintains flashcard decks arranged in boxes numbered 1 through 5. New or incorrectly recalled cards stay in box 1 and are reviewed daily. Correctly recalled cards advance to higher-numbered boxes, each reviewed at progressively longer intervals: box 2 every two days, box 3 every four days, and so on. An incorrect response returns the card to box 1. The Leitner system made spaced repetition practical without a computer and its structure directly anticipates the logic of later software implementations.
+
+## Computational Implementations
+
+### SM-2: The First Algorithmic Approach
+
+Piotr Wozniak, then a student at the University of Poznan, implemented the first computerized spaced repetition algorithm in 1987. Named SuperMemo, the system used a simplified forgetting curve model to calculate the optimal next review date for each flashcard. The second version, SM-2, became the most widely adopted algorithm in the field and is still used today as the basis of many applications.
+
+In SM-2, each card carries an Ease Factor (EF) and a consecutive correct recall count. On review, the learner rates recall quality on a scale from 0 to 5. Cards rated 3 or above are scheduled for a future review: the first interval is 1 day, the second is 6 days, and subsequent intervals are the previous interval multiplied by the Ease Factor. Cards rated below 3 are reset. The Ease Factor adjusts up or down after each review, so well-retained items earn progressively longer intervals while difficult items cycle more frequently.
+
+SM-2 has known limitations. Its initial intervals of 1 day and 6 days do not adapt to individual learner characteristics, and its model of forgetting is a simplification that does not account for relearning effects or varying difficulty distributions across users.
+
+### FSRS: A Modern Successor
+
+The Free Spaced Repetition Scheduler (FSRS), developed by Jarrett Ye and colleagues and published in 2022, improves substantially on SM-2 by modeling three memory components: stability (the expected half-life of the memory in the absence of review), difficulty (how intrinsically hard the item is for the learner), and retrievability (the current probability of successful recall). FSRS updates all three components continuously based on observed responses and was validated empirically against large-scale review logs. In head-to-head comparisons, FSRS achieved better long-term retention outcomes at lower review burden than SM-2.
+
+### Anki and Mass Adoption
+
+Anki, released in 2006 by Damien Elmes, brought spaced repetition to a global audience. Initially implementing SM-2, it later added native support for FSRS. Anki allows users to create decks on any subject, incorporate images and audio, and share decks publicly through AnkiWeb. Its adoption in medical education is particularly notable: medical students routinely spend years building and reviewing Anki decks covering thousands of anatomy, pharmacology, and pathology facts. As of the mid-2020s, AnkiWeb hosts several hundred thousand publicly shared decks with millions of active users.
+
+## The Neuroscience of Spacing
+
+### The Desirable Difficulties Framework
+
+Robert Bjork at UCLA developed the desirable difficulties framework to explain why spacing works neurologically. The core argument is that retrieval itself — actively pulling information from memory — is a powerful memory-strengthening event. When retrieval is effortless, as when material was studied moments ago, the memory consolidation signal is weak. When retrieval requires effort, as when some forgetting has occurred and the answer must be reconstructed, the consolidation signal is much stronger. Spaced repetition maximizes useful retrieval effort by scheduling review at the point of maximum effort that still allows successful recall.
+
+This framework also explains why testing (retrieval practice) is more effective for long-term retention than re-studying. Merely reading notes again provides weak memory consolidation. Being forced to generate the answer yourself, even imperfectly, produces substantially stronger encoding.
+
+### Synaptic Consolidation
+
+At the molecular level, the spacing effect has a plausible mechanistic basis in synaptic consolidation. Long-term potentiation (LTP), the primary cellular mechanism of memory formation, requires protein synthesis at the synapse. When a synapse is activated repeatedly with too little delay between activations, the protein synthesis machinery is already occupied and the second activation produces weaker potentiation. When activations are spaced appropriately, the machinery has recovered and the second activation produces robust long-term strengthening. This biological timing constraint provides a mechanistic basis for the behavioral spacing effect.
+
+## Applications and Evidence
+
+### Language Vocabulary Acquisition
+
+Spaced repetition is among the most empirically well-supported techniques for vocabulary acquisition in foreign languages. A meta-analysis by Cepeda et al. (2006) of 254 studies found that spaced practice consistently outperformed massed practice for long-term retention across a wide range of materials and learner populations. For vocabulary specifically, the advantage of spaced over massed practice compounds over time: while immediate performance may be similar, retention measured weeks or months later shows large effects in favor of spacing.
+
+Duolingo, Memrise, and Clozemaster all incorporate spaced repetition in their core learning loops. Duolingo's internal experiments, published in 2019, found that users who received spaced repetition scheduling for vocabulary review showed 45 to 60 percent better long-term retention than control users receiving uniform random review.
+
+### Medical Education
+
+Medical students face among the most demanding long-term memorization challenges in any academic field. Anatomy, pharmacology, pathology, and microbiology each require thousands of specific facts to be retained across multi-year curricula. The informal adoption of Anki decks in medical education has grown into a near-universal practice at many medical schools, with student-developed decks like AnKing covering tens of thousands of cards organized around major medical curricula.
+
+Several medical schools have begun formally studying and incorporating spaced repetition. A study at the University of Michigan Medical School found that students using spaced repetition reviewed knowledge gaps more efficiently and showed better retention on standardized assessments compared to students using traditional review methods.
+
+### Limitations
+
+Spaced repetition excels at declarative memory — facts, vocabulary, and definitions — but is less suited to building conceptual understanding, procedural skill, or the ability to transfer knowledge to novel contexts. Overuse can create what researchers call production without comprehension: the ability to recall a fact in isolation without being able to apply it.
+
+Consistency is also a significant practical challenge. A spaced repetition queue that goes unreviewed for several days creates a backlog that can become discouraging. Many learners abandon their queues when real life disrupts their schedule. This motivational challenge is partly addressed by modern applications through gamification and adaptive scheduling that handles lapses gracefully.

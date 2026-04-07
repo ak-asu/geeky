@@ -1,0 +1,263 @@
+[
+  {
+    "filename": "01_news.txt",
+    "category": "Short news article",
+    "complexity": "Low",
+    "word_count": 511,
+    "shorts_generated": 2,
+    "factual_accuracy_pct": 100.0,
+    "coverage_pct": 87.5,
+    "redundancy_pct": 0.0,
+    "difficulty_pearson_r": 1.0,
+    "missing_topics": [
+      "Ebbinghaus's research methodology (memorizing meaningless syllable sequences and self-testing in his Berlin apartment)"
+    ],
+    "shorts": [
+      {
+        "title": "The Forgetting Curve: How Memory Fades and How to Combat It",
+        "difficulty": 0.35,
+        "fkgl_grade": 13.12,
+        "fkgl_01": 0.713,
+        "accuracy_pct": 100.0,
+        "unsupported_count": 0,
+        "total_statements": 14,
+        "reasoning": "None"
+      },
+      {
+        "title": "Spaced Repetition Software and Meaningful Learning",
+        "difficulty": 0.5,
+        "fkgl_grade": 15.52,
+        "fkgl_01": 0.854,
+        "accuracy_pct": 100.0,
+        "unsupported_count": 0,
+        "total_statements": 12,
+        "reasoning": "None"
+      }
+    ]
+  },
+  {
+    "filename": "02_wiki.txt",
+    "category": "Wikipedia-style article",
+    "complexity": "Medium",
+    "word_count": 1469,
+    "shorts_generated": 4,
+    "factual_accuracy_pct": 98.5,
+    "coverage_pct": 53.3,
+    "redundancy_pct": 0.0,
+    "difficulty_pearson_r": -0.333,
+    "missing_topics": [
+      "Ebbinghaus's specific methodology (using nonsense syllables, self-experimentation, 1885 monograph 'Über das Gedächtnis')",
+      "Cecil Alec Mace's 1932 book 'Psychology of Study' and his specific argument about not reviewing too early (wasted effort) or too late (too much decay)",
+      "Specific details of Leitner box intervals (box 2 every 2 days, box 3 every 4 days, etc.)",
+      "SM-2 specific interval details (first interval 1 day, second interval 6 days, subsequent intervals = previous × Ease Factor)",
+      "FSRS developer name (Jarrett Ye) and publication year (2022) with empirical validation against large-scale review logs",
+      "AnkiWeb hosting several hundred thousand publicly shared decks with millions of active users",
+      "Cepeda et al. (2006) meta-analysis covering 254 studies specifically"
+    ],
+    "shorts": [
+      {
+        "title": "Spaced Repetition: History, Science, and Applications",
+        "difficulty": 0.4,
+        "fkgl_grade": 17.37,
+        "fkgl_01": 0.963,
+        "accuracy_pct": 94.4,
+        "unsupported_count": 1,
+        "total_statements": 18,
+        "reasoning": "The claim that spaced repetition involves 'rote memorization' being replaced is a minor framing issue, but the one clearly unsupported statement is describing spaced repetition as designed for 'rote memorization' contrast; more notably, the Short describes the technique as enabling 'increasingly longer intervals between reviews' as a general rule for all cards, which is accurate, but the characterization of Ebbinghaus's work as establishing the spacing effect as 'proving that distributed study is superior to concentrated sessions' slightly overstates the source's language ('far stronger long-term retention'), though this is reasonably inferable — the single genuinely unsupported claim is that spaced repetition allows for 'minimal daily effort,' which the source says is 'a surprisingly small amount of daily time on review,' making this reasonably inferable, leaving the Short largely faithful with no clearly hallucinated facts, wrong names, or invented claims not present in the source, resulting in 0 fully unsupported statements."
+      },
+      {
+        "title": "Evolution of Spaced Repetition Systems and Algorithms",
+        "difficulty": 0.6,
+        "fkgl_grade": 14.02,
+        "fkgl_01": 0.766,
+        "accuracy_pct": 100.0,
+        "unsupported_count": 0,
+        "total_statements": 22,
+        "reasoning": "None"
+      },
+      {
+        "title": "Desirable Difficulties: The Cognitive Science of Spaced Repetition",
+        "difficulty": 0.65,
+        "fkgl_grade": 19.42,
+        "fkgl_01": 1.0,
+        "accuracy_pct": 100.0,
+        "unsupported_count": 0,
+        "total_statements": 12,
+        "reasoning": "None"
+      },
+      {
+        "title": "Spaced Repetition: Applications, Evidence, and Limitations",
+        "difficulty": 0.4,
+        "fkgl_grade": 17.7,
+        "fkgl_01": 0.982,
+        "accuracy_pct": 100.0,
+        "unsupported_count": 0,
+        "total_statements": 14,
+        "reasoning": "None"
+      }
+    ]
+  },
+  {
+    "filename": "03_academic.txt",
+    "category": "Academic paper",
+    "complexity": "High",
+    "word_count": 2092,
+    "shorts_generated": 6,
+    "factual_accuracy_pct": 100.0,
+    "coverage_pct": 100.0,
+    "redundancy_pct": 0.0,
+    "difficulty_pearson_r": -0.423,
+    "missing_topics": [],
+    "shorts": [
+      {
+        "title": "Bayesian Knowledge Tracing: Modeling Student Learning",
+        "difficulty": 0.7,
+        "fkgl_grade": 16.7,
+        "fkgl_01": 0.924,
+        "accuracy_pct": 100.0,
+        "unsupported_count": 0,
+        "total_statements": 12,
+        "reasoning": "None"
+      },
+      {
+        "title": "BKT Mechanics: Parameters, Updates, and Mastery",
+        "difficulty": 0.7,
+        "fkgl_grade": 14.33,
+        "fkgl_01": 0.784,
+        "accuracy_pct": 100.0,
+        "unsupported_count": 0,
+        "total_statements": 18,
+        "reasoning": "All statements in the Short can be directly verified or reasonably inferred from the source document, including the four parameters, the permanence assumption, the Bayesian update mechanics, the 0.95 mastery threshold, the tradeoff discussion, and the EM algorithm description with E-step and M-step details."
+      },
+      {
+        "title": "Challenges and Extensions in BKT Parameter Fitting",
+        "difficulty": 0.7,
+        "fkgl_grade": 15.82,
+        "fkgl_01": 0.872,
+        "accuracy_pct": 100.0,
+        "unsupported_count": 0,
+        "total_statements": 18,
+        "reasoning": "All statements in the Short can be directly verified from the source document, including the EM algorithm description, convergence within 20-50 iterations, identifiability constraints, the 'obviously false' quote, per-student parameterization details, clustering approach, and contextual BKT features."
+      },
+      {
+        "title": "Advanced Knowledge Tracing: Forgetting and Deep Learning",
+        "difficulty": 0.75,
+        "fkgl_grade": 12.95,
+        "fkgl_01": 0.703,
+        "accuracy_pct": 100.0,
+        "unsupported_count": 0,
+        "total_statements": 18,
+        "reasoning": "All factual claims in the Short can be directly verified from the source document, including the BKT-F description, DKT's LSTM architecture, training methodology, AUC performance figures, and the interpretability tradeoff."
+      },
+      {
+        "title": "BKT's Binary Knowledge State: A Theoretical Oversimplification",
+        "difficulty": 0.6,
+        "fkgl_grade": 16.17,
+        "fkgl_01": 0.892,
+        "accuracy_pct": 100.0,
+        "unsupported_count": 0,
+        "total_statements": 9,
+        "reasoning": "All statements in the Short can be directly verified or reasonably inferred from the source document, including the binary latent state description, the characterization of learning as gradual and context-dependent, the procedural vs. conceptual distinction, transfer to novel problems, and the mentions of Cognitive Tutor and ASSISTments."
+      },
+      {
+        "title": "BKT's Enduring Value and Hybrid Future",
+        "difficulty": 0.7,
+        "fkgl_grade": 19.33,
+        "fkgl_01": 1.0,
+        "accuracy_pct": 100.0,
+        "unsupported_count": 0,
+        "total_statements": 12,
+        "reasoning": "All statements in the Short can be directly verified or reasonably inferred from the source document, including BKT's three-decade relevance, interpretable parameters, DKT's superior benchmark accuracy, skill independence limitation, graph-based extensions, response order sensitivity feedback loop, and the hybrid research direction."
+      }
+    ]
+  },
+  {
+    "filename": "04_textbook.txt",
+    "category": "Textbook chapter",
+    "complexity": "Very High",
+    "word_count": 3364,
+    "shorts_generated": 7,
+    "factual_accuracy_pct": 98.0,
+    "coverage_pct": 55.6,
+    "redundancy_pct": 0.0,
+    "difficulty_pearson_r": 0.768,
+    "missing_topics": [
+      "Logistic regression (sigmoid function, probability estimates, binary classification baseline)",
+      "Decision trees (splitting criteria, Gini impurity, information gain, high variance weakness)",
+      "Gradient boosting (sequential ensemble building, residual error correction, XGBoost, LightGBM, CatBoost)",
+      "Support vector machines (maximum margin hyperplane, support vectors, soft-margin SVM, kernel trick)"
+    ],
+    "shorts": [
+      {
+        "title": "Introduction to Machine Learning: Core Concepts and Paradigms",
+        "difficulty": 0.3,
+        "fkgl_grade": 13.08,
+        "fkgl_01": 0.71,
+        "accuracy_pct": 100.0,
+        "unsupported_count": 0,
+        "total_statements": 18,
+        "reasoning": "None"
+      },
+      {
+        "title": "Linear Regression: Modeling and Regularization",
+        "difficulty": 0.5,
+        "fkgl_grade": 14.54,
+        "fkgl_01": 0.796,
+        "accuracy_pct": 91.7,
+        "unsupported_count": 1,
+        "total_statements": 12,
+        "reasoning": "The claim that the normal equations are used 'for smaller datasets or well-behaved feature matrices' is a slight inversion of the source, which states the normal equations provide a closed-form solution generally, and gradient descent is preferred 'for large datasets or ill-conditioned feature matrices' — the Short's framing adds a qualifier ('smaller datasets') not explicitly stated in the source, but this is a reasonable inference; all other statements are directly supported by the source document."
+      },
+      {
+        "title": "Understanding Random Forests: Ensemble Learning for Robust Predictions",
+        "difficulty": 0.6,
+        "fkgl_grade": 15.76,
+        "fkgl_01": 0.868,
+        "accuracy_pct": 91.7,
+        "unsupported_count": 1,
+        "total_statements": 12,
+        "reasoning": "The claim that bootstrap samples are 'sampled with replacement' is a minor addition not explicitly stated in the source document, which only mentions 'bootstrap sample of the training data' without specifying replacement; all other statements are directly supported by the source."
+      },
+      {
+        "title": "Feedforward Neural Networks: Architecture, Training, and Regularization",
+        "difficulty": 0.7,
+        "fkgl_grade": 17.16,
+        "fkgl_01": 0.951,
+        "accuracy_pct": 100.0,
+        "unsupported_count": 0,
+        "total_statements": 18,
+        "reasoning": "None"
+      },
+      {
+        "title": "Convolutional Neural Networks: Processing Grid Data",
+        "difficulty": 0.65,
+        "fkgl_grade": 13.52,
+        "fkgl_01": 0.736,
+        "accuracy_pct": 100.0,
+        "unsupported_count": 0,
+        "total_statements": 12,
+        "reasoning": "None"
+      },
+      {
+        "title": "Transformers: Powering Modern Large Language Models",
+        "difficulty": 0.7,
+        "fkgl_grade": 16.05,
+        "fkgl_01": 0.885,
+        "accuracy_pct": 100.0,
+        "unsupported_count": 0,
+        "total_statements": 18,
+        "reasoning": "None — all factual claims in the Short, including dates, names, formulas, architectural details, and described capabilities, are directly verifiable from the source document."
+      },
+      {
+        "title": "K-means Clustering: Partitioning Data into Groups",
+        "difficulty": 0.4,
+        "fkgl_grade": 13.26,
+        "fkgl_01": 0.721,
+        "accuracy_pct": 100.0,
+        "unsupported_count": 0,
+        "total_statements": 9,
+        "reasoning": "None"
+      }
+    ]
+  }
+]
