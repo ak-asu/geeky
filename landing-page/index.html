@@ -3,10 +3,10 @@
   <head>
     <meta charset='UTF-8' />
     <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-    <title>Geeky — Adaptive Learning Platform</title>
+    <title>Geeky - Adaptive Learning Platform</title>
     <meta
       name='description'
-      content='Geeky transforms multimedia notes into adaptive, bite-sized learning with knowledge graphs, quizzes, and AI-powered exploration.'
+      content='Geeky is an offline-first adaptive learning platform that converts notes into AI Shorts, organizes concepts in a Knowledge Graph, and recommends what to learn next.'
     />
     <link rel='preconnect' href='https://fonts.googleapis.com' />
     <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin />
@@ -17,16 +17,20 @@
     <link rel='stylesheet' href='./styles.css' />
   </head>
   <body>
-    <header class='hero'>
+    <header id='top' class='hero'>
       <nav class='nav container'>
         <a class='brand' href='#top'>Geeky</a>
         <div class='nav-links'>
+          <a href='#problem'>Problem</a>
           <a href='#features'>Features</a>
-          <a href='#innovations'>Innovations</a>
-          <a href='#use-cases'>Use Cases</a>
-          <a href='#contributors'>Contributors</a>
+          <a href='#pipeline'>Pipeline</a>
+          <a href='#tiers'>Tiers</a>
+          <a href='#stack'>Stack</a>
+          <a href='#contributors'>Team</a>
         </div>
-        <a class='btn btn-primary' href='#download'>Download APK</a>
+        <a class='btn btn-primary' href='https://github.com/ak-asu/geeky/releases'
+          >Latest APK</a
+        >
       </nav>
 
       <div class='hero-bg'>
@@ -37,17 +41,18 @@
 
       <div class='hero-content container reveal'>
         <div class='hero-copy'>
-          <p class='badge'>Offline-first • AI-powered • Adaptive</p>
-          <h1>From scattered notes to structured mastery.</h1>
+          <p class='badge'>Offline-first | AI-powered | Adaptive learning</p>
+          <h1>From scattered notes to a personalized learning roadmap.</h1>
           <p>
-            Geeky turns your multimedia inputs into concise learning shorts, organizes them in a
-            knowledge graph, and adapts your learning path based on how you study.
+            Geeky transforms user-captured content (text, links, files, images, and shared media)
+            into bite-sized Shorts, maps them into a Knowledge Graph, and adapts recommendations
+            after every interaction.
           </p>
           <div class='hero-actions'>
-            <a id='download' class='btn btn-primary btn-lg' href='https://example.com/geeky.apk'
-              >Download APK</a
+            <a class='btn btn-primary btn-lg' href='https://github.com/ak-asu/geeky'
+              >View Repository</a
             >
-            <a class='btn btn-ghost btn-lg' href='#features'>Explore Features</a>
+            <a class='btn btn-ghost btn-lg' href='#features'>See Product Scope</a>
           </div>
           <div class='stats'>
             <article>
@@ -56,145 +61,302 @@
             </article>
             <article>
               <h3 data-counter='13'>0</h3>
-              <p>Local DB tables</p>
+              <p>Drift tables</p>
             </article>
             <article>
-              <h3 data-counter='3'>0</h3>
-              <p>Core learning pillars</p>
+              <h3 data-counter='11'>0</h3>
+              <p>Data access objects</p>
+            </article>
+            <article>
+              <h3 data-counter='4'>0</h3>
+              <p>Core pipeline stages</p>
             </article>
           </div>
         </div>
         <div class='hero-media'>
-          <img
-            src='https://placehold.co/560x420/00BFA5/FFFFFF?text=App+Preview+Placeholder'
-            alt='Geeky app preview placeholder'
-          />
+          <div class='snapshot'>
+            <p class='kicker'>Current status</p>
+            <h3>Flutter app is feature-rich; Python backend is in progress.</h3>
+            <p>
+              Frontend includes offline persistence, module architecture, premium gates, and
+              seeded local data. Backend services for AI processing and RAG are scaffolded and
+              actively being implemented.
+            </p>
+            <div class='pill-row'>
+              <span class='pill'>Flutter + Riverpod 3</span>
+              <span class='pill'>Drift + SQLite</span>
+              <span class='pill'>FastAPI + ChromaDB</span>
+              <span class='pill'>Firebase + Gemini</span>
+            </div>
+          </div>
         </div>
       </div>
     </header>
 
     <main>
-      <section id='features' class='section container reveal'>
+      <section id='problem' class='section container reveal'>
         <div class='section-head'>
-          <p class='kicker'>Features</p>
-          <h2>Everything needed for modern self-learning</h2>
+          <p class='kicker'>Why this exists</p>
+          <h2>Geeky solves five practical learning problems</h2>
         </div>
         <div class='grid cards'>
           <article class='card'>
-            <h3>Multimedia Ingestion</h3>
-            <p>Capture text, links, files, images, and shared content into one learning pipeline.</p>
+            <h3>Content scatter</h3>
+            <p>
+              Learning material is spread across apps and formats; Geeky centralizes it into one
+              structured workflow.
+            </p>
           </article>
           <article class='card'>
-            <h3>AI Shorts</h3>
-            <p>Create concise, focused learning shorts that are easy to consume and revisit.</p>
+            <h3>Information overload</h3>
+            <p>
+              Deduplication and scoring reduce repeated or low-value content so users focus on
+              what matters.
+            </p>
           </article>
           <article class='card'>
-            <h3>Knowledge Graph</h3>
-            <p>Navigate prerequisites, related concepts, and deeper topics visually.</p>
+            <h3>Passive consumption</h3>
+            <p>
+              Shorts, quizzes, and interactions turn reading and watching into active learning.
+            </p>
           </article>
           <article class='card'>
-            <h3>Adaptive Roadmaps</h3>
-            <p>Learning sequence updates dynamically from engagement and quiz performance.</p>
+            <h3>No adaptive path</h3>
+            <p>
+              Recommendation scores rebalance relevance, capability, and novelty per learner.
+            </p>
           </article>
           <article class='card'>
-            <h3>Spaced Repetition</h3>
-            <p>Retention-focused quizzes and review timing to improve long-term recall.</p>
+            <h3>Retention decay</h3>
+            <p>
+              Spaced repetition with FSRS keeps long-term recall strong without excess reviews.
+            </p>
           </article>
           <article class='card'>
-            <h3>Offline-first</h3>
-            <p>Learn anywhere with local persistence and sync on reconnect.</p>
+            <h3>Weak concept structure</h3>
+            <p>
+              A graph-based model connects prerequisites, related concepts, and deeper paths.
+            </p>
           </article>
         </div>
       </section>
 
-      <section id='innovations' class='section alt'>
+      <section id='features' class='section alt'>
         <div class='container reveal'>
           <div class='section-head'>
-            <p class='kicker'>Innovations</p>
-            <h2>Built for depth, not just speed</h2>
+            <p class='kicker'>Product scope</p>
+            <h2>Key capabilities already designed into the system</h2>
           </div>
           <div class='timeline'>
             <article>
               <span>01</span>
               <div>
-                <h3>Concept-aware deduplication</h3>
-                <p>Reduce repeated information while preserving source diversity.</p>
+                <h3>Multimedia ingestion</h3>
+                <p>
+                  Accepts notes from text, links, files, images, audio/video workflows, and mobile
+                  sharing flows.
+                </p>
               </div>
             </article>
             <article>
               <span>02</span>
               <div>
-                <h3>Graph-native learning flow</h3>
-                <p>Move beyond linear lessons with connected conceptual navigation.</p>
+                <h3>AI Shorts and source-grounded summaries</h3>
+                <p>
+                  Processes content into concise Shorts with topic tags, difficulty estimates, and
+                  follow-up prompts.
+                </p>
               </div>
             </article>
             <article>
               <span>03</span>
               <div>
-                <h3>Personalized next-best short</h3>
-                <p>Recommendations adapt after every interaction for better progression.</p>
+                <h3>Knowledge Graph navigation</h3>
+                <p>
+                  Supports deeper, broader, next, and related exploration with dynamic edges and
+                  hierarchy-aware traversal.
+                </p>
+              </div>
+            </article>
+            <article>
+              <span>04</span>
+              <div>
+                <h3>Adaptive learning engine</h3>
+                <p>
+                  Uses a multi-factor score (relevance, capability, novelty) and interaction
+                  history to reorder recommendations.
+                </p>
+              </div>
+            </article>
+            <article>
+              <span>05</span>
+              <div>
+                <h3>RAG and semantic discovery</h3>
+                <p>
+                  Hybrid retrieval, reranking, and grounded response generation over user-scoped
+                  content.
+                </p>
+              </div>
+            </article>
+            <article>
+              <span>06</span>
+              <div>
+                <h3>Offline-first experience</h3>
+                <p>
+                  Local-first reads and queued interactions maintain usability while disconnected,
+                  then sync on reconnect.
+                </p>
               </div>
             </article>
           </div>
-          <img
-            class='feature-gif'
-            src='https://placehold.co/1200x420/1E1E1E/00BFA5?text=GIF+Demo+Placeholder'
-            alt='Animated demo placeholder'
-          />
         </div>
       </section>
 
-      <section id='use-cases' class='section container reveal'>
+      <section id='pipeline' class='section container reveal'>
         <div class='section-head'>
-          <p class='kicker'>Use Cases</p>
-          <h2>Who Geeky helps</h2>
+          <p class='kicker'>Pipeline</p>
+          <h2>How a note becomes adaptive learning content</h2>
+        </div>
+        <div class='benchmarks'>
+          <article>
+            <div>
+              <h3>Extract</h3>
+              <p>Normalize content from mixed media into a unified representation.</p>
+            </div>
+          </article>
+          <article>
+            <div>
+              <h3>Chunk + dedup</h3>
+              <p>
+                Split by structure/semantics and remove exact, near, and semantic duplicates.
+              </p>
+            </div>
+          </article>
+          <article>
+            <div>
+              <h3>Embed + generate</h3>
+              <p>
+                Store embeddings, generate Shorts, tag topics, and run consistency-aware checks.
+              </p>
+            </div>
+          </article>
+          <article>
+            <div>
+              <h3>Update graph + roadmap</h3>
+              <p>
+                Refresh concept relationships, module context, and each learner's next-best content.
+              </p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id='tiers' class='section alt'>
+        <div class='container reveal'>
+          <div class='section-head'>
+            <p class='kicker'>Access model</p>
+            <h2>Free and Premium are clearly separated</h2>
+          </div>
+          <div class='table-wrap'>
+            <table>
+              <thead>
+                <tr>
+                  <th>Capability</th>
+                  <th>Free</th>
+                  <th>Premium</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Note ingestion and note feed</td>
+                  <td>Full access</td>
+                  <td>Full access</td>
+                </tr>
+                <tr>
+                  <td>Knowledge Graph and RAG query</td>
+                  <td>Locked</td>
+                  <td>Full access</td>
+                </tr>
+                <tr>
+                  <td>Quizzes and spaced repetition</td>
+                  <td>Locked</td>
+                  <td>Full access</td>
+                </tr>
+                <tr>
+                  <td>Analytics depth</td>
+                  <td>Basic</td>
+                  <td>Full dashboard</td>
+                </tr>
+                <tr>
+                  <td>Source limit</td>
+                  <td>3 sources</td>
+                  <td>Unlimited</td>
+                </tr>
+                <tr>
+                  <td>Store module downloads</td>
+                  <td>3 modules</td>
+                  <td>Unlimited</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id='stack' class='section container reveal'>
+        <div class='section-head'>
+          <p class='kicker'>Architecture snapshot</p>
+          <h2>Clean boundaries between UI, data, and AI workloads</h2>
         </div>
         <div class='grid use-cases'>
           <article class='case'>
-            <h3>Students</h3>
-            <p>Convert lecture notes and links into revision-ready shorts and quizzes.</p>
+            <h3>Frontend (Flutter)</h3>
+            <p>
+              Feature-first modules, Riverpod state management, GoRouter navigation, Drift local
+              database, and Material 3 theming.
+            </p>
           </article>
           <article class='case'>
-            <h3>Researchers</h3>
-            <p>Organize complex topics, papers, and references into navigable concept maps.</p>
+            <h3>Backend (Python)</h3>
+            <p>
+              FastAPI services handle AI pipeline orchestration, retrieval workflows,
+              recommendations, and business logic.
+            </p>
           </article>
           <article class='case'>
-            <h3>Lifelong Learners</h3>
-            <p>Build a personalized, continuously growing knowledge base from daily content.</p>
+            <h3>Infrastructure</h3>
+            <p>
+              Firebase for auth/data/storage/notifications, Cloud Run for compute, Gemini for
+              generation and embeddings, ChromaDB for vectors.
+            </p>
           </article>
         </div>
       </section>
 
-      <section class='section alt'>
+      <section id='use-cases' class='section alt'>
         <div class='container reveal'>
           <div class='section-head'>
-            <p class='kicker'>Benchmarks</p>
-            <h2>Placeholder metrics (replace with real data)</h2>
+            <p class='kicker'>Who benefits</p>
+            <h2>Designed for real-world self-directed learning</h2>
           </div>
-          <div class='benchmarks'>
-            <article>
-              <div>
-                <h3>Content Processing Speed</h3>
-                <p>Typical single-source processing latency</p>
-              </div>
-              <strong>8.2s</strong>
-              <div class='meter'><span style='--fill: 82%'></span></div>
+          <div class='grid use-cases'>
+            <article class='case'>
+              <h3>Students</h3>
+              <p>Turn lectures, links, and notes into reviewable micro-content and revision flows.</p>
             </article>
-            <article>
-              <div>
-                <h3>Recommendation Relevance</h3>
-                <p>User-rated relevance score</p>
-              </div>
-              <strong>91%</strong>
-              <div class='meter'><span style='--fill: 91%'></span></div>
+            <article class='case'>
+              <h3>Researchers</h3>
+              <p>
+                Organize dense topics into concept relationships, source-backed summaries, and
+                navigable clusters.
+              </p>
             </article>
-            <article>
-              <div>
-                <h3>Retention Lift</h3>
-                <p>Improvement with spaced review (placeholder)</p>
-              </div>
-              <strong>+37%</strong>
-              <div class='meter'><span style='--fill: 74%'></span></div>
+            <article class='case'>
+              <h3>Professionals</h3>
+              <p>
+                Maintain continuous upskilling from scattered daily content without losing context
+                or recall.
+              </p>
             </article>
           </div>
         </div>
@@ -202,32 +364,33 @@
 
       <section id='contributors' class='section container reveal'>
         <div class='section-head'>
-          <p class='kicker'>Contributors</p>
-          <h2>Project team</h2>
+          <p class='kicker'>Project team</p>
+          <h2>Built with academic mentorship</h2>
         </div>
         <div class='grid contributors'>
           <article class='contributor'>
-            <img
-              src='https://placehold.co/160x160/26C6DA/FFFFFF?text=Prof+A'
-              alt='Professor contributor placeholder A'
-            />
-            <h3>Prof. [Name 1]</h3>
+            <img src='./hokeun.png' alt='Professor Hokeun portrait' />
+            <h3>Professor Hokeun Kim</h3>
             <p>Academic Mentor</p>
+            <p>
+              <a href='https://search.asu.edu/profile/4842939' target='_blank' rel='noopener noreferrer'
+                >ASU Profile</a
+              >
+            </p>
           </article>
           <article class='contributor'>
-            <img
-              src='https://placehold.co/160x160/008E76/FFFFFF?text=Prof+B'
-              alt='Professor contributor placeholder B'
-            />
-            <h3>Prof. [Name 2]</h3>
+            <img src='./sghayekh.png' alt='Professor S. Ghayekh portrait' />
+            <h3>Professor Samira Ghayekhloo</h3>
             <p>Academic Mentor</p>
+            <p>
+              <a href='https://search.asu.edu/profile/3516139' target='_blank' rel='noopener noreferrer'
+                >ASU Profile</a
+              >
+            </p>
           </article>
           <article class='contributor'>
-            <img
-              src='https://placehold.co/160x160/00BFA5/FFFFFF?text=You'
-              alt='Student contributor placeholder'
-            />
-            <h3>[Your Name]</h3>
+            <img src='./aakash.png' alt='Aakash portrait' />
+            <h3>Aakash Khepar</h3>
             <p>Builder of Geeky</p>
           </article>
         </div>
@@ -236,7 +399,7 @@
 
     <footer class='footer'>
       <div class='container'>
-        <p>Geeky • Learn smarter with adaptive, connected knowledge.</p>
+        <p>Geeky unifies ingestion, understanding, and retention into one adaptive workflow.</p>
       </div>
     </footer>
 
