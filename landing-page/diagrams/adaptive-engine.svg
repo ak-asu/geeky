@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+  <title id="title">Adaptive Engine Signals</title>
+  <desc id="desc">Recommendation score combines relevance, capability, novelty, and contextual signals such as time and location.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#101a22"/>
+      <stop offset="100%" stop-color="#0a1219"/>
+    </linearGradient>
+    <linearGradient id="node" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#1a3745"/>
+      <stop offset="100%" stop-color="#16313d"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#6deedd"/>
+    </marker>
+    <style>
+      .title { font: 700 28px 'Plus Jakarta Sans', sans-serif; fill: #f2fbf9; }
+      .sub { font: 600 16px 'Plus Jakarta Sans', sans-serif; fill: #9beee1; }
+      .node { fill: url(#node); stroke: #5df2d6; stroke-opacity: .45; stroke-width: 2; rx: 14; }
+      .h { font: 700 18px 'Plus Jakarta Sans', sans-serif; fill: #dcfffb; }
+      .t { font: 500 14px 'Plus Jakarta Sans', sans-serif; fill: #c3ddd9; }
+      .eq { font: 700 22px 'Plus Jakarta Sans', sans-serif; fill: #6ee9d8; }
+      .line { stroke: #6deedd; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1200" height="620" fill="url(#bg)"/>
+  <text class="title" x="48" y="56">Adaptive Engine Signals (Derived from report model)</text>
+  <text class="sub" x="48" y="86">Core scoring: relevance 40% + capability 30% + novelty 30%</text>
+
+  <rect class="node" x="62" y="146" width="280" height="140"/>
+  <text class="h" x="84" y="186">User interactions</text>
+  <text class="t" x="84" y="214">read / skip / save / quiz</text>
+  <text class="t" x="84" y="236">feedback loop updates state</text>
+
+  <rect class="node" x="62" y="322" width="280" height="210"/>
+  <text class="h" x="84" y="360">Context signals</text>
+  <text class="t" x="84" y="388">Time-of-day</text>
+  <text class="t" x="84" y="412">Session duration</text>
+  <text class="t" x="84" y="436">Device type</text>
+  <text class="t" x="84" y="460">Location (coarse, optional)</text>
+  <text class="t" x="84" y="484">Diversity constraints</text>
+
+  <rect class="node" x="418" y="214" width="360" height="220"/>
+  <text class="h" x="442" y="252">Multi-factor scorer</text>
+  <text class="eq" x="442" y="292">0.40R + 0.30C + 0.30N</text>
+  <text class="t" x="442" y="324">R: relevance to goals and interests</text>
+  <text class="t" x="442" y="348">C: capability and difficulty alignment</text>
+  <text class="t" x="442" y="372">N: novelty and exploration balance</text>
+  <text class="t" x="442" y="396">+ contextual adjustments</text>
+
+  <rect class="node" x="854" y="214" width="292" height="220"/>
+  <text class="h" x="878" y="252">Roadmap output</text>
+  <text class="t" x="878" y="282">Ordered next-best Shorts</text>
+  <text class="t" x="878" y="306">Prerequisite-aware sequencing</text>
+  <text class="t" x="878" y="330">Periodic orphan coverage sweep</text>
+  <text class="t" x="878" y="354">Updates after each interaction</text>
+
+  <path class="line" d="M342 216 H408"/>
+  <path class="line" d="M342 424 H408"/>
+  <path class="line" d="M778 324 H844"/>
+</svg>

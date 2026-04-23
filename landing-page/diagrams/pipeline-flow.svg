@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
+  <title id="title">Geeky Content Processing Pipeline</title>
+  <desc id="desc">Extract, chunk and deduplicate, embed and generate, then update graph and roadmap.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#101920"/>
+      <stop offset="100%" stop-color="#091117"/>
+    </linearGradient>
+    <linearGradient id="step" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#18404f"/>
+      <stop offset="100%" stop-color="#123241"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#68efdd"/>
+    </marker>
+    <style>
+      .title { font: 700 28px 'Plus Jakarta Sans', sans-serif; fill: #f2fbf9; }
+      .card { fill: url(#step); stroke: #5df2d6; stroke-opacity: .5; stroke-width: 2; rx: 18; }
+      .h { font: 700 20px 'Plus Jakarta Sans', sans-serif; fill: #dffffa; }
+      .t { font: 500 14px 'Plus Jakarta Sans', sans-serif; fill: #c3ddd9; }
+      .num { font: 800 24px 'Plus Jakarta Sans', sans-serif; fill: #5df2d6; }
+      .arrow { stroke: #68efdd; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1200" height="560" fill="url(#bg)"/>
+  <text class="title" x="48" y="58">Content Pipeline (Derived from Mermaid flow in the report)</text>
+
+  <rect class="card" x="64" y="140" width="250" height="300"/>
+  <text class="num" x="88" y="182">01</text>
+  <text class="h" x="88" y="218">Extract</text>
+  <text class="t" x="88" y="248">TEXT | IMAGE OCR | AUDIO STT</text>
+  <text class="t" x="88" y="270">LINK parsing | FILE extraction</text>
+  <text class="t" x="88" y="292">Media metadata normalization</text>
+
+  <rect class="card" x="340" y="140" width="250" height="300"/>
+  <text class="num" x="364" y="182">02</text>
+  <text class="h" x="364" y="218">Chunk + Dedup</text>
+  <text class="t" x="364" y="248">Structural and semantic chunking</text>
+  <text class="t" x="364" y="270">Exact hash + MinHash/LSH</text>
+  <text class="t" x="364" y="292">Semantic similarity filters</text>
+
+  <rect class="card" x="616" y="140" width="250" height="300"/>
+  <text class="num" x="640" y="182">03</text>
+  <text class="h" x="640" y="218">Embed + Generate</text>
+  <text class="t" x="640" y="248">gemini-embedding-001 vectors</text>
+  <text class="t" x="640" y="270">Short generation (150-250 words)</text>
+  <text class="t" x="640" y="292">Tagging + difficulty + prompts</text>
+
+  <rect class="card" x="892" y="140" width="250" height="300"/>
+  <text class="num" x="916" y="182">04</text>
+  <text class="h" x="916" y="218">Update Learning State</text>
+  <text class="t" x="916" y="248">Knowledge Graph node/edge updates</text>
+  <text class="t" x="916" y="270">Module metadata refresh</text>
+  <text class="t" x="916" y="292">Roadmap recalculation</text>
+
+  <path class="arrow" d="M314 290 H332"/>
+  <path class="arrow" d="M590 290 H608"/>
+  <path class="arrow" d="M866 290 H884"/>
+</svg>

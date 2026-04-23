@@ -25,6 +25,9 @@
           <a href='#features'>Features</a>
           <a href='#pipeline'>Pipeline</a>
           <a href='#tiers'>Tiers</a>
+          <a href='#signals'>Signals</a>
+          <a href='#diagrams'>Diagrams</a>
+          <a href='#compare'>Compare</a>
           <a href='#stack'>Stack</a>
           <a href='#contributors'>Team</a>
         </div>
@@ -129,7 +132,7 @@
           <article class='card'>
             <h3>Retention decay</h3>
             <p>
-              Spaced repetition with FSRS keeps long-term recall strong without excess reviews.
+              Spaced repetition with FSRS (20–30% fewer reviews than SM-2) targets 90% retention.
             </p>
           </article>
           <article class='card'>
@@ -248,6 +251,256 @@
               </p>
             </div>
           </article>
+        </div>
+      </section>
+
+      <section id='signals' class='section alt'>
+        <div class='container reveal'>
+          <div class='section-head'>
+            <p class='kicker'>Adaptive signals</p>
+            <h2>Recommendations respond to behavior and context</h2>
+          </div>
+          <p class='section-note'>
+            Core scoring uses relevance (40%), capability (30%), and novelty (30%), then adjusts
+            with contextual signals documented in the project reports.
+          </p>
+          <div class='grid signal-flips'>
+            <article class='flip-card' tabindex='0'>
+              <div class='flip-card-inner'>
+                <div class='flip-face flip-front'>
+                  <h3>Time-of-day</h3>
+                  <p>Chronological usage patterns influence what appears next.</p>
+                </div>
+                <div class='flip-face flip-back'>
+                  <h3>Why it matters</h3>
+                  <p>
+                    The model can prioritize lighter or deeper content depending on session timing
+                    and user response rhythms.
+                  </p>
+                </div>
+              </div>
+            </article>
+            <article class='flip-card' tabindex='0'>
+              <div class='flip-card-inner'>
+                <div class='flip-face flip-front'>
+                  <h3>Location (coarse)</h3>
+                  <p>Optional city/state context can boost local relevance.</p>
+                </div>
+                <div class='flip-face flip-back'>
+                  <h3>Why it matters</h3>
+                  <p>
+                    Region-specific sources get a moderate priority lift while preserving coverage
+                    diversity.
+                  </p>
+                </div>
+              </div>
+            </article>
+            <article class='flip-card' tabindex='0'>
+              <div class='flip-card-inner'>
+                <div class='flip-face flip-front'>
+                  <h3>Session duration</h3>
+                  <p>Short and long sessions can receive different content pacing.</p>
+                </div>
+                <div class='flip-face flip-back'>
+                  <h3>Why it matters</h3>
+                  <p>
+                    The roadmap can favor concise items in brief sessions and deeper chains in
+                    longer study windows.
+                  </p>
+                </div>
+              </div>
+            </article>
+            <article class='flip-card' tabindex='0'>
+              <div class='flip-card-inner'>
+                <div class='flip-face flip-front'>
+                  <h3>Interaction feedback</h3>
+                  <p>Read, skip, done, and quiz outcomes continually re-score items.</p>
+                </div>
+                <div class='flip-face flip-back'>
+                  <h3>Why it matters</h3>
+                  <p>
+                    Personalization does not rely on a one-time profile; it updates after each
+                    interaction event.
+                  </p>
+                </div>
+              </div>
+            </article>
+            <article class='flip-card' tabindex='0'>
+              <div class='flip-card-inner'>
+                <div class='flip-face flip-front'>
+                  <h3>Difficulty alignment</h3>
+                  <p>Capability matching helps avoid content that is too easy or too hard.</p>
+                </div>
+                <div class='flip-face flip-back'>
+                  <h3>Why it matters</h3>
+                  <p>
+                    Bayesian Knowledge Tracing (BKT) models per-concept mastery, updating after quiz
+                    results and interaction speed to calibrate progression.
+                  </p>
+                </div>
+              </div>
+            </article>
+            <article class='flip-card' tabindex='0'>
+              <div class='flip-card-inner'>
+                <div class='flip-face flip-front'>
+                  <h3>Deduplication rigor</h3>
+                  <p>Four-stage pipeline removes exact, near, semantic, and cross-modal duplicates.</p>
+                </div>
+                <div class='flip-face flip-back'>
+                  <h3>Why it matters</h3>
+                  <p>
+                    Bloom filters screen fast, then exact hash/MinHash/embeddings ensure no repeated
+                    content drains learner attention.
+                  </p>
+                </div>
+              </div>
+            </article>
+            <article class='flip-card' tabindex='0'>
+              <div class='flip-card-inner'>
+                <div class='flip-face flip-front'>
+                  <h3>Contextual bandits</h3>
+                  <p>Balance exploration (new topics) vs exploitation (high-relevance content).</p>
+                </div>
+                <div class='flip-face flip-back'>
+                  <h3>Why it matters</h3>
+                  <p>
+                    Continuous learning without pigeonholing: curiosity is rewarded while expertise
+                    deepens along high-value paths.
+                  </p>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id='diagrams' class='section container reveal'>
+        <div class='section-head'>
+          <p class='kicker'>Diagram gallery</p>
+          <h2>SVGs derived from report Mermaid architecture views</h2>
+        </div>
+        <div class='carousel' data-carousel>
+          <button class='carousel-btn prev' aria-label='Show previous diagram' data-prev>
+            <span aria-hidden='true'>&larr;</span>
+          </button>
+          <div class='carousel-track-wrap'>
+            <div class='carousel-track'>
+              <figure class='carousel-slide active'>
+                <img src='./diagrams/architecture-flow.svg' alt='Geeky high-level architecture diagram' />
+                <figcaption>
+                  Frontend, Firebase, FastAPI, ChromaDB, and Gemini API integration flow.
+                </figcaption>
+              </figure>
+              <figure class='carousel-slide'>
+                <img src='./diagrams/pipeline-flow.svg' alt='Content processing pipeline diagram' />
+                <figcaption>
+                  End-to-end note pipeline: extraction, dedup, embedding, short generation, and
+                  learning state updates.
+                </figcaption>
+              </figure>
+              <figure class='carousel-slide'>
+                <img src='./diagrams/adaptive-engine.svg' alt='Adaptive engine scoring signal diagram' />
+                <figcaption>
+                  Multi-factor recommendation scoring and contextual signals like time and location.
+                </figcaption>
+              </figure>
+            </div>
+          </div>
+          <button class='carousel-btn next' aria-label='Show next diagram' data-next>
+            <span aria-hidden='true'>&rarr;</span>
+          </button>
+        </div>
+        <div class='carousel-dots' data-dots></div>
+        <p class='carousel-info'><span class='slide-counter' data-current='1'>1</span> / 3 diagrams</p>
+      </section>
+
+      <section id='compare' class='section alt'>
+        <div class='container reveal'>
+          <div class='section-head'>
+            <p class='kicker'>Comparisons and profiles</p>
+            <h2>Important tables from the research and architecture docs</h2>
+          </div>
+          <div class='compare-grid'>
+            <dip class='table-source'>From ProposalNew.md: Recommendation paradigm evaluation</p>
+              <v class='table-wrap'>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Recommendation approach</th>
+                    <th>Mechanism</th>
+                    <th>Explainability</th>
+                    <th>Best fit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Path-based</td>
+                    <td>Prerequisite chains</td>
+                    <td>High</td>
+                    <td>Structured curricula</td>
+                  </tr>
+                  <tr>
+                    <td>Graph-based</td>
+                    <td>Message passing on knowledge graph</td>
+                    <td>Medium</td>
+                    <td>Rich concept relationships</td>
+                  </tr>
+                  <tr>
+                    <td>Collaborative filtering</td>
+                    <td>User-behavior similarity</td>
+                    <td>Medium</td>
+                    <td>Implicit interaction signals</td>
+                  </tr>
+                  <tr>
+                    <td>Hybrid (selected)</td>
+                    <td>Path + scoring + contextual balance</td>
+                    <td>High</td>
+                    <td>Production personalization</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class='table-wrap'>
+              <p class='table-source'>From ARCHITECTURE.md: Task-specific RAG retrieval profiles</p>
+              <table>
+                <thead>
+                  <tr>
+                    <th>RAG profile</th>
+                    <th>MMR lambda</th>
+                    <th>Compression level</th>
+                    <th>Output intent</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Q&A</td>
+                    <td>0.8</td>
+                    <td>Aggressive</td>
+                    <td>Precise answer with citations</td>
+                  </tr>
+                  <tr>
+                    <td>Flashcard generation</td>
+                    <td>0.5</td>
+                    <td>Moderate</td>
+                    <td>Coverage across sources</td>
+                  </tr>
+                  <tr>
+                    <td>Summary</td>
+                    <td>0.6</td>
+                    <td>Light</td>
+                    <td>Narrative synthesis</td>
+                  </tr>
+                  <tr>
+                    <td>Mind map</td>
+                    <td>0.4</td>
+                    <td>Heavy</td>
+                    <td>Maximum concept diversity</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </section>
 
