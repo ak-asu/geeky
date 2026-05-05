@@ -386,20 +386,20 @@
           <div class='carousel-track-wrap'>
             <div class='carousel-track'>
               <figure class='carousel-slide active'>
-                <img src='./diagrams/architecture-flow.svg' alt='Geeky high-level architecture diagram' />
+                <img src='./architecture-flow.svg' alt='Geeky high-level architecture diagram' />
                 <figcaption>
                   Frontend, Firebase, FastAPI, ChromaDB, and Gemini API integration flow.
                 </figcaption>
               </figure>
               <figure class='carousel-slide'>
-                <img src='./diagrams/pipeline-flow.svg' alt='Content processing pipeline diagram' />
+                <img src='./pipeline-flow.svg' alt='Content processing pipeline diagram' />
                 <figcaption>
                   End-to-end note pipeline: extraction, dedup, embedding, short generation, and
                   learning state updates.
                 </figcaption>
               </figure>
               <figure class='carousel-slide'>
-                <img src='./diagrams/adaptive-engine.svg' alt='Adaptive engine scoring signal diagram' />
+                <img src='./adaptive-engine.svg' alt='Adaptive engine scoring signal diagram' />
                 <figcaption>
                   Multi-factor recommendation scoring and contextual signals like time and location.
                 </figcaption>
@@ -421,84 +421,88 @@
             <h2>Important tables from the research and architecture docs</h2>
           </div>
           <div class='compare-grid'>
-            <p class='table-source'>From ProposalNew.md: Recommendation paradigm evaluation</p>
+            <div>
+              <p class='table-source'>From ProposalNew.md: Recommendation paradigm evaluation</p>
               <div class='table-wrap'>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Recommendation approach</th>
-                    <th>Mechanism</th>
-                    <th>Explainability</th>
-                    <th>Best fit</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Path-based</td>
-                    <td>Prerequisite chains</td>
-                    <td>High</td>
-                    <td>Structured curricula</td>
-                  </tr>
-                  <tr>
-                    <td>Graph-based</td>
-                    <td>Message passing on knowledge graph</td>
-                    <td>Medium</td>
-                    <td>Rich concept relationships</td>
-                  </tr>
-                  <tr>
-                    <td>Collaborative filtering</td>
-                    <td>User-behavior similarity</td>
-                    <td>Medium</td>
-                    <td>Implicit interaction signals</td>
-                  </tr>
-                  <tr>
-                    <td>Hybrid (selected)</td>
-                    <td>Path + scoring + contextual balance</td>
-                    <td>High</td>
-                    <td>Production personalization</td>
-                  </tr>
-                </tbody>
-              </table>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Recommendation approach</th>
+                      <th>Mechanism</th>
+                      <th>Explainability</th>
+                      <th>Best fit</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Path-based</td>
+                      <td>Prerequisite chains</td>
+                      <td>High</td>
+                      <td>Structured curricula</td>
+                    </tr>
+                    <tr>
+                      <td>Graph-based</td>
+                      <td>Message passing on knowledge graph</td>
+                      <td>Medium</td>
+                      <td>Rich concept relationships</td>
+                    </tr>
+                    <tr>
+                      <td>Collaborative filtering</td>
+                      <td>User-behavior similarity</td>
+                      <td>Medium</td>
+                      <td>Implicit interaction signals</td>
+                    </tr>
+                    <tr>
+                      <td>Hybrid (selected)</td>
+                      <td>Path + scoring + contextual balance</td>
+                      <td>High</td>
+                      <td>Production personalization</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
 
-            <div class='table-wrap'>
+            <div>
               <p class='table-source'>From ARCHITECTURE.md: Task-specific RAG retrieval profiles</p>
-              <table>
-                <thead>
-                  <tr>
-                    <th>RAG profile</th>
-                    <th>MMR lambda</th>
-                    <th>Compression level</th>
-                    <th>Output intent</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Q&A</td>
-                    <td>0.8</td>
-                    <td>Aggressive</td>
-                    <td>Precise answer with citations</td>
-                  </tr>
-                  <tr>
-                    <td>Flashcard generation</td>
-                    <td>0.5</td>
-                    <td>Moderate</td>
-                    <td>Coverage across sources</td>
-                  </tr>
-                  <tr>
-                    <td>Summary</td>
-                    <td>0.6</td>
-                    <td>Light</td>
-                    <td>Narrative synthesis</td>
-                  </tr>
-                  <tr>
-                    <td>Mind map</td>
-                    <td>0.4</td>
-                    <td>Heavy</td>
-                    <td>Maximum concept diversity</td>
-                  </tr>
-                </tbody>
-              </table>
+              <div class='table-wrap'>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>RAG profile</th>
+                      <th>MMR lambda</th>
+                      <th>Compression level</th>
+                      <th>Output intent</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Q&A</td>
+                      <td>0.8</td>
+                      <td>Aggressive</td>
+                      <td>Precise answer with citations</td>
+                    </tr>
+                    <tr>
+                      <td>Flashcard generation</td>
+                      <td>0.5</td>
+                      <td>Moderate</td>
+                      <td>Coverage across sources</td>
+                    </tr>
+                    <tr>
+                      <td>Summary</td>
+                      <td>0.6</td>
+                      <td>Light</td>
+                      <td>Narrative synthesis</td>
+                    </tr>
+                    <tr>
+                      <td>Mind map</td>
+                      <td>0.4</td>
+                      <td>Heavy</td>
+                      <td>Maximum concept diversity</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
