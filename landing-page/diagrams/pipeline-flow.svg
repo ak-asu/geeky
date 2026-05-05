@@ -49,10 +49,10 @@
 
   <rect class="card" x="892" y="140" width="250" height="300"/>
   <text class="num" x="916" y="182">04</text>
-  <text class="h" x="916" y="218">Update Learning State</text>
-  <text class="t" x="916" y="248">Knowledge Graph node/edge updates</text>
-  <text class="t" x="916" y="270">Module metadata refresh</text>
-  <text class="t" x="916" y="292">Roadmap recalculation</text>
+  <text class="h" x="916" y="218">Return &amp; Integrate</text>
+  <text class="t" x="916" y="248">Backend returns Shorts + concepts</text>
+  <text class="t" x="916" y="270">Client updates KG + roadmap</text>
+  <text class="t" x="916" y="292">Drift + ObjectBox persist locally</text>
 
   <path class="arrow" d="M314 290 H332"/>
   <path class="arrow" d="M590 290 H608"/>

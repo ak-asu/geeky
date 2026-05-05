@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
   <title id="title">Geeky High-Level Architecture</title>
-  <desc id="desc">Flutter app connects to Firebase and FastAPI backend. Backend uses ChromaDB and Gemini API.</desc>
+  <desc id="desc">Flutter app connects to Firebase (Firestore) and FastAPI backend. Backend uses Redis for async job queuing and Gemini API for AI generation and embeddings.</desc>
   <defs>
     <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
       <stop offset="0%" stop-color="#0f1b22"/>
@@ -35,21 +35,20 @@
 
   <rect class="box" x="470" y="88" width="320" height="180"/>
   <text class="head" x="496" y="136">Firebase Suite</text>
-  <text class="text" x="496" y="168">Auth, Firestore, Storage, FCM</text>
-  <text class="text" x="496" y="194">Cloud Functions triggers</text>
-  <text class="text" x="496" y="220">User-scoped sync and persistence</text>
+  <text class="text" x="496" y="168">Firestore: bans, app config, store</text>
+  <text class="text" x="496" y="194">Firebase App Check (attestation)</text>
 
   <rect class="box" x="470" y="318" width="320" height="210"/>
   <text class="head" x="496" y="366">FastAPI Backend</text>
-  <text class="text" x="496" y="398">AI pipeline orchestration</text>
-  <text class="text" x="496" y="424">RAG, recommendation, KG updates</text>
+  <text class="text" x="496" y="398">Celery async note processing</text>
+  <text class="text" x="496" y="424">RAG reranking + quiz grading</text>
   <text class="text" x="496" y="450">Protocol-first service boundaries</text>
-  <text class="text" x="496" y="476">Runs on Cloud Run</text>
+  <text class="text" x="496" y="476">Stateless — no user data stored</text>
 
   <rect class="box" x="860" y="124" width="280" height="160"/>
-  <text class="head" x="884" y="170">ChromaDB</text>
-  <text class="text" x="884" y="202">User-scoped vectors</text>
-  <text class="text" x="884" y="228">Dense retrieval for RAG</text>
+  <text class="head" x="884" y="170">Redis</text>
+  <text class="text" x="884" y="202">Job queue + async results (2h TTL)</text>
+  <text class="text" x="884" y="228">Quota + rate limiting cache</text>
 
   <rect class="box" x="860" y="338" width="280" height="160"/>
   <text class="head" x="884" y="384">Gemini API</text>
@@ -57,15 +56,14 @@
   <text class="text" x="884" y="442">Embeddings + multimodal analysis</text>
 
   <path class="line" d="M416 244 H462"/>
-  <text class="label" x="430" y="232">sync</text>
+  <text class="label" x="422" y="232">Firestore</text>
 
   <path class="line" d="M416 276 H462 V422"/>
   <text class="label" x="422" y="356">REST</text>
 
   <path class="line" d="M790 422 H850"/>
-  <text class="label" x="804" y="410">vectors</text>
+  <text class="label" x="804" y="410">AI calls</text>
 
-  <path class="line" d="M790 422 V418 H850"/>
   <path class="line" d="M790 380 C820 330, 820 220, 850 204"/>
-  <text class="label" x="806" y="304">triggers / AI calls</text>
+  <text class="label" x="806" y="304">jobs / queue</text>
 </svg>

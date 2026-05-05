@@ -88,7 +88,7 @@
             <div class='pill-row'>
               <span class='pill'>Flutter + Riverpod 3</span>
               <span class='pill'>Drift + SQLite</span>
-              <span class='pill'>FastAPI + ChromaDB</span>
+              <span class='pill'>FastAPI + Redis</span>
               <span class='pill'>Firebase + Gemini</span>
             </div>
           </div>
@@ -421,8 +421,8 @@
             <h2>Important tables from the research and architecture docs</h2>
           </div>
           <div class='compare-grid'>
-            <dip class='table-source'>From ProposalNew.md: Recommendation paradigm evaluation</p>
-              <v class='table-wrap'>
+            <p class='table-source'>From ProposalNew.md: Recommendation paradigm evaluation</p>
+              <div class='table-wrap'>
               <table>
                 <thead>
                   <tr>
@@ -579,8 +579,8 @@
           <article class='case'>
             <h3>Infrastructure</h3>
             <p>
-              Firebase for auth/data/storage/notifications, Cloud Run for compute, Gemini for
-              generation and embeddings, ChromaDB for vectors.
+              Firestore for app config and curated content, Firebase App Check for attestation,
+              Cloud Run for compute, Redis for jobs and caching, Gemini for generation and embeddings.
             </p>
           </article>
         </div>
